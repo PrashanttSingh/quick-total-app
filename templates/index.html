@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>QuickTotal</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>⚡ QuickTotal</h1>
+        <p>Upload a photo of paper calculations — get instant total!</p>
+        <input type="file" id="image" accept="image/*">
+        <button onclick="uploadImage()">Calculate Total</button>
+        <div id="result"></div>
+    </div>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
