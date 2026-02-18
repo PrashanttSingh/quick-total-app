@@ -1,17 +1,64 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>QuickTotal</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuickTotal - Smart Calculator</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <div class="container">
-        <h1>⚡ QuickTotal</h1>
-        <p>Upload a photo of paper calculations — get instant total!</p>
-        <input type="file" id="image" accept="image/*">
-        <button onclick="uploadImage()">Calculate Total</button>
-        <div id="result"></div>
+        <div class="header">
+            <h1>⚡ QuickTotal</h1>
+            <p>Smart paper calculation scanner</p>
+        </div>
+
+        <div class="upload-area" id="dropZone">
+            <div class="upload-content">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 15V3M12 3L8 7M12 3L16 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M2 17L2 19C2 20.1046 2.89543 21 4 21L20 21C21.1046 21 22 20.1046 22 19V17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <h3>Drop image here</h3>
+                <p>or</p>
+                <div class="button-group">
+                    <label for="fileInput" class="btn btn-primary">
+                        📁 Browse Files
+                    </label>
+                    <button class="btn btn-secondary" id="cameraBtn">
+                        📷 Take Photo
+                    </button>
+                </div>
+                <input type="file" id="fileInput" accept="image/*" hidden>
+                <input type="file" id="cameraInput" accept="image/*" capture="environment" hidden>
+            </div>
+        </div>
+
+        <div class="preview-area" id="previewArea" style="display:none;">
+            <div class="image-container">
+                <img id="previewImage" alt="Preview">
+                <canvas id="selectionCanvas"></canvas>
+            </div>
+            <p class="hint">💡 Draw a box around numbers you want to sum</p>
+            <div class="button-group">
+                <button class="btn btn-primary" id="calculateBtn">Calculate Total</button>
+                <button class="btn btn-outline" id="resetBtn">Start Over</button>
+            </div>
+        </div>
+
+        <!-- CHANGED: id="loader" to id="loading" -->
+        <div class="loader" id="loading" style="display:none;">
+            <div class="spinner"></div>
+            <p>🤖 Analyzing with AI...</p>
+        </div>
+
+        <!-- CHANGED: id="resultArea" to id="result" and simplified structure -->
+        <div class="result-area" id="result" style="display:block;">
+            <!-- Results will be injected here by JavaScript -->
+        </div>
+
     </div>
+
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
