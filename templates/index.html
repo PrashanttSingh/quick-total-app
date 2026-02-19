@@ -3,59 +3,171 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QuickTotal - Smart Calculator</title>
+    <title>QuickTotal - Smart Bill Calculator</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>⚡ QuickTotal</h1>
-            <p>Smart paper calculation scanner</p>
-        </div>
 
-        <div class="upload-area" id="dropZone">
-            <div class="upload-content">
-                <svg width="64" height="64" viewBox="0 0 24 24" fill="none">
-                    <path d="M12 15V3M12 3L8 7M12 3L16 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                    <path d="M2 17L2 19C2 20.1046 2.89543 21 4 21L20 21C21.1046 21 22 20.1046 22 19V17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                </svg>
-                <h3>Drop image here</h3>
-                <p>or</p>
-                <div class="button-group">
-                    <label for="fileInput" class="btn btn-primary">
-                        📁 Browse Files
-                    </label>
-                    <button class="btn btn-secondary" id="cameraBtn">
-                        📷 Take Photo
+    <!-- ANIMATED BACKGROUND -->
+    <div class="bg-gradient"></div>
+    <div class="bg-grid"></div>
+    <div class="bg-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+
+    <!-- WEBCAM MODAL -->
+    <div id="cameraModal">
+        <div class="modal-backdrop" id="modalBackdrop"></div>
+        <div class="modal-box">
+            <div class="modal-header">
+                <span>📷 Point camera at your bill</span>
+                <button id="closeCameraBtn" class="modal-close">✕</button>
+            </div>
+            <div class="video-wrapper">
+                <video id="webcamVideo" autoplay playsinline></video>
+                <div class="scan-frame">
+                    <div class="corner tl"></div>
+                    <div class="corner tr"></div>
+                    <div class="corner bl"></div>
+                    <div class="corner br"></div>
+                    <div class="scan-line"></div>
+                </div>
+                <div class="scan-label">Align bill within the frame</div>
+            </div>
+            <canvas id="snapCanvas" style="display:none;"></canvas>
+            <button id="snapBtn" class="btn-snap">
+                <span class="snap-ring"></span>
+                <span class="snap-dot"></span>
+            </button>
+        </div>
+    </div>
+
+    <div class="app-wrapper">
+
+        <!-- NAVBAR -->
+        <nav class="navbar">
+            <div class="nav-logo">
+                <div class="nav-logo-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <path d="M9 7H6a2 2 0 00-2 2v9a2 2 0 002 2h9a2 2 0 002-2v-3" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+                        <path d="M9 15l8-8M17 7h-4m4 0v4" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <span class="nav-brand">QuickTotal</span>
+                <span class="nav-badge">AI</span>
+            </div>
+            <div class="nav-status">
+                <span class="status-dot"></span>
+                <span>Online</span>
+            </div>
+        </nav>
+
+        <div class="container">
+
+            <!-- HERO -->
+            <div class="hero">
+                <div class="hero-tag">⚡ Powered by Gemini + Tesseract</div>
+                <h1 class="hero-title">
+                    Scan any bill.<br>
+                    <span class="gradient-text">Get totals instantly.</span>
+                </h1>
+                <p class="hero-sub">Grocery lists · Receipts · Handwritten notes · Math sheets</p>
+            </div>
+
+            <!-- FEATURE PILLS -->
+            <div class="feature-pills">
+                <div class="pill">📄 Printed Bills</div>
+                <div class="pill">✍️ Handwritten</div>
+                <div class="pill">🧾 Receipts</div>
+                <div class="pill">🛒 Grocery Lists</div>
+                <div class="pill">➕ Math Sheets</div>
+            </div>
+
+            <!-- UPLOAD ZONE -->
+            <div class="upload-zone" id="dropZone">
+                <div class="upload-zone-inner">
+                    <div class="upload-icon-wrap">
+                        <div class="upload-icon-bg"></div>
+                        <svg class="upload-icon-svg" width="36" height="36" viewBox="0 0 24 24" fill="none">
+                            <path d="M12 15V3M12 3L8 7M12 3L16 7" stroke="#6366f1" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M2 17v2a2 2 0 002 2h16a2 2 0 002-2v-2" stroke="#6366f1" stroke-width="2.5" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <h3 class="upload-title">Drop your image here</h3>
+                    <p class="upload-sub">JPG, PNG, HEIC — printed or handwritten</p>
+                    <div class="upload-divider"><span>or</span></div>
+                    <div class="btn-group">
+                        <label for="fileInput" class="btn btn-primary">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            Browse Files
+                        </label>
+                        <button class="btn btn-outline" id="cameraBtn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" stroke="#6366f1" stroke-width="2"/>
+                                <circle cx="12" cy="13" r="4" stroke="#6366f1" stroke-width="2"/>
+                            </svg>
+                            Camera
+                        </button>
+                    </div>
+                    <input type="file" id="fileInput" accept="image/*" hidden>
+                    <input type="file" id="cameraInput" accept="image/*" capture="environment" hidden>
+                </div>
+            </div>
+
+            <!-- PREVIEW CARD -->
+            <div class="preview-card" id="previewArea" style="display:none;">
+                <div class="preview-topbar">
+                    <div class="preview-info">
+                        <span class="preview-dot"></span>
+                        <span>Image loaded — draw a box to select area (optional)</span>
+                    </div>
+                    <button class="preview-reset-icon" id="resetBtn" title="Start Over">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                            <path d="M3 12a9 9 0 109-9M3 3v6h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
                     </button>
                 </div>
-                <input type="file" id="fileInput" accept="image/*" hidden>
-                <input type="file" id="cameraInput" accept="image/*" capture="environment" hidden>
+                <div class="image-wrap" id="imageWrap">
+                    <img id="previewImage" alt="Preview">
+                    <canvas id="selectionCanvas"></canvas>
+                </div>
+                <div class="preview-footer">
+                    <button class="btn btn-primary btn-full" id="calculateBtn">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                            <circle cx="12" cy="12" r="10" stroke="white" stroke-width="2"/>
+                            <path d="M12 8v4l3 3" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                        Analyze & Calculate Total
+                    </button>
+                </div>
             </div>
+
+            <!-- LOADER -->
+            <div class="loader-card" id="loading" style="display:none;">
+                <div class="loader-rings">
+                    <div class="ring ring-1"></div>
+                    <div class="ring ring-2"></div>
+                    <div class="ring ring-3"></div>
+                </div>
+                <p class="loader-text">AI is reading your image...</p>
+                <p class="loader-sub">Tesseract + Gemini working together</p>
+            </div>
+
+            <!-- RESULTS -->
+            <div id="result"></div>
+
         </div>
 
-        <div class="preview-area" id="previewArea" style="display:none;">
-            <div class="image-container">
-                <img id="previewImage" alt="Preview">
-                <canvas id="selectionCanvas"></canvas>
-            </div>
-            <p class="hint">💡 Draw a box around numbers you want to sum</p>
-            <div class="button-group">
-                <button class="btn btn-primary" id="calculateBtn">Calculate Total</button>
-                <button class="btn btn-outline" id="resetBtn">Start Over</button>
-            </div>
-        </div>
-
-        <!-- CHANGED: id="loader" to id="loading" -->
-        <div class="loader" id="loading" style="display:none;">
-            <div class="spinner"></div>
-            <p>🤖 Analyzing with AI...</p>
-        </div>
-
-        <!-- CHANGED: id="resultArea" to id="result" and simplified structure -->
-        <div class="result-area" id="result" style="display:block;">
-            <!-- Results will be injected here by JavaScript -->
-        </div>
+        <!-- FOOTER -->
+        <footer class="footer">
+            <p>QuickTotal · Built with Flask + Gemini AI + Tesseract OCR</p>
+        </footer>
 
     </div>
 
