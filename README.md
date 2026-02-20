@@ -1,63 +1,81 @@
-# quick-total-app
-in this repo we will be creating a fully fledged end to end app for doing calculations of  peaples simply by capturing the phtoto of the page .this repo will be directly trying to solve real world calcultions,like totalling  so that peaple are able to sum up there espenses and bills total in a jiffy..🙃🙃
+# QuickTotal - AI Bill & Hisab Calculator
 
-# ⚡ QuickTotal - Smart Paper Calculator Scanner
+**Scan Indian/foreign bills, grocery lists, handwritten hisab → instant total.** Camera/upload → AI extracts items/prices → auto-sum. No manual entry.
 
-Scan paper calculations and get instant totals using OCR + AI.
+# ✨ Current Features (Feb 2026)
+✅ Camera (laptop/phone) + drag-drop + gallery upload
+✅ Online AI first (<5s): OpenRouter vision models
+✅ Offline fallback: Ollama llava:7b (10-40s CPU)
+✅ Blurry fix: OpenCV preprocessing
+✅ Itemized list + ₹ grand total
+✅ Works offline/online
 
-## 🚀 Setup Guide
+
+## 🚀 Updated Setup (2026)
 
 ### Prerequisites
 - Python 3.8+
 - VS Code
-- Tesseract OCR
+- Ollama (offline AI)
 
-### Installation Steps
-
-1. Clone Repository
+### Installation
 ```bash
-git clone <https://github.com/PrashanttSingh/quick-total-app.git>
+git clone https://github.com/PrashanttSingh/quick-total-app.git
 cd quicktotalapp
 
-2. Create Virtual Environment
+# Virtual Environment
 python -m venv .venv
+# Windows: .venv\Scripts\activate
+# Linux/Mac: source .venv/bin/activate
 
-3. Activate Environment
-Windows PowerShell:
-#if you using powershell in vs code
-powershell
-.\.venv\Scripts\Activate.ps1
-#if you using powershell in vs code
-Ubuntu/Linux:
-source .venv/bin/activate
+# Install Python packages
+pip install flask pillow opencv-python requests python-dotenv ollama
 
-4. Install Python Dependencies
-pip install -r requirements.txt
+# Offline AI (4.1GB, fastest CPU vision)
+ollama pull llava:7b
 
-5. Install Tesseract OCR
-Windows:
- winget install -e --id UB-Mannheim.TesseractOCR
-#Then restart VS Code,after installation
-linux:
- sudo apt update
- sudo apt install tesseract-ocr
+# API Key (.env file)
+echo "key=sk-or-v1-your-openrouter-key" > .env
 
-6. Run Application
- python app.py 
 
-7. Open Browser
- http://127.0.0.1:5000   #showing in your terminal
+Run
+# Terminal 1
+ollama serve
 
-#important 
-├── app.py
-├── requirements.txt
-├── .gitignore
-├── static/
-│   ├── style.css
-│   └── script.js
+# Terminal 2  
+python app.py
+
+Open: http://127.0.0.1:5000  #in terminal after running  python app.py
+
+📱 Test Flow
+📷 Camera bill photo → AI detects: "Rice ₹120, Dal ₹85..."
+💰 Auto total: "₹405" + itemized list
+⚡ Online: <5s | Offline: 10-40s
+
+🗑️ Removed (Slow/Old)
+llava-phi3:3.8b → 3+ min lag
+
+Tesseract math mode → wrong results
+
+Gemini API → quota errors
+
+📁 Project Structure
+
+├── app.py           # Flask + OpenRouter + Ollama llava:7b
+├── .env            # OpenRouter key
 ├── templates/
-│   └── index.html
-└── uploads/
-   
- 
+│   └── index.html  # Camera + modern UI
+├── static/
+│   ├── style.css   # Vyapar-inspired
+│   └── script.js   # Drag-drop + canvas
+├── uploads/        # Temp images
+└── requirements.txt
+
+🤖 AI Pipeline
+Photo → OpenCV preprocess → 
+OpenRouter (gemma/nemotron/llama3.2) → 
+Ollama llava:7b → JSON items → Total
+
+🎯 Target Users
+Shopkeepers, students, households - India + global bills/groceries/hisab
 

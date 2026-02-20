@@ -5,15 +5,13 @@ import json
 import base64
 import requests
 import numpy as np
-import pytesseract
+import ollama
 from io import BytesIO
 from flask import Flask, render_template, request, jsonify
 from PIL import Image
 from dotenv import load_dotenv
 
 load_dotenv()
-
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
 key = os.getenv('key')
 if not key:
@@ -35,83 +33,111 @@ MODEL_NAMES = {
 def preprocess_image(img_pil):
     img_np = np.array(img_pil)
     gray = cv2.cvtColor(img_np, cv2.COLOR_RGB2GRAY)
-    gray = cv2.resize(gray, None, fx=3, fy=3, interpolation=cv2.INTER_CUBIC)
-    denoised = cv2.fastNlMeansDenoising(gray, h=10)
-    kernel = np.array([[-1,-1,-1], [-1,9,-1], [-1,-1,-1]])
-    sharpened = cv2.filter2D(denoised, -1, kernel)
-    thresh = cv2.threshold(sharpened, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
-    return thresh
+    gray = cv2.resize(gray, None, fx=2.5, fy=2.5, interpolation=cv2.INTER_CUBIC)
 
+    laplacian_var = cv2.Laplacian(gray, cv2.CV_64F).var()
+    is_blurry = laplacian_var < 500
+    print(f"[Preprocess] Laplacian variance: {laplacian_var:.1f} → {'BLURRY' if is_blurry else 'CLEAR'}")
 
-def is_clean_expression(expr_clean):
-    ops = re.findall(r'[+\-*/]', expr_clean)
-    if len(ops) > 3:
-        return False
-    if len(ops) >= 3 and len(set(ops)) > 1:
-        return False
-    return True
+    if is_blurry:
+        gray = cv2.bilateralFilter(gray, 9, 75, 75)
+        blur = cv2.GaussianBlur(gray, (0, 0), 3)
+        gray = cv2.addWeighted(gray, 1.5, blur, -0.5, 0)
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+        gray = clahe.apply(gray)
+        binary = cv2.adaptiveThreshold(gray, 255,
+            cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 31, 15)
+    else:
+        gray = cv2.fastNlMeansDenoising(gray, h=5)
+        _, binary = cv2.threshold(gray, 0, 255,
+            cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
-
-def extract_calculations(text):
-    calculations = []
-    total = 0
-    seen = set()
-    for line in text.split('\n'):
-        line = line.strip()
-        if not line:
-            continue
-        match = re.search(r'(\d+\s*[+\-x*/÷]\s*\d+(?:\s*[+\-x*/÷]\s*\d+)*)', line)
-        if match:
-            expr = match.group(1)
-            expr_clean = re.sub(r'\s+', '', expr.replace('x', '*').replace('÷', '/'))
-            if re.match(r'^\d+(?:[+\-*/]\d+)+$', expr_clean):
-                if expr_clean not in seen and is_clean_expression(expr_clean):
-                    seen.add(expr_clean)
-                    try:
-                        line_total = eval(expr_clean)
-                        if abs(line_total) > 99999:
-                            continue
-                        calculations.append({
-                            'expression': expr.strip(),
-                            'result': round(line_total, 2),
-                            'type': 'math'
-                        })
-                        total += line_total
-                    except:
-                        continue
-    return calculations, round(total, 2)
-
-
-def extract_bill_items(text):
-    items = []
-    total = 0
-    skip_words = ['total', 'subtotal', 'tax', 'gst', 'date',
-                  'time', 'phone', 'bill no', 'invoice', 'thank']
-    for line in text.split('\n'):
-        line = line.strip()
-        if not line:
-            continue
-        if any(w in line.lower() for w in skip_words):
-            continue
-        match = re.search(
-            r'([a-zA-Z][\w\s]{0,25}?)\s+[₹Rs.]?\s*(\d{1,6}(?:\.\d{1,2})?)\s*$', line)
-        if match:
-            item_name = match.group(1).strip()
-            amount = float(match.group(2))
-            if 0 < amount < 100000:
-                items.append({
-                    'expression': item_name,
-                    'result': amount,
-                    'type': 'bill'
-                })
-                total += amount
-    return items, round(total, 2)
+    return binary
 
 
 def img_to_base64(img_pil):
     buffer = BytesIO()
     img_pil.save(buffer, format='JPEG', quality=90)
     return base64.b64encode(buffer.getvalue()).decode('utf-8')
+
+
+# ✅ NEW: Ollama offline fallback (replaces Tesseract)
+def ollama_fallback(img_pil, mode='bill'):
+    if mode == 'bill':
+        prompt = """Look at this image carefully.
+List every item and its price you can see.
+IMPORTANT: If the same item appears multiple times, list it multiple times.
+Respond in this exact JSON format only, nothing else:
+[{"item": "item name", "amount": 99.99}]
+Do not include total, tax, GST rows.
+If nothing found return exactly: []"""
+    elif mode == 'math':
+        prompt = """Look at this image carefully.
+Find every math calculation visible (additions, subtractions, multiplications).
+Include ALL problems on the page, even simple ones like 4 + 3.
+Respond in this exact JSON format only, nothing else:
+[{"item": "4 + 3", "amount": 7}]
+If nothing found return exactly: []"""
+    else:
+        prompt = """Look at this image carefully.
+If it has a bill/receipt: list items and prices. List repeated items multiple times.
+If it has math: list ALL expressions and their answers.
+Respond in this exact JSON format only, nothing else:
+[{"item": "name or expression", "amount": 99.99}]
+If nothing found return exactly: []"""
+
+    img_b64 = img_to_base64(img_pil)
+
+    try:
+        print("Trying Ollama offline: llava:7b (fast)")
+        response = ollama.chat(
+            model='llava:7b',
+            messages=[{
+                'role': 'user',
+                'content': prompt,
+                'images': [img_b64]
+            }]
+        )
+        raw = response['message']['content'].strip()
+        print(f"Ollama raw: {raw[:150]}")
+
+        raw = re.sub(r'```json\s*', '', raw)
+        raw = re.sub(r'```\s*', '', raw).strip()
+
+        try:
+            data = json.loads(raw)
+        except:
+            match = re.search(r'\[.*\]', raw, re.DOTALL)
+            if not match:
+                print("Ollama: No JSON found")
+                return [], 0
+            data = json.loads(match.group())
+
+        if not isinstance(data, list) or len(data) == 0:
+            return [], 0
+
+        calculations = []
+        total = 0
+        for entry in data:
+            item = str(entry.get('item', '')).strip()
+            try:
+                amount = float(entry.get('amount', 0))
+            except:
+                continue
+            if item and amount != 0:
+                calculations.append({
+                    'expression': item,
+                    'result': round(amount, 2),
+                    'type': 'ollama'
+                })
+                total += amount
+
+        print(f"✅ Ollama success: {len(calculations)} items")
+        return calculations, round(total, 2)
+
+    except Exception as e:
+        print(f"Ollama failed: {e}")
+        return [], 0
 
 
 def ai_fallback(img, mode='auto'):
@@ -124,22 +150,22 @@ def ai_fallback(img, mode='auto'):
     if mode == 'bill':
         prompt = """Look at this image carefully.
 List every item and its price you can see.
+IMPORTANT: If the same item appears multiple times, list it multiple times.
 Respond in this exact JSON format only, nothing else:
 [{"item": "item name", "amount": 99.99}]
 Do not include total, tax, GST rows.
 If nothing found return exactly: []"""
-
     elif mode == 'math':
         prompt = """Look at this image carefully.
-Find every math calculation visible.
+Find every math calculation visible (additions, subtractions, multiplications).
+Include ALL problems on the page, even simple ones like 4 + 3.
 Respond in this exact JSON format only, nothing else:
-[{"item": "4 + 2", "amount": 6}]
+[{"item": "4 + 3", "amount": 7}]
 If nothing found return exactly: []"""
-
     else:
         prompt = """Look at this image carefully.
-If it has a bill/receipt: list items and prices.
-If it has math: list expressions and answers.
+If it has a bill/receipt: list items and prices. List repeated items multiple times.
+If it has math: list ALL expressions and their answers.
 Respond in this exact JSON format only, nothing else:
 [{"item": "name or expression", "amount": 99.99}]
 If nothing found return exactly: []"""
@@ -167,13 +193,12 @@ If nothing found return exactly: []"""
                         ]
                     }],
                     "temperature": 0.1,
-                    "max_tokens": 2048  # ✅ ADDED — prevents cutting off long lists
+                    "max_tokens": 2048
                 },
                 timeout=40
             )
 
             resp_json = response.json()
-
             if 'error' in resp_json:
                 print(f"Model {model} error: {resp_json['error']['message']}")
                 continue
@@ -182,25 +207,21 @@ If nothing found return exactly: []"""
             print(f"Model {model} raw: {raw[:150]}")
 
             raw = re.sub(r'```json\s*', '', raw)
-            raw = re.sub(r'```\s*', '', raw)
-            raw = raw.strip()
+            raw = re.sub(r'```\s*', '', raw).strip()
 
             try:
                 data = json.loads(raw)
             except:
                 match = re.search(r'\[.*\]', raw, re.DOTALL)
                 if not match:
-                    print(f"Model {model}: No JSON found, trying next...")
                     continue
                 data = json.loads(match.group())
 
             if not isinstance(data, list) or len(data) == 0:
-                print(f"Model {model}: Empty result, trying next...")
                 continue
 
             calculations = []
             total = 0
-
             for entry in data:
                 item = str(entry.get('item', '')).strip()
                 try:
@@ -224,28 +245,16 @@ If nothing found return exactly: []"""
             print(f"Model {model} exception: {e}")
             continue
 
-    print("❌ All models failed")
+    print("❌ All online models failed")
     return [], 0, None
 
 
-def detect_mode(text, img_pil):
-    bill_keywords = ['rs', '₹', '$', '€', 'total', 'price', 'amount',
-                     'qty', 'item', 'receipt', 'invoice', 'bill',
-                     'tax', 'gst', 'mrp', 'rate', 'paid', 'cash']
-    math_keywords = ['=', '+', '-', 'x', '÷', 'worksheet', 'exercise']
-
-    text_lower = text.lower()
-    bill_score = sum(1 for kw in bill_keywords if kw in text_lower)
-    math_score = sum(1 for kw in math_keywords if kw in text_lower)
-
+def detect_mode(img_pil):
+    # Mode detection via image shape only (no Tesseract needed)
     w, h = img_pil.size
     if h > w * 1.5:
-        bill_score += 2
-
-    if bill_score == 0 and math_score == 0:
         return 'bill'
-
-    return 'bill' if bill_score >= math_score else 'math'
+    return 'auto'
 
 
 @app.route('/')
@@ -271,46 +280,28 @@ def calculate():
         if all(v is not None for v in [x1, y1, x2, y2]):
             img = img.crop((min(x1,x2), min(y1,y2), max(x1,x2), max(y1,y2)))
 
-        processed = preprocess_image(img)
-        raw_text = pytesseract.image_to_string(processed, config='--psm 3')
-        mode = detect_mode(raw_text, img)
+        mode = detect_mode(img)
         print(f"Detected mode: {mode}")
 
         calculations = []
         total = 0
-        method = 'Tesseract'
+        method = 'AI'
 
-        if mode == 'bill':
-            calculations, total, used_model = ai_fallback(img, mode='bill')
-            method = used_model or 'AI'
+        # Step 1: Try online AI (OpenRouter)
+        calculations, total, used_model = ai_fallback(img, mode=mode)
+        if used_model:
+            method = used_model
 
-        else:
-            calculations, total, used_model = ai_fallback(img, mode='math')
-            method = used_model or 'AI'
-
-            if len(calculations) == 0:
-                print("AI failed, trying Tesseract...")
-                for psm in [3, 6, 11]:
-                    config = f'--psm {psm} -c tessedit_char_whitelist=0123456789+-x=()./÷ '
-                    text = pytesseract.image_to_string(processed, config=config)
-                    calcs, t = extract_calculations(text)
-                    if len(calcs) >= 2 and all(
-                        is_clean_expression(
-                            re.sub(r'\s+', '', c['expression'].replace('x', '*'))
-                        ) for c in calcs
-                    ):
-                        calculations, total = calcs, t
-                        method = 'Tesseract'
-                        break
-
+        # Step 2: If online fails → Ollama offline
         if len(calculations) == 0:
-            print("Trying auto mode as last resort...")
-            calculations, total, used_model = ai_fallback(img, mode='auto')
-            method = used_model or 'AI'
+            print("Online AI failed → trying Ollama offline...")
+            calculations, total = ollama_fallback(img, mode=mode)
+            if len(calculations) > 0:
+                method = 'Ollama (Offline)'
 
         if len(calculations) == 0:
             return jsonify({
-                'error': 'Nothing detected — ensure good lighting and image is not blurry'
+                'error': '⚠️ Both online AI and Ollama failed. Make sure Ollama is running: ollama serve'
             })
 
         return jsonify({
