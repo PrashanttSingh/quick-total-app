@@ -66,10 +66,6 @@ body::after {
   background-size: 40px 40px;
 }
 
-/* ═══════════════════════════════════════════
-   LAYOUT & COMPONENTS
-═══════════════════════════════════════════ */
-/* MADE BOX SMALLER: Max-width reduced from 950px to 750px */
 .app-container {
   max-width: 750px;
   margin: 0 auto;
@@ -112,7 +108,6 @@ body::after {
   font-size: 15px;
 }
 
-/* FEATURE TAGS */
 .feature-tags {
   display: flex;
   justify-content: center;
@@ -138,9 +133,6 @@ body::after {
   animation: popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1);
 }
 
-/* ═══════════════════════════════════════════
-   UPLOAD ZONE & BUTTONS
-═══════════════════════════════════════════ */
 .upload-zone {
   border: 2px dashed rgba(255, 255, 255, 0.2);
   border-radius: 16px;
@@ -176,7 +168,6 @@ body::after {
   font-size: 14px;
 }
 
-/* SMOOTH HOVER ANIMATIONS FOR BUTTONS */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -232,9 +223,6 @@ body::after {
   font-size: 16px;
 }
 
-/* ═══════════════════════════════════════════
-   PREVIEW AREA
-═══════════════════════════════════════════ */
 .preview-header {
   display: flex;
   justify-content: space-between;
@@ -250,7 +238,6 @@ body::after {
   margin-bottom: 25px;
 }
 
-/* POP IN ANIMATION FOR THUMBNAILS */
 .thumbnail-item {
   position: relative;
   width: 100px;
@@ -316,7 +303,6 @@ body::after {
   transform: scale(1.2);
 }
 
-/* CROPPING CANVAS FIXES */
 .canvas-wrapper {
   position: relative;
   border-radius: 12px;
@@ -338,7 +324,7 @@ body::after {
   height: 100%;
   cursor: crosshair;
   z-index: 10;
-  touch-action: none; /* Crucial for mobile drawing */
+  touch-action: none;
 }
 .crop-hint {
   margin-bottom: 12px;
@@ -352,9 +338,6 @@ body::after {
   padding-top: 20px;
 }
 
-/* ═══════════════════════════════════════════
-   MODAL WITH PANNING & ZOOM
-═══════════════════════════════════════════ */
 .modal {
   display: none;
   position: fixed;
@@ -432,9 +415,6 @@ body::after {
   transition: transform 0.1s ease-out;
 }
 
-/* ═══════════════════════════════════════════
-   RESULTS & ANIMATIONS
-═══════════════════════════════════════════ */
 @keyframes popIn {
   0% {
     opacity: 0;
@@ -593,9 +573,6 @@ body::after {
   color: white;
 }
 
-/* ═══════════════════════════════════════════
-   TRUST DISCLAIMER (NEW)
-═══════════════════════════════════════════ */
 .trust-disclaimer {
   margin-top: 30px;
   background: rgba(255, 255, 255, 0.03);
@@ -619,9 +596,6 @@ body::after {
   color: var(--text-bright);
 }
 
-/* ═══════════════════════════════════════════
-   LOADER & FOOTER
-═══════════════════════════════════════════ */
 .loader-card {
   padding: 60px 20px;
   text-align: center;
