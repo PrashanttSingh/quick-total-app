@@ -4,6 +4,8 @@ import cv2
 import json
 import base64
 import requests
+import time
+from datetime import datetime
 import numpy as np
 from io import BytesIO
 from flask import Flask, render_template, request, jsonify
@@ -13,36 +15,68 @@ import google.generativeai as genai
 
 load_dotenv()
 
-# --- LOAD ALL API KEYS (INCLUDING BACKUPS & HUGGINGFACE) ---
+# ==========================================
+# 🛑 THE MAGIC DEVELOPER SWITCH 🛑
+DEV_MODE = True
+# ==========================================
+
+# --- API KEYS ---
 GEMINI_KEYS = [k for k in [os.getenv('GEMINI_KEY'), os.getenv('GEMINI_KEY_BACKUP')] if k]
 OPENROUTER_KEYS = [k for k in [os.getenv('key'), os.getenv('OPENROUTER_KEY_BACKUP')] if k]
-HF_TOKEN = os.getenv('HF_TOKEN')
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 32 * 1024 * 1024
 
 MODEL_NAMES = {
-      "google/gemma-3-27b-it:free":      "Gemma 3 27B",
-     "nvidia/nemotron-nano-12b-vl:free": "Nemotron 12B",
+    "google/gemini-2.0-flash-lite-preview-02-05:free": "Gemini 2.0 Lite",
+    "google/gemma-3-27b-it:free": "Gemma 3 27B",
+    "nvidia/nemotron-nano-12b-v2-vl:free": "Nemotron V2",
+    "mistralai/pixtral-12b:free": "Pixtral 12B Vision",
+    "meta-llama/llama-3.2-90b-vision-instruct:free": "Llama 3.2 Vision"
 }
 
-HF_MODELS = [
-    "llava-hf/llava-1.5-7b-hf",
-    "Salesforce/blip2-opt-2.7b",
-]
+def get_latest_batch_id():
+    log_file = "processing_logs.md"
+    if not os.path.isfile(log_file):
+        return 0
+    try:
+        with open(log_file, "r", encoding="utf-8") as f:
+            content = f.read()
+            matches = re.findall(r'\|\s*Batch (\d+)\s*\|', content)
+            if matches:
+                return int(max(matches, key=int))
+    except Exception:
+        pass
+    return 0
+
+def log_performance(batch_id, display_time, filename, image_count, status, timeline_list, time_taken, img_qual, ai_acc):
+    log_file = "processing_logs.md"
+    file_exists = os.path.isfile(log_file)
+    
+    timeline_str = "<br>".join(timeline_list)
+    
+    with open(log_file, mode='a', encoding='utf-8') as f:
+        if not file_exists:
+            f.write("# 📊 QuickTotal AI Journey Logs\n\n")
+            f.write("| Batch ID | Time & Date | File | Count | Status | Processing Timeline | Total Time | **Quality** | **Accuracy** |\n")
+            f.write("|---|---|---|---|---|---|---|---|---|\n")
+            
+        status_icon = "✅ Success" if status == "Success" else "❌ Failed"
+        qual_display = f"<b>{img_qual}%</b>" if img_qual > 0 else "-"
+        acc_display = f"<b>{ai_acc}%</b>" if ai_acc > 0 else "-"
+
+        row = f"| {batch_id} | {display_time} | `{filename}` | {image_count} | {status_icon} | {timeline_str} | {time_taken}s | {qual_display} | {acc_display} |\n"
+        f.write(row)
 
 def enhance_poor_image(img_pil):
-    """Mild contrast and sharpness enhancement. Safe for receipts and math sheets."""
     try:
         enhancer = ImageEnhance.Contrast(img_pil)
         img_pil = enhancer.enhance(1.3)
-        
         enhancer = ImageEnhance.Sharpness(img_pil)
         img_pil = enhancer.enhance(1.5)
         return img_pil
-    except Exception as e:
-        print(f"Enhancement failed, using original: {e}")
+    except Exception:
         return img_pil
 
 def img_to_base64(img_pil):
@@ -50,27 +84,23 @@ def img_to_base64(img_pil):
     img_pil.save(buffer, format='JPEG', quality=90)
     return base64.b64encode(buffer.getvalue()).decode('utf-8')
 
-# --- THE GOLDEN PROMPT ---
 def build_prompt(mode):
-    return """You are an elite financial data extraction AI. Read the image carefully. It may be a printed receipt, a handwritten bill, a list of bare numbers, or math equations.
+    return """You are an elite financial data extraction AI. Read the image carefully.
 
 CRITICAL RULES:
-1. UNIVERSAL EXTRACTION: Extract every single purchased item, service, or mathematical equation you see.
-2. RECEIPTS & DUPLICATES: Extract every line item exactly as it appears. If an item appears multiple times, extract it multiple times. Do NOT group or remove duplicates.
-3. BARE NUMBERS: If you see a vertical list of numbers, extract each one as "Entry 1", "Entry 2", etc., and the number as the amount.
-4. MATH EQUATIONS: If you see equations (e.g., "10 + 35"), use the equation as the "item" and calculate the correct result as the "amount".
-5. DISCOUNTS/COUPONS: If you see a discount, coupon, or savings, output the amount as a NEGATIVE number (e.g., -5.00).
-6. EXCLUDE TOTALS: DO NOT extract summary lines. Ignore "Total", "Subtotal", "Tax", "Balance", "Cash", or "Change". 
-7. OUTPUT: Return ONLY a valid JSON array of objects. Do NOT wrap in markdown or add explanations.
+1. Extract every purchased item/service and exact price.
+2. Provide a logical 1-word or 2-word 'category' for each item (e.g., Groceries, Utility, Food, Tax, Fee).
+3. Keep duplicates exactly as they appear.
+4. Solve math equations (e.g., "10 + 35") for the amount.
+5. Discounts are NEGATIVE numbers.
+6. Ignore Totals, Subtotals. (Taxes should be extracted as a separate item with category 'Tax').
+7. BALANCED SCORING (0-100):
+   - "image_quality": Strictly legibility. Clear text = 85-100.
+   - "ai_accuracy": Your confidence. Effortless read = 90-100.
 
 EXPECTED FORMAT:
-[
-    {"item": "Milk", "amount": 4.50},
-    {"item": "Entry 1", "amount": 50.00},
-    {"item": "10 + 35", "amount": 45.00},
-    {"item": "Store Discount", "amount": -1.50}
-]
-If absolutely no data is found, return exactly: []"""
+{"image_quality": 95, "ai_accuracy": 98, "items": [{"item": "Milk", "amount": 4.50, "category": "Groceries"}]}
+If no data found, return exactly: {"image_quality": 0, "ai_accuracy": 0, "items": []}"""
 
 def parse_response(raw):
     raw = re.sub(r'```json\s*', '', raw)
@@ -78,7 +108,7 @@ def parse_response(raw):
     try:
         return json.loads(raw)
     except:
-        match = re.search(r'\[.*?\]', raw, re.DOTALL)
+        match = re.search(r'\{.*?\}', raw, re.DOTALL)
         if match:
             try:
                 return json.loads(match.group())
@@ -86,15 +116,26 @@ def parse_response(raw):
                 return None
         return None
 
-def build_calculations(data, source_type):
+def build_calculations(parsed_data, source_type):
     calculations = []
     subtotal = 0
-    if not isinstance(data, list):
-        return [], 0
+    img_qual = 0
+    ai_acc = 0
+    
+    if not isinstance(parsed_data, dict):
+        return [], 0, 0, 0
+        
+    img_qual = parsed_data.get('image_quality', 0)
+    ai_acc = parsed_data.get('ai_accuracy', parsed_data.get('accuracy', 0))
+    items_list = parsed_data.get('items', [])
+    
+    if not isinstance(items_list, list):
+        return [], 0, img_qual, ai_acc
 
-    for entry in data:
+    for entry in items_list:
         if not isinstance(entry, dict): continue
         item = str(entry.get('item', '')).strip()
+        category = str(entry.get('category', 'Misc')).strip()
         try:
             amount = float(entry.get('amount', 0))
         except:
@@ -102,49 +143,51 @@ def build_calculations(data, source_type):
         if item:
             calculations.append({
                 'expression': item,
+                'category': category,
                 'result': round(amount, 2),
                 'type': source_type
             })
             subtotal += amount
-    return calculations, round(subtotal, 2)
+    return calculations, round(subtotal, 2), img_qual, ai_acc
 
-# --- AI PROCESSING WITH FAILSAFES ---
-def gemini_fallback(img, mode='auto'):
-    if not GEMINI_KEYS: return [], 0, None
-    prompt = build_prompt(mode)
+def gemini_fallback(img, timeline, mode='auto'):
+    if not GEMINI_KEYS:
+        timeline.append("ℹ️ Gemini: Skipped (Disabled)")
+        return [], 0, 0, 0, None
     
+    prompt = build_prompt(mode)
     for api_key in GEMINI_KEYS:
         try:
             genai.configure(api_key=api_key)
             model = genai.GenerativeModel('gemini-2.5-flash') 
-            # Send the PIL image directly (Fastest & most stable for Gemini SDK)
-            response = model.generate_content(
-                [prompt, img], 
-                generation_config=genai.GenerationConfig(temperature=0.1)
-            )
-            raw = response.text.strip()
-            data = parse_response(raw)
-            if isinstance(data, list) and data:
-                calculations, total = build_calculations(data, 'gemini')
-                return calculations, total, "Gemini 2.5 Flash"
+            response = model.generate_content([prompt, img], generation_config=genai.GenerationConfig(temperature=0.1))
+            data = parse_response(response.text.strip())
+            if isinstance(data, dict) and data.get('items'):
+                calcs, total, img_qual, ai_acc = build_calculations(data, 'gemini')
+                timeline.append("✅ Gemini 2.5 Flash: Success")
+                return calcs, total, img_qual, ai_acc, "Gemini 2.5 Flash"
         except Exception as e:
-            print(f"Gemini Key failed: {e}")
+            timeline.append(f"❌ Gemini Error: {str(e)[:45]}...")
             continue
-    return [], 0, None
+    return [], 0, 0, 0, None
 
-def ai_fallback(img, mode='auto'):
-    if not OPENROUTER_KEYS: return [], 0, None
+def ai_fallback(img, timeline, mode='auto'):
+    if not OPENROUTER_KEYS:
+        timeline.append("ℹ️ OpenRouter: Skipped (No Keys)")
+        return [], 0, 0, 0, None
+    
     prompt = build_prompt(mode)
     img_b64 = img_to_base64(img)
 
-    for api_key in OPENROUTER_KEYS:
-        for model in MODEL_NAMES:
+    for key_idx, api_key in enumerate(OPENROUTER_KEYS):
+        key_label = f" (Key {key_idx + 1})" if len(OPENROUTER_KEYS) > 1 else ""
+        for model_id, model_name in MODEL_NAMES.items():
             try:
                 response = requests.post(
                     url="https://openrouter.ai/api/v1/chat/completions",
                     headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
                     json={
-                        "model": model,
+                        "model": model_id,
                         "messages": [{"role": "user", "content": [
                             {"type": "text", "text": prompt},
                             {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{img_b64}"}}
@@ -155,51 +198,29 @@ def ai_fallback(img, mode='auto'):
                     timeout=45
                 )
                 resp_json = response.json()
-                if 'error' in resp_json: continue
+                if 'error' in resp_json:
+                    err_msg = resp_json['error'].get('message', str(resp_json['error']))
+                    if "Rate limit" in err_msg: err_msg = "Rate Limit Hit"
+                    elif "No endpoints" in err_msg: err_msg = "Model Offline"
+                    else: err_msg = err_msg[:40] + "..."
+                        
+                    timeline.append(f"❌ {model_name}{key_label}: {err_msg}")
+                    continue
                 
                 raw = resp_json['choices'][0]['message']['content'].strip()
                 data = parse_response(raw)
-                if not isinstance(data, list) or len(data) == 0: continue
+                if not isinstance(data, dict) or not data.get('items'):
+                    timeline.append(f"❌ {model_name}{key_label}: Format Error")
+                    continue
 
-                calculations, total = build_calculations(data, 'ai')
-                if len(calculations) > 0:
-                    return calculations, total, MODEL_NAMES[model]
+                calcs, total, img_qual, ai_acc = build_calculations(data, 'ai')
+                if len(calcs) > 0:
+                    timeline.append(f"✅ {model_name}{key_label}: Success")
+                    return calcs, total, img_qual, ai_acc, model_name
             except Exception as e:
-                continue
-    return [], 0, None
-
-def hf_fallback(img, mode='auto'):
-    if not HF_TOKEN: return [], 0, None
-    prompt = build_prompt(mode)
-    img_b64 = img_to_base64(img)
-
-    for model in HF_MODELS:
-        try:
-            response = requests.post(
-                f"https://api-inference.huggingface.co/models/{model}/v1/chat/completions",
-                headers={"Authorization": f"Bearer {HF_TOKEN}", "Content-Type": "application/json"},
-                json={
-                    "model": model,
-                    "messages": [{"role": "user", "content": [
-                        {"type": "text", "text": prompt},
-                        {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{img_b64}"}}
-                    ]}],
-                    "max_tokens": 2048
-                },
-                timeout=35
-            )
-            if response.status_code != 200: continue
-            resp_json = response.json()
-            raw = resp_json['choices'][0]['message']['content'].strip()
-            data = parse_response(raw)
-            if not isinstance(data, list) or len(data) == 0: continue
-
-            calculations, total = build_calculations(data, 'hf')
-            if len(calculations) > 0:
-                return calculations, total, "HuggingFace AI"
-        except Exception as e:
-            continue
-    return [], 0, None
+                 timeline.append(f"❌ {model_name}{key_label}: Connection Error")
+                 continue
+    return [], 0, 0, 0, None
 
 @app.route('/')
 def index():
@@ -208,28 +229,68 @@ def index():
 @app.route('/calculate', methods=['POST'])
 def calculate():
     files = request.files.getlist('images')
-    if not files or all(f.filename == '' for f in files):
-        return jsonify({'error': 'No files selected'})
+    valid_files = [f for f in files if f.filename != '']
+    
+    image_index = int(request.form.get('image_index', 1))
+    total_images = int(request.form.get('total_images', 1))
+
+    # --- DEV MODE INTERCEPT ---
+    if DEV_MODE:
+        time.sleep(0.5) 
+        return jsonify({
+            'results': [{
+                'index': image_index,
+                'items': [
+                    {'expression': 'Organic Milk', 'category': 'Groceries', 'result': 65.00, 'type': 'mock'},
+                    {'expression': 'Printer Paper', 'category': 'Office', 'result': 120.00, 'type': 'mock'},
+                    {'expression': 'Desk Lamp', 'category': 'Office', 'result': 450.00, 'type': 'mock'},
+                    {'expression': 'State Tax (GST)', 'category': 'Tax', 'result': 25.50, 'type': 'mock'}
+                ],
+                'subtotal': 660.50,
+                'image_quality': 99,
+                'ai_accuracy': 99,
+                'method': 'Developer Mode (Fake Data)'
+            }],
+            'grand_total': 660.50,
+            'methods_used': ['Developer Mode']
+        })
+
+    if image_index == 1:
+        batch_num = get_latest_batch_id() + 1
+    else:
+        batch_num = get_latest_batch_id()
+        if batch_num == 0: batch_num = 1
+
+    batch_id = f"Batch {batch_num}"
+    
+    batch_time = datetime.now().strftime("%I:%M:%S %p")
+    batch_date = datetime.now().strftime("%d/%m/%y")
+    formatted_datetime = f"{batch_time}<br>{batch_date}"
 
     structured_results = []
     grand_total = 0.0
     used_methods = set()
 
     try:
-        for i, file in enumerate(files):
-            if file.filename == '': continue
+        for i, file in enumerate(valid_files):
+            start_time = time.time()
+            processing_timeline = []
                 
             img = Image.open(file.stream).convert('RGB')
             img = enhance_poor_image(img)
 
-            # TRY GEMINI -> THEN OPENROUTER -> THEN HUGGINGFACE
-            calcs, subtotal, model = gemini_fallback(img)
+            calcs, subtotal, img_qual, ai_acc, model = gemini_fallback(img, processing_timeline)
             if not model:
-                 calcs, subtotal, model = ai_fallback(img)
-            if not model:
-                 calcs, subtotal, model = hf_fallback(img)
+                 calcs, subtotal, img_qual, ai_acc, model = ai_fallback(img, processing_timeline)
 
-            image_index = i + 1
+            end_time = time.time()
+            processing_time = round(end_time - start_time, 2)
+            
+            image_count_info = f"{image_index} of {total_images}" 
+            safe_filename = file.filename if file.filename != "image" else f"Image_{image_index}"
+
+            display_batch = f"**Batch {batch_num}**" if image_index == 1 else ""
+            display_time = formatted_datetime if image_index == 1 else ""
 
             if model and calcs:
                 used_methods.add(model)
@@ -238,13 +299,17 @@ def calculate():
                     'index': image_index,
                     'items': calcs,
                     'subtotal': subtotal,
+                    'image_quality': img_qual,
+                    'ai_accuracy': ai_acc,
                     'method': model
                 })
+                log_performance(display_batch, display_time, safe_filename, image_count_info, "Success", processing_timeline, processing_time, img_qual, ai_acc)
             else:
                  structured_results.append({
                     'index': image_index,
                     'error': "Could not read data reliably. Please try cropping closer to the text."
                 })
+                 log_performance(display_batch, display_time, safe_filename, image_count_info, "Failed", processing_timeline, processing_time, 0, 0)
 
         if not structured_results:
              return jsonify({'error': 'No readable data found.'})

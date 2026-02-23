@@ -66,6 +66,9 @@ body::after {
   background-size: 40px 40px;
 }
 
+/* ═══════════════════════════════════════════
+   LAYOUT & COMPONENTS
+═══════════════════════════════════════════ */
 .app-container {
   max-width: 750px;
   margin: 0 auto;
@@ -133,6 +136,9 @@ body::after {
   animation: popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1);
 }
 
+/* ═══════════════════════════════════════════
+   UPLOAD ZONE & BUTTONS
+═══════════════════════════════════════════ */
 .upload-zone {
   border: 2px dashed rgba(255, 255, 255, 0.2);
   border-radius: 16px;
@@ -223,6 +229,9 @@ body::after {
   font-size: 16px;
 }
 
+/* ═══════════════════════════════════════════
+   PREVIEW AREA
+═══════════════════════════════════════════ */
 .preview-header {
   display: flex;
   justify-content: space-between;
@@ -338,6 +347,9 @@ body::after {
   padding-top: 20px;
 }
 
+/* ═══════════════════════════════════════════
+   MODAL WITH PANNING & ZOOM
+═══════════════════════════════════════════ */
 .modal {
   display: none;
   position: fixed;
@@ -415,6 +427,9 @@ body::after {
   transition: transform 0.1s ease-out;
 }
 
+/* ═══════════════════════════════════════════
+   RESULTS & ANIMATIONS
+═══════════════════════════════════════════ */
 @keyframes popIn {
   0% {
     opacity: 0;
@@ -573,6 +588,55 @@ body::after {
   color: white;
 }
 
+/* ═══════════════════════════════════════════
+   ACCURACY BAR & WARNINGS (NEW)
+═══════════════════════════════════════════ */
+.accuracy-wrapper {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid var(--glass-border);
+}
+.accuracy-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+.accuracy-bar-bg {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.accuracy-bar-fill {
+  height: 100%;
+  border-radius: 10px;
+  transition: width 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.low-accuracy-warning {
+  background: rgba(251, 113, 133, 0.15);
+  color: #fb7185;
+  border: 1px solid rgba(251, 113, 133, 0.3);
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  margin-top: 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  line-height: 1.4;
+}
+.low-accuracy-warning svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* ═══════════════════════════════════════════
+   TRUST DISCLAIMER
+═══════════════════════════════════════════ */
 .trust-disclaimer {
   margin-top: 30px;
   background: rgba(255, 255, 255, 0.03);
@@ -596,6 +660,9 @@ body::after {
   color: var(--text-bright);
 }
 
+/* ═══════════════════════════════════════════
+   LOADER & FOOTER
+═══════════════════════════════════════════ */
 .loader-card {
   padding: 60px 20px;
   text-align: center;
@@ -659,4 +726,131 @@ body::after {
   border: 1px solid rgba(251, 113, 133, 0.3);
   border-radius: 16px;
   font-weight: 600;
+}
+/* =========================================
+   CLICK-TO-EDIT TEXT STYLES
+   ========================================= */
+.editable-text {
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.4);
+    cursor: text;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    outline: none;
+}
+
+.editable-text:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-bottom-color: var(--primary);
+}
+
+.editable-text:focus {
+    background: rgba(139, 92, 246, 0.2); /* Soft purple glow */
+    border-bottom: 1px solid var(--primary);
+}
+/* =========================================
+   ADD NEW ROW BUTTON
+   ========================================= */
+.add-row-btn {
+    background: rgba(139, 92, 246, 0.1);
+    color: #c4b5fd;
+    border: 1px dashed rgba(139, 92, 246, 0.4);
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 0.85em;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-block;
+    margin-top: 12px;
+}
+
+.add-row-btn:hover {
+    background: rgba(139, 92, 246, 0.3);
+    border-color: #c4b5fd;
+    color: #fff;
+    transform: translateY(-1px);
+}
+/* =========================================
+   CATEGORY BADGES & BREAKDOWN
+   ========================================= */
+.cat-badge {
+    font-size: 0.75em;
+    padding: 2px 8px;
+    border-radius: 12px;
+    background: rgba(139, 92, 246, 0.2);
+    color: #c4b5fd;
+    border: 1px solid rgba(139, 92, 246, 0.4);
+    text-transform: capitalize;
+    white-space: nowrap;
+}
+
+.cat-breakdown-box {
+    margin-top: 20px;
+    padding: 20px;
+    border-radius: 12px;
+}
+
+.cat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 0.95em;
+}
+/* =========================================
+   EXPORT BUTTON
+   ========================================= */
+.export-btn {
+    margin-top: 20px;
+    background: var(--primary-solid);
+    color: white;
+    text-align: center;
+    padding: 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1.05em;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+}
+
+.export-btn:hover {
+    background: #7c3aed;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+}
+/* =========================================
+   PDF EXPORT BUTTON
+   ========================================= */
+.pdf-btn {
+    margin-top: 10px;
+    background: #ef4444; /* A nice red color for PDFs */
+    color: white;
+    text-align: center;
+    padding: 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1.05em;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+}
+
+.pdf-btn:hover {
+    background: #dc2626;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+}
+/* =========================================
+   PIE CHART CONTAINER
+   ========================================= */
+.chart-wrapper {
+    position: relative;
+    height: 250px; 
+    width: 100%;
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: center;
 }
