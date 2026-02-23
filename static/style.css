@@ -429,6 +429,25 @@ body::after {
   display: inline-block;
   margin-top: 12px;
 }
+
+/* NEW BUTTON STYLE FOR SAVING TRAINING DATA */
+.save-train-btn {
+  background: rgba(52, 211, 153, 0.1);
+  color: #34d399;
+  border: 1px dashed rgba(52, 211, 153, 0.4);
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 0.85em;
+  cursor: pointer;
+  display: inline-block;
+  margin-top: 12px;
+  transition: all 0.3s ease;
+}
+.save-train-btn:hover {
+  background: rgba(52, 211, 153, 0.2);
+  transform: translateY(-1px);
+}
+
 .cat-badge {
   font-size: 0.75em;
   padding: 2px 8px;
@@ -495,7 +514,6 @@ body::after {
   box-shadow: 0 4px 15px rgba(139, 92, 246, 0.2);
 }
 
-/* Fix for the dimmed 'Spend by Category' heading in the sidebar */
 #categoryBreakdown h3 {
   color: #f8fafc !important;
   font-size: 1.2rem !important;
@@ -506,4 +524,59 @@ body::after {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+/* =========================================
+   📱 MOBILE SPECIFIC TWEAKS (Max-width: 768px)
+   Fixes the squished layout on phone screens
+========================================= */
+@media (max-width: 768px) {
+  .container {
+    padding-left: 10px;
+    padding-right: 10px;
+    overflow-x: hidden;
+  }
+
+  /* Stacks the editable span items vertically so they aren't squished */
+  .rc-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+  }
+
+  .rc-item > div {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .rc-item-val {
+    align-self: flex-end;
+    font-size: 1.2em;
+  }
+
+  /* Makes the Add & Save buttons fill the width of the screen for easy tapping */
+  .add-row-btn,
+  .save-train-btn {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+  }
+
+  /* Stacks the button container vertically */
+  .my-3 {
+    flex-direction: column;
+  }
+
+  .receipt-card {
+    margin: 0;
+    width: 100%;
+  }
+
+  .chart-wrapper {
+    height: 200px;
+  }
 }

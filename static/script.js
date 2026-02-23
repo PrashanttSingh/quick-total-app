@@ -338,11 +338,13 @@ function renderThumbnails() {
   });
 }
 
+// FIXED: Now properly strips % signs and parses Integers so 100% turns Green instead of Red!
 function getAccuracyInfo(score) {
-  if (score >= 90) return { color: "#34d399", text: "Excellent" };
-  if (score >= 70) return { color: "#fbbf24", text: "Good" };
-  if (score >= 50) return { color: "#ea580c", text: "Fair" };
-  return { color: "#ef4444", text: "Low Confidence" };
+  const num = parseInt(score) || 0;
+  if (num >= 90) return { color: "#34d399", text: "Excellent" }; // Green
+  if (num >= 70) return { color: "#fbbf24", text: "Good" }; // Yellow
+  if (num >= 50) return { color: "#ea580c", text: "Fair" }; // Orange
+  return { color: "#ef4444", text: "Low Confidence" }; // Red
 }
 
 // ============================================================
@@ -372,14 +374,13 @@ calculateBtn.addEventListener("click", async () => {
       formData.append("image_index", i + 1);
       formData.append("total_images", totalFiles);
 
-      // --- GRID LAYOUT FIXED: 2 COLUMNS ON DESKTOP ---
       const colWrap = document.createElement("div");
-      // col-12 for mobile (full width), col-md-6 for tablet/desktop (50% width = 2 cards per row)
       colWrap.className = "col-12 col-md-6 mb-4";
 
       const tempCard = document.createElement("div");
       tempCard.className =
         "receipt-card glass-panel h-100 animate-pop rounded-4 shadow-sm";
+      tempCard.dataset.imageIndex = i; // Store index for saving data later
       tempCard.innerHTML = `<div class="rc-header p-3 border-bottom border-secondary"><span>Document #${i + 1}</span><span style="color:#8b5cf6;">Processing... ⏳</span></div>`;
 
       colWrap.appendChild(tempCard);
@@ -408,35 +409,42 @@ calculateBtn.addEventListener("click", async () => {
           itemsHtml += `
             <div class="rc-item px-3">
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <span class="editable-text" contenteditable="true" spellcheck="false" title="Click to edit name">${item.expression}</span>
-                    <span class="cat-badge editable-text" contenteditable="true" spellcheck="false" title="Click to edit category">${category}</span>
+                    <span class="editable-text item-name-field" contenteditable="true" spellcheck="false" title="Click to edit name">${item.expression}</span>
+                    <span class="cat-badge editable-text item-cat-field" contenteditable="true" spellcheck="false" title="Click to edit category">${category}</span>
                 </div>
-                <span class="rc-item-val editable-text price-edit ${isNeg ? "val-neg" : ""}" contenteditable="true" spellcheck="false" title="Click to edit price">${isNeg ? "-" : "+"}₹${Math.abs(item.result).toFixed(2)}</span>
+                <span class="rc-item-val editable-text price-edit" contenteditable="true" spellcheck="false" title="Click to edit price">${isNeg ? "-" : "+"}₹${Math.abs(item.result).toFixed(2)}</span>
             </div>`;
         });
 
-        let imgInfo = getAccuracyInfo(result.image_quality || 0);
-        let accInfo = getAccuracyInfo(result.ai_accuracy || 0);
+        // Parse ints here so width doesn't break CSS (e.g. width: 100%%)
+        const imgScoreNum = parseInt(result.image_quality) || 0;
+        const accScoreNum = parseInt(result.ai_accuracy) || 0;
+        let imgInfo = getAccuracyInfo(imgScoreNum);
+        let accInfo = getAccuracyInfo(accScoreNum);
 
         let accuracyHtml = `
             <div class="p-3" style="margin-top: 15px; border-top: 1px solid var(--glass-border); display: flex; flex-direction: column; gap: 12px;">
                 <div>
-                    <div class="accuracy-label"><span>Image Quality</span><span style="color: ${imgInfo.color};">${result.image_quality}%</span></div>
-                    <div class="accuracy-bar-bg"><div class="accuracy-bar-fill" style="width: ${result.image_quality}%; background: ${imgInfo.color};"></div></div>
+                    <div class="accuracy-label"><span>Image Quality</span><span style="color: ${imgInfo.color};">${imgScoreNum}%</span></div>
+                    <div class="accuracy-bar-bg"><div class="accuracy-bar-fill" style="width: ${imgScoreNum}%; background: ${imgInfo.color};"></div></div>
                 </div>
                 <div>
-                    <div class="accuracy-label"><span>AI Accuracy</span><span style="color: ${accInfo.color};">${result.ai_accuracy}%</span></div>
-                    <div class="accuracy-bar-bg"><div class="accuracy-bar-fill" style="width: ${result.ai_accuracy}%; background: ${accInfo.color};"></div></div>
+                    <div class="accuracy-label"><span>AI Accuracy</span><span style="color: ${accInfo.color};">${accScoreNum}%</span></div>
+                    <div class="accuracy-bar-bg"><div class="accuracy-bar-fill" style="width: ${accScoreNum}%; background: ${accInfo.color};"></div></div>
                 </div>
             </div>`;
 
+        // NEW UPGRADE: Added the Approve & Save button for training data
         tempCard.innerHTML = `
             <div class="rc-header p-3 border-bottom border-secondary">
                 <span>Document #${i + 1} <span class="entry-count" style="font-size:0.85em; font-weight:500; color:var(--text-muted);">(${itemCount} entries)</span></span>
                 <span class="rc-method-badge">${result.method}</span>
             </div>
             <div class="rc-items-list">${itemsHtml}</div>
-            <div style="text-align: center;" class="my-2"><div class="add-row-btn" title="Did the AI miss an item? Add it here.">+ Add Missing Item</div></div>
+            <div style="text-align: center; display: flex; justify-content: center; gap: 10px;" class="my-3">
+                <div class="add-row-btn" title="Did the AI miss an item? Add it here.">+ Add Missing Item</div>
+                <div class="save-train-btn" title="Save this perfect receipt to your training dataset.">✅ Approve & Save</div>
+            </div>
             <div class="rc-subtotal px-3 py-2 border-top border-secondary border-opacity-25"><span>Subtotal</span><span>₹${result.subtotal.toFixed(2)}</span></div>
             ${accuracyHtml}
         `;
@@ -496,7 +504,8 @@ receiptsList.addEventListener("keydown", (e) => {
   }
 });
 
-receiptsList.addEventListener("click", (e) => {
+receiptsList.addEventListener("click", async (e) => {
+  // Logic for adding a missing row
   if (e.target.classList.contains("add-row-btn")) {
     const card = e.target.closest(".receipt-card");
     const itemsList = card.querySelector(".rc-items-list");
@@ -504,8 +513,8 @@ receiptsList.addEventListener("click", (e) => {
     newRow.className = "rc-item animate-pop px-3";
     newRow.innerHTML = `
         <div style="display: flex; align-items: center; gap: 8px;">
-            <span class="editable-text" contenteditable="true" spellcheck="false" title="Click to edit name">New Item</span>
-            <span class="cat-badge editable-text" contenteditable="true" spellcheck="false" title="Click to edit category">Misc</span>
+            <span class="editable-text item-name-field" contenteditable="true" spellcheck="false" title="Click to edit name">New Item</span>
+            <span class="cat-badge editable-text item-cat-field" contenteditable="true" spellcheck="false" title="Click to edit category">Misc</span>
         </div>
         <span class="rc-item-val editable-text price-edit" contenteditable="true" spellcheck="false" title="Click to edit price">+₹0.00</span>
     `;
@@ -514,6 +523,64 @@ receiptsList.addEventListener("click", (e) => {
     const countSpan = card.querySelector(".entry-count");
     if (countSpan)
       countSpan.textContent = `(${itemsList.querySelectorAll(".rc-item").length} entries)`;
+  }
+
+  // Logic for Saving Training Data
+  if (e.target.classList.contains("save-train-btn")) {
+    const btn = e.target;
+    const card = btn.closest(".receipt-card");
+    const imageIndex = parseInt(card.dataset.imageIndex);
+    const fileToSave = filesToProcess[imageIndex];
+
+    // Scrape perfectly corrected data from the UI card
+    let correctedItems = [];
+    card.querySelectorAll(".rc-item").forEach((itemEl) => {
+      let itemName = itemEl
+        .querySelector(".item-name-field")
+        .textContent.trim();
+      let itemCat = itemEl.querySelector(".item-cat-field").textContent.trim();
+      let itemAmountRaw = itemEl
+        .querySelector(".price-edit")
+        .textContent.replace(/[^\d.-]/g, "");
+      let itemAmount = parseFloat(itemAmountRaw) || 0;
+
+      correctedItems.push({
+        item: itemName,
+        category: itemCat,
+        amount: itemAmount,
+      });
+    });
+
+    // Show saving state
+    btn.textContent = "Saving... ⏳";
+    btn.style.pointerEvents = "none";
+
+    try {
+      // We will build this Python route next!
+      const formData = new FormData();
+      formData.append("image", fileToSave);
+      formData.append("json_data", JSON.stringify({ items: correctedItems }));
+
+      const res = await fetch("/save_training_data", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (res.ok) {
+        btn.textContent = "Saved to Dataset 🎉";
+        btn.style.background = "rgba(16, 185, 129, 0.4)";
+        btn.style.color = "white";
+        btn.style.border = "none";
+      } else {
+        throw new Error("Failed to save");
+      }
+    } catch (err) {
+      alert(
+        "Error saving training data. (We will build the Python route for this next!)",
+      );
+      btn.textContent = "✅ Approve & Save";
+      btn.style.pointerEvents = "auto";
+    }
   }
 });
 
@@ -724,21 +791,17 @@ function downloadPDF() {
     const chartWidth = 500;
     const chartHeight = 280;
 
-    // Force a brand new page
     doc.addPage();
 
-    // Center coordinates
     const xPos = (595.28 - chartWidth) / 2;
     const yPos = 180;
 
-    // Big centered title
     doc.setFontSize(22);
     doc.setTextColor(30, 41, 59);
     doc.text("Spend Analysis by Category", 595.28 / 2, 120, {
       align: "center",
     });
 
-    // Draw the chart
     doc.addImage(chartImg, "PNG", xPos, yPos, chartWidth, chartHeight);
   }
 

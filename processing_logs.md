@@ -77,3 +77,8 @@
 | **Batch 21** | 12:26:08 AM<br>24/02/26 | `OIP - Copy.jfif` | 1 of 3 | ✅ Success | ✅ Gemini 2.5 Flash: Success (Key 1) | 5.43s | <b>100%</b> | <b>100%</b> |
 |  |  | `OIP - Copy - Copy.jfif` | 2 of 3 | ✅ Success | ✅ Gemini 2.5 Flash: Success (Key 1) | 20.84s | <b>100%</b> | <b>100%</b> |
 |  |  | `OIP - Copy - Copy.jfif` | 3 of 3 | ✅ Success | ✅ Gemini 2.5 Flash: Success (Key 1) | 4.33s | <b>100%</b> | <b>100%</b> |
+| **Batch 22** | 01:42:32 AM<br>24/02/26 | `Addition-and-Subtraction-for-Kindergarten.webp` | 1 of 5 | ✅ Success | ✅ Gemini 2.5 Flash: Success (Key 1) | 16.06s | <b>100%</b> | <b>100%</b> |
+|  |  | `download.webp` | 2 of 5 | ✅ Success | ⚠️ Gemini Key 1 Rate Limited<br>✅ Gemini 2.5 Flash: Success (Key 2) | 20.64s | <b>100%</b> | <b>100%</b> |
+|  |  | `OIP - Copy - Copy - Copy.jfif` | 3 of 5 | ✅ Success | ✅ Gemini 2.5 Flash: Success (Key 1) | 5.97s | <b>100%</b> | <b>100%</b> |
+|  |  | `WhatsApp Image 2026-02-21 at 3.07.15 PM.jpeg` | 4 of 5 | ✅ Success | ⚠️ Gemini Key 1 Rate Limited<br>✅ Gemini 2.5 Flash: Success (Key 2) | 44.23s | <b>100%</b> | <b>100%</b> |
+|  |  | `WhatsApp Image 2026-02-21 at 11.05.50 PM.jpeg` | 5 of 5 | ✅ Success | ⚠️ Gemini Key 1 Rate Limited<br>✅ Gemini 2.5 Flash: Success (Key 2) | 28.69s | <b>88%</b> | <b>100%</b> |
