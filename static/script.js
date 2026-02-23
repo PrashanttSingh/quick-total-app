@@ -1,6 +1,6 @@
 // GLOBAL STATE
 let filesToProcess = [];
-let spendPieChart = null; // Global variable to hold our new Pie Chart
+let spendPieChart = null;
 
 // ELEMENTS
 const dropZone = document.getElementById("dropZone");
@@ -38,9 +38,6 @@ const captureBtn = document.getElementById("captureBtn");
 const closeCameraBtn = document.getElementById("closeCameraBtn");
 let videoStream = null;
 
-// ============================================================
-// CAMERA LOGIC
-// ============================================================
 if (openCameraBtn) {
   openCameraBtn.addEventListener("click", async () => {
     try {
@@ -51,7 +48,6 @@ if (openCameraBtn) {
       cameraModal.style.display = "flex";
     } catch (err) {
       alert("Camera access denied or not available.");
-      console.error(err);
     }
   });
 }
@@ -91,16 +87,12 @@ if (captureBtn) {
       base64Image,
       `camera_capture_${Date.now()}.jpg`,
     );
-
     filesToProcess.push(newFile);
     updateUIState();
     stopCamera();
   });
 }
 
-// ============================================================
-// MODAL & CROP LOGIC
-// ============================================================
 let currentZoom = 1,
   panX = 0,
   panY = 0;
@@ -180,7 +172,6 @@ if (modalCropCanvas) {
     mEndX = p.x;
     mEndY = p.y;
   });
-
   modalCropCanvas.addEventListener("mousemove", (e) => {
     if (!isModalDrawing) return;
     e.preventDefault();
@@ -191,41 +182,8 @@ if (modalCropCanvas) {
     mCtx.fillRect(mStartX, mStartY, mEndX - mStartX, mEndY - mStartY);
     mCtx.strokeRect(mStartX, mStartY, mEndX - mStartX, mEndY - mStartY);
   });
-
-  modalCropCanvas.addEventListener(
-    "touchstart",
-    (e) => {
-      if (!isCropMode) return;
-      isModalDrawing = true;
-      const p = getModalPos(e);
-      mStartX = p.x;
-      mStartY = p.y;
-      mEndX = p.x;
-      mEndY = p.y;
-    },
-    { passive: false },
-  );
-
-  modalCropCanvas.addEventListener(
-    "touchmove",
-    (e) => {
-      if (!isModalDrawing) return;
-      e.preventDefault();
-      const p = getModalPos(e);
-      mEndX = p.x;
-      mEndY = p.y;
-      mCtx.clearRect(0, 0, modalCropCanvas.width, modalCropCanvas.height);
-      mCtx.fillRect(mStartX, mStartY, mEndX - mStartX, mEndY - mStartY);
-      mCtx.strokeRect(mStartX, mStartY, mEndX - mStartX, mEndY - mStartY);
-    },
-    { passive: false },
-  );
 }
-
 window.addEventListener("mouseup", () => {
-  isModalDrawing = false;
-});
-window.addEventListener("touchend", () => {
   isModalDrawing = false;
 });
 
@@ -295,7 +253,6 @@ if (modalTransformWrapper) {
     updateZoom();
   });
 }
-
 if (modalImage) {
   modalImage.addEventListener("mousedown", (e) => {
     if (isCropMode) return;
@@ -305,12 +262,10 @@ if (modalImage) {
     modalImage.style.cursor = "grabbing";
   });
 }
-
 window.addEventListener("mouseup", () => {
   isDraggingImage = false;
   if (modalImage) modalImage.style.cursor = "crosshair";
 });
-
 window.addEventListener("mousemove", (e) => {
   if (!isDraggingImage || isCropMode) return;
   e.preventDefault();
@@ -318,13 +273,9 @@ window.addEventListener("mousemove", (e) => {
   panY = e.clientY - startDragY;
   updateZoom();
 });
-
 if (closeImageModal)
   closeImageModal.onclick = () => (imageModal.style.display = "none");
 
-// ============================================================
-// FILE HANDLING
-// ============================================================
 ["dragenter", "dragover", "dragleave", "drop"].forEach((evt) => {
   dropZone.addEventListener(evt, (e) => {
     e.preventDefault();
@@ -349,7 +300,6 @@ function addFiles(newFiles) {
   filesToProcess = filesToProcess.concat(Array.from(newFiles));
   updateUIState();
 }
-
 function removeFile(index, event) {
   event.stopPropagation();
   filesToProcess.splice(index, 1);
@@ -360,21 +310,15 @@ function updateUIState() {
   const count = filesToProcess.length;
   fileCountLabel.textContent = `${count} Document${count !== 1 ? "s" : ""} Ready`;
   resultsContainer.style.display = "none";
-
   if (count === 0) {
     resetApp();
     return;
   }
-
   dropZone.style.display = "none";
   previewArea.style.display = "block";
   browseBtn.textContent = "Add More Documents";
   actionButtons.style.display = "flex";
   thumbnailGrid.style.display = "flex";
-
-  const singleImgCont = document.getElementById("singleImageContainer");
-  if (singleImgCont) singleImgCont.style.display = "none";
-
   renderThumbnails();
 }
 
@@ -387,11 +331,7 @@ function renderThumbnails() {
       div.className = "thumbnail-item animate-pop";
       div.style.animationDelay = `${index * 0.05}s`;
       div.onclick = () => openModal(file, index);
-      div.innerHTML = `
-                <span class="thumb-number">#${index + 1}</span>
-                <img src="${e.target.result}">
-                <div class="thumb-delete" onclick="removeFile(${index}, event)">×</div>
-            `;
+      div.innerHTML = `<span class="thumb-number">#${index + 1}</span><img src="${e.target.result}"><div class="thumb-delete" onclick="removeFile(${index}, event)">×</div>`;
       thumbnailGrid.appendChild(div);
     };
     reader.readAsDataURL(file);
@@ -399,22 +339,14 @@ function renderThumbnails() {
 }
 
 function getAccuracyInfo(score) {
-  if (score >= 98) return { color: "#10b981", text: "Perfect" };
-  if (score >= 94) return { color: "#34d399", text: "Excellent" };
-  if (score >= 90) return { color: "#fbff00", text: "Very High" };
-  if (score >= 80) return { color: "#facc15", text: "High" };
+  if (score >= 90) return { color: "#34d399", text: "Excellent" };
   if (score >= 70) return { color: "#fbbf24", text: "Good" };
-  if (score >= 60) return { color: "#f59e0b", text: "Moderate" };
   if (score >= 50) return { color: "#ea580c", text: "Fair" };
-  if (score >= 40) return { color: "#ef4444", text: "Low" };
-  if (score >= 30) return { color: "#dc2626", text: "Very Low" };
-  if (score >= 20) return { color: "#b91c1c", text: "Poor" };
-  if (score >= 10) return { color: "#991b1b", text: "Highly Uncertain" };
-  return { color: "#7f1d1d", text: "Failed" };
+  return { color: "#ef4444", text: "Low Confidence" };
 }
 
 // ============================================================
-// API SUBMISSION
+// API SUBMISSION (BOOTSTRAP 2-COLUMN GRID ON DESKTOP)
 // ============================================================
 calculateBtn.addEventListener("click", async () => {
   if (filesToProcess.length === 0) return;
@@ -425,14 +357,8 @@ calculateBtn.addEventListener("click", async () => {
   receiptsList.innerHTML = "";
   grandTotalCard.style.display = "none";
 
-  const oldBreakdown = document.getElementById("categoryBreakdown");
-  if (oldBreakdown) oldBreakdown.style.display = "none";
-
-  const oldExportBtn = document.getElementById("exportCsvBtn");
-  if (oldExportBtn) oldExportBtn.style.display = "none";
-
-  const oldPdfBtn = document.getElementById("exportPdfBtn");
-  if (oldPdfBtn) oldPdfBtn.style.display = "none";
+  const breakdownContainer = document.getElementById("categoryBreakdown");
+  if (breakdownContainer) breakdownContainer.style.display = "none";
 
   let grandTotal = 0;
   let successfulDocs = 0;
@@ -443,14 +369,21 @@ calculateBtn.addEventListener("click", async () => {
       const file = filesToProcess[i];
       const formData = new FormData();
       formData.append("images", file);
-
       formData.append("image_index", i + 1);
       formData.append("total_images", totalFiles);
 
+      // --- GRID LAYOUT FIXED: 2 COLUMNS ON DESKTOP ---
+      const colWrap = document.createElement("div");
+      // col-12 for mobile (full width), col-md-6 for tablet/desktop (50% width = 2 cards per row)
+      colWrap.className = "col-12 col-md-6 mb-4";
+
       const tempCard = document.createElement("div");
-      tempCard.className = "receipt-card glass-panel animate-pop";
-      tempCard.innerHTML = `<div class="rc-header"><span>Document #${i + 1}</span><span style="color:#8b5cf6;">Processing... ⏳</span></div>`;
-      receiptsList.appendChild(tempCard);
+      tempCard.className =
+        "receipt-card glass-panel h-100 animate-pop rounded-4 shadow-sm";
+      tempCard.innerHTML = `<div class="rc-header p-3 border-bottom border-secondary"><span>Document #${i + 1}</span><span style="color:#8b5cf6;">Processing... ⏳</span></div>`;
+
+      colWrap.appendChild(tempCard);
+      receiptsList.appendChild(colWrap);
 
       try {
         const res = await fetch("/calculate", {
@@ -461,7 +394,7 @@ calculateBtn.addEventListener("click", async () => {
 
         if (data.error || !data.results || data.results[0].error) {
           const errorMsg = data.error || data.results[0].error;
-          tempCard.innerHTML = `<div class="rc-header"><span>Document #${i + 1}</span><span class="val-neg">Failed</span></div><p>${errorMsg}</p>`;
+          tempCard.innerHTML = `<div class="rc-header p-3 border-bottom border-secondary"><span>Document #${i + 1}</span><span class="val-neg">Failed</span></div><p class="p-3">${errorMsg}</p>`;
           continue;
         }
 
@@ -472,82 +405,49 @@ calculateBtn.addEventListener("click", async () => {
         result.items.forEach((item) => {
           const isNeg = item.result < 0;
           const category = item.category || "Misc";
-
           itemsHtml += `
-                        <div class="rc-item">
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <span class="editable-text" contenteditable="true" spellcheck="false" title="Click to edit name">${item.expression}</span>
-                                <span class="cat-badge editable-text" contenteditable="true" spellcheck="false" title="Click to edit category">${category}</span>
-                            </div>
-                            <span class="rc-item-val editable-text price-edit ${isNeg ? "val-neg" : ""}" contenteditable="true" spellcheck="false" title="Click to edit price">${isNeg ? "-" : "+"}₹${Math.abs(item.result).toFixed(2)}</span>
-                        </div>`;
+            <div class="rc-item px-3">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span class="editable-text" contenteditable="true" spellcheck="false" title="Click to edit name">${item.expression}</span>
+                    <span class="cat-badge editable-text" contenteditable="true" spellcheck="false" title="Click to edit category">${category}</span>
+                </div>
+                <span class="rc-item-val editable-text price-edit ${isNeg ? "val-neg" : ""}" contenteditable="true" spellcheck="false" title="Click to edit price">${isNeg ? "-" : "+"}₹${Math.abs(item.result).toFixed(2)}</span>
+            </div>`;
         });
 
-        let imgQualScore = result.image_quality || 0;
-        let aiAccScore = result.ai_accuracy || 0;
-
-        let imgInfo = getAccuracyInfo(imgQualScore);
-        let accInfo = getAccuracyInfo(aiAccScore);
-        let warningHtml = "";
-
-        if (imgQualScore < 70 || aiAccScore < 70) {
-          let warningColor =
-            imgQualScore < aiAccScore ? imgInfo.color : accInfo.color;
-          warningHtml = `
-                        <div class="low-accuracy-warning" style="border-color:${warningColor}; color:${warningColor}; background: rgba(0,0,0,0.2); margin-top:12px;">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                            <span><strong>Warning:</strong> Low confidence due to image clarity. Please double-check these numbers.</span>
-                        </div>`;
-        }
+        let imgInfo = getAccuracyInfo(result.image_quality || 0);
+        let accInfo = getAccuracyInfo(result.ai_accuracy || 0);
 
         let accuracyHtml = `
-                    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--glass-border); display: flex; flex-direction: column; gap: 12px;">
-                        <div>
-                            <div class="accuracy-label">
-                                <span>Image Quality: ${imgInfo.text}</span>
-                                <span style="color: ${imgInfo.color}; text-shadow: 0 0 5px ${imgInfo.color};">${imgQualScore}%</span>
-                            </div>
-                            <div class="accuracy-bar-bg">
-                                <div class="accuracy-bar-fill" style="width: ${imgQualScore}%; background: ${imgInfo.color}; box-shadow: 0 0 8px ${imgInfo.color};"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="accuracy-label">
-                                <span>AI Accuracy: ${accInfo.text}</span>
-                                <span style="color: ${accInfo.color}; text-shadow: 0 0 5px ${accInfo.color};">${aiAccScore}%</span>
-                            </div>
-                            <div class="accuracy-bar-bg">
-                                <div class="accuracy-bar-fill" style="width: ${aiAccScore}%; background: ${accInfo.color}; box-shadow: 0 0 8px ${accInfo.color};"></div>
-                            </div>
-                        </div>
-                        ${warningHtml}
-                    </div>
-                `;
+            <div class="p-3" style="margin-top: 15px; border-top: 1px solid var(--glass-border); display: flex; flex-direction: column; gap: 12px;">
+                <div>
+                    <div class="accuracy-label"><span>Image Quality</span><span style="color: ${imgInfo.color};">${result.image_quality}%</span></div>
+                    <div class="accuracy-bar-bg"><div class="accuracy-bar-fill" style="width: ${result.image_quality}%; background: ${imgInfo.color};"></div></div>
+                </div>
+                <div>
+                    <div class="accuracy-label"><span>AI Accuracy</span><span style="color: ${accInfo.color};">${result.ai_accuracy}%</span></div>
+                    <div class="accuracy-bar-bg"><div class="accuracy-bar-fill" style="width: ${result.ai_accuracy}%; background: ${accInfo.color};"></div></div>
+                </div>
+            </div>`;
 
         tempCard.innerHTML = `
-                    <div class="rc-header">
-                        <span>Document #${i + 1} <span class="entry-count" style="font-size:0.85em; font-weight:500; color:var(--text-muted);">(${itemCount} entries)</span></span>
-                        <span class="rc-method-badge">${result.method}</span>
-                    </div>
-                    <div class="rc-items-list">${itemsHtml}</div>
-                    <div style="text-align: center;">
-                        <div class="add-row-btn" title="Did the AI miss an item? Add it here.">+ Add Missing Item</div>
-                    </div>
-                    <div class="rc-subtotal">
-                        <span>Subtotal</span>
-                        <span>₹${result.subtotal.toFixed(2)}</span>
-                    </div>
-                    ${accuracyHtml}
-                `;
+            <div class="rc-header p-3 border-bottom border-secondary">
+                <span>Document #${i + 1} <span class="entry-count" style="font-size:0.85em; font-weight:500; color:var(--text-muted);">(${itemCount} entries)</span></span>
+                <span class="rc-method-badge">${result.method}</span>
+            </div>
+            <div class="rc-items-list">${itemsHtml}</div>
+            <div style="text-align: center;" class="my-2"><div class="add-row-btn" title="Did the AI miss an item? Add it here.">+ Add Missing Item</div></div>
+            <div class="rc-subtotal px-3 py-2 border-top border-secondary border-opacity-25"><span>Subtotal</span><span>₹${result.subtotal.toFixed(2)}</span></div>
+            ${accuracyHtml}
+        `;
 
         grandTotal += result.subtotal;
         successfulDocs++;
       } catch (err) {
-        tempCard.innerHTML = `<div class="rc-header"><span>Document #${i + 1}</span><span class="val-neg">Error</span></div><p>Connection Error: ${err.message}</p>`;
+        tempCard.innerHTML = `<div class="rc-header p-3"><span>Document #${i + 1}</span><span class="val-neg">Error</span></div><p class="px-3">Connection Error: ${err.message}</p>`;
       }
     }
   } catch (globalErr) {
-    console.error("Global processing error:", globalErr);
     alert("An unexpected error occurred during processing.");
   } finally {
     loadingEl.style.display = "none";
@@ -556,11 +456,9 @@ calculateBtn.addEventListener("click", async () => {
     if (successfulDocs > 0) {
       grandTotalValue.textContent = `₹${grandTotal.toFixed(2)}`;
       grandTotalCard.style.display = "flex";
-
       recalculateLiveMath();
-
       window.scrollTo({
-        top: grandTotalCard.offsetTop - 20,
+        top: document.getElementById("resultsContainer").offsetTop - 20,
         behavior: "smooth",
       });
     }
@@ -568,9 +466,8 @@ calculateBtn.addEventListener("click", async () => {
 });
 
 // ============================================================
-// LIVE MATH, CATEGORY BREAKDOWN & NEW ROW LOGIC
+// INTERACTIVE EVENT LISTENERS
 // ============================================================
-
 receiptsList.addEventListener("focusin", (e) => {
   if (e.target.classList.contains("editable-text")) {
     const text = e.target.textContent.trim();
@@ -579,9 +476,8 @@ receiptsList.addEventListener("focusin", (e) => {
       text === "+₹0.00" ||
       text === "-₹0.00" ||
       text === "Misc"
-    ) {
+    )
       e.target.textContent = "";
-    }
   }
 });
 
@@ -589,17 +485,14 @@ receiptsList.addEventListener("focusout", (e) => {
   if (
     e.target.classList.contains("price-edit") ||
     e.target.classList.contains("cat-badge")
-  ) {
+  )
     recalculateLiveMath();
-  }
 });
 
 receiptsList.addEventListener("keydown", (e) => {
-  if (e.target.classList.contains("editable-text")) {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      e.target.blur();
-    }
+  if (e.target.classList.contains("editable-text") && e.key === "Enter") {
+    e.preventDefault();
+    e.target.blur();
   }
 });
 
@@ -607,25 +500,20 @@ receiptsList.addEventListener("click", (e) => {
   if (e.target.classList.contains("add-row-btn")) {
     const card = e.target.closest(".receipt-card");
     const itemsList = card.querySelector(".rc-items-list");
-
     const newRow = document.createElement("div");
-    newRow.className = "rc-item animate-pop";
+    newRow.className = "rc-item animate-pop px-3";
     newRow.innerHTML = `
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <span class="editable-text" contenteditable="true" spellcheck="false" title="Click to edit name">New Item</span>
-                <span class="cat-badge editable-text" contenteditable="true" spellcheck="false" title="Click to edit category">Misc</span>
-            </div>
-            <span class="rc-item-val editable-text price-edit" contenteditable="true" spellcheck="false" title="Click to edit price">+₹0.00</span>
-        `;
-
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="editable-text" contenteditable="true" spellcheck="false" title="Click to edit name">New Item</span>
+            <span class="cat-badge editable-text" contenteditable="true" spellcheck="false" title="Click to edit category">Misc</span>
+        </div>
+        <span class="rc-item-val editable-text price-edit" contenteditable="true" spellcheck="false" title="Click to edit price">+₹0.00</span>
+    `;
     itemsList.appendChild(newRow);
     newRow.querySelector(".editable-text").focus();
-
     const countSpan = card.querySelector(".entry-count");
-    if (countSpan) {
-      const currentCount = itemsList.querySelectorAll(".rc-item").length;
-      countSpan.textContent = `(${currentCount} entries)`;
-    }
+    if (countSpan)
+      countSpan.textContent = `(${itemsList.querySelectorAll(".rc-item").length} entries)`;
   }
 });
 
@@ -635,25 +523,19 @@ function recalculateLiveMath() {
 
   document.querySelectorAll(".receipt-card").forEach((card) => {
     let cardSubtotal = 0;
-
     card.querySelectorAll(".rc-item").forEach((itemEl) => {
       const priceElement = itemEl.querySelector(".price-edit");
       const catElement = itemEl.querySelector(".cat-badge");
 
       let rawText = priceElement.textContent.replace(/[^\d.-]/g, "");
       let value = parseFloat(rawText) || 0;
-
       const isNeg = value < 0;
       priceElement.textContent = `${isNeg ? "-" : "+"}₹${Math.abs(value).toFixed(2)}`;
 
-      if (isNeg) {
-        priceElement.classList.add("val-neg");
-      } else {
-        priceElement.classList.remove("val-neg");
-      }
+      if (isNeg) priceElement.classList.add("val-neg");
+      else priceElement.classList.remove("val-neg");
 
       cardSubtotal += value;
-
       let catName = catElement ? catElement.textContent.trim() : "Misc";
       if (catName === "") catName = "Misc";
       catName =
@@ -665,70 +547,47 @@ function recalculateLiveMath() {
     });
 
     const subtotalElement = card.querySelector(".rc-subtotal span:last-child");
-    if (subtotalElement) {
+    if (subtotalElement)
       subtotalElement.textContent = `₹${cardSubtotal.toFixed(2)}`;
-    }
-
     newGrandTotal += cardSubtotal;
   });
 
-  if (grandTotalValue) {
+  if (grandTotalValue)
     grandTotalValue.textContent = `₹${newGrandTotal.toFixed(2)}`;
-  }
 
-  // --- CATEGORY BREAKDOWN LOGIC ---
   let breakdownContainer = document.getElementById("categoryBreakdown");
-
-  if (!breakdownContainer) {
-    breakdownContainer = document.createElement("div");
-    breakdownContainer.id = "categoryBreakdown";
-    breakdownContainer.className = "cat-breakdown-box glass-panel animate-pop";
-    grandTotalCard.parentNode.insertBefore(
-      breakdownContainer,
-      grandTotalCard.nextSibling,
-    );
-  }
 
   if (newGrandTotal === 0 && Object.keys(categoryTotals).length === 0) {
     breakdownContainer.style.display = "none";
   } else {
     breakdownContainer.style.display = "block";
-    let breakdownHtml = `<h3 style="margin: 0 0 15px 0; font-size: 1.1em; color: var(--primary-light);">📊 Spend by Category</h3>`;
+    let breakdownHtml = `<h3>📊 Spend by Category</h3>`;
 
     const sortedCats = Object.entries(categoryTotals).sort(
       (a, b) => b[1] - a[1],
     );
-
     sortedCats.forEach(([cat, val]) => {
       if (val === 0) return;
       const percentage =
         newGrandTotal !== 0
           ? Math.abs((val / newGrandTotal) * 100).toFixed(1)
           : 0;
-
       breakdownHtml += `
-                <div class="cat-row">
-                    <span style="font-weight: 500; color: #c4b5fd;">${cat}</span>
-                    <div style="flex-grow: 1; border-bottom: 1px dotted rgba(255,255,255,0.2); margin: 0 15px; position: relative; top: -4px;"></div>
-                    <span>₹${val.toFixed(2)} <span style="font-size:0.8em; color:var(--text-muted); margin-left:5px;">(${percentage}%)</span></span>
-                </div>
-            `;
+        <div class="cat-row">
+            <span style="font-weight: 500; color: #c4b5fd;">${cat}</span>
+            <div style="flex-grow: 1; border-bottom: 1px dotted rgba(255,255,255,0.2); margin: 0 15px; position: relative; top: -4px;"></div>
+            <span>₹${val.toFixed(2)} <span style="font-size:0.8em; color:var(--text-muted); margin-left:5px;">(${percentage}%)</span></span>
+        </div>`;
     });
 
-    // Inject the empty canvas for our Pie Chart!
     breakdownHtml += `<div class="chart-wrapper"><canvas id="spendChart"></canvas></div>`;
     breakdownContainer.innerHTML = breakdownHtml;
 
-    // --- DRAW THE CHART.JS PIE CHART ---
     const ctx = document.getElementById("spendChart");
     if (ctx) {
-      if (spendPieChart) spendPieChart.destroy(); // Clear old chart if editing
-
-      // Extract sorted labels and data for the chart
+      if (spendPieChart) spendPieChart.destroy();
       const chartLabels = sortedCats.map((item) => item[0]);
       const chartData = sortedCats.map((item) => item[1]);
-
-      // Beautiful modern colors
       const pieColors = [
         "#8b5cf6",
         "#ec4899",
@@ -740,15 +599,11 @@ function recalculateLiveMath() {
       ];
 
       spendPieChart = new Chart(ctx, {
-        type: "doughnut", // Doughnut looks slightly more modern than full pie!
+        type: "doughnut",
         data: {
           labels: chartLabels,
           datasets: [
-            {
-              data: chartData,
-              backgroundColor: pieColors,
-              borderWidth: 0, // Clean look
-            },
+            { data: chartData, backgroundColor: pieColors, borderWidth: 0 },
           ],
         },
         options: {
@@ -764,84 +619,40 @@ function recalculateLiveMath() {
       });
     }
   }
-
-  // --- BUTTON GENERATION (CSV AND PDF) ---
-  let exportBtn = document.getElementById("exportCsvBtn");
-  if (!exportBtn) {
-    exportBtn = document.createElement("div");
-    exportBtn.id = "exportCsvBtn";
-    exportBtn.className = "export-btn animate-pop";
-    exportBtn.innerHTML = `⬇️ Download Excel (CSV)`;
-    breakdownContainer.parentNode.insertBefore(
-      exportBtn,
-      breakdownContainer.nextSibling,
-    );
-    exportBtn.addEventListener("click", downloadCSV);
-  }
-
-  let pdfBtn = document.getElementById("exportPdfBtn");
-  if (!pdfBtn) {
-    pdfBtn = document.createElement("div");
-    pdfBtn.id = "exportPdfBtn";
-    pdfBtn.className = "pdf-btn animate-pop";
-    pdfBtn.innerHTML = `📄 Download PDF Report`;
-    breakdownContainer.parentNode.insertBefore(pdfBtn, exportBtn.nextSibling);
-    pdfBtn.addEventListener("click", downloadPDF);
-  }
-
-  if (newGrandTotal === 0 && Object.keys(categoryTotals).length === 0) {
-    exportBtn.style.display = "none";
-    pdfBtn.style.display = "none";
-  } else {
-    exportBtn.style.display = "block";
-    pdfBtn.style.display = "block";
-  }
 }
 
-// ============================================================
-// CSV / EXCEL DOWNLOAD GENERATOR (FIXED SERIAL NUMBERS)
-// ============================================================
 function downloadCSV() {
-  // Added a proper S.No. column
   let csvContent = "S.No.,Document,Item Name,Category,Price\n";
-  let serialNumber = 1; // Start counting from 1
-
+  let serialNumber = 1;
   document.querySelectorAll(".receipt-card").forEach((card, index) => {
     const docName = `Document #${index + 1}`;
-
     card.querySelectorAll(".rc-item").forEach((itemEl) => {
       const spans = itemEl.querySelectorAll(".editable-text");
       if (spans.length >= 3) {
         let itemName = spans[0].textContent.trim().replace(/,/g, "");
         let category = spans[1].textContent.trim().replace(/,/g, "");
         let priceRaw = spans[2].textContent.trim().replace(/[^\d.-]/g, "");
-
-        // Now it prints 1, 2, 3, 4... properly!
         csvContent += `${serialNumber},${docName},${itemName},${category},${priceRaw}\n`;
         serialNumber++;
       }
     });
   });
-
   const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
-  link.setAttribute("href", url);
-  const fileName = `QuickTotal_Export_${new Date().getTime()}.csv`;
-  link.setAttribute("download", fileName);
+  link.setAttribute("href", URL.createObjectURL(blob));
+  link.setAttribute(
+    "download",
+    `QuickTotal_Export_${new Date().getTime()}.csv`,
+  );
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
 }
 
-// ============================================================
-// PDF DOWNLOAD GENERATOR (CLEAN PRO TABLE + SIDE LEGEND DATA)
-// ============================================================
 function downloadPDF() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF("p", "pt", "a4");
 
-  // 1. Draw the Document Header
   doc.setFontSize(22);
   doc.setTextColor(139, 92, 246);
   doc.text("QuickTotal Financial Report", 40, 50);
@@ -850,28 +661,24 @@ function downloadPDF() {
   doc.setTextColor(100, 116, 139);
   doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 40, 70);
 
-  // 2. Gather all the data for the Table natively
-  const tableColumn = ["S.No.", "Item Name", "Category", "Price"];
   const tableRows = [];
-
   let sno = 1;
   document.querySelectorAll(".receipt-card").forEach((card) => {
     card.querySelectorAll(".rc-item").forEach((itemEl) => {
       const spans = itemEl.querySelectorAll(".editable-text");
       if (spans.length >= 3) {
-        const itemName = spans[0].textContent.trim();
-        const category = spans[1].textContent.trim();
-        let price = spans[2].textContent.trim();
-
-        price = `Rs. ${price.replace(/₹/g, "").trim()}`;
-        tableRows.push([sno++, itemName, category, price]);
+        tableRows.push([
+          sno++,
+          spans[0].textContent.trim(),
+          spans[1].textContent.trim(),
+          `Rs. ${spans[2].textContent.trim().replace(/₹/g, "").trim()}`,
+        ]);
       }
     });
   });
 
-  // 3. Draw the Table
   doc.autoTable({
-    head: [tableColumn],
+    head: [["S.No.", "Item Name", "Category", "Price"]],
     body: tableRows,
     startY: 90,
     theme: "striped",
@@ -880,76 +687,66 @@ function downloadPDF() {
     styles: { font: "helvetica", fontSize: 11 },
   });
 
-  // 4. Calculate where the table ended
   const finalY = doc.lastAutoTable.finalY || 90;
-  let grandTotalValue = document.getElementById("grandTotalValue").textContent;
-  grandTotalValue = `Rs. ${grandTotalValue.replace(/₹/g, "").trim()}`;
-
   doc.setFontSize(14);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(30, 41, 59);
-  doc.text(`Grand Total: ${grandTotalValue}`, 40, finalY + 30);
+  doc.text(
+    `Grand Total: Rs. ${document.getElementById("grandTotalValue").textContent.replace(/₹/g, "").trim()}`,
+    40,
+    finalY + 30,
+  );
 
-  // 5. Embed the Chart Graphic (CLEAN LEGEND VERSION)
   if (spendPieChart) {
-    // Save original settings
     const origColor = spendPieChart.options.plugins.legend.labels.color;
     const origSize =
       spendPieChart.options.plugins.legend.labels.font.size || 12;
     const origLabels = [...spendPieChart.data.labels];
-
-    // Calculate percentages
     const dataArray = spendPieChart.data.datasets[0].data;
     const totalSum = dataArray.reduce((acc, val) => acc + Number(val), 0);
 
-    // Update labels to include percentages
-    spendPieChart.data.labels = origLabels.map((label, index) => {
-      const value = Number(dataArray[index]);
-      const percentage =
-        totalSum > 0 ? ((value / totalSum) * 100).toFixed(1) : 0;
-      return `${label}: ${percentage}%`;
-    });
-
-    // Make Legend Professional for PDF
+    spendPieChart.data.labels = origLabels.map(
+      (label, index) =>
+        `${label}: ${totalSum > 0 ? ((Number(dataArray[index]) / totalSum) * 100).toFixed(1) : 0}%`,
+    );
     spendPieChart.options.plugins.legend.labels.color = "#000000";
-    spendPieChart.options.plugins.legend.labels.font.size = 18; // Large but clean
-    spendPieChart.options.plugins.legend.position = "right"; // Keep it strictly on the right
+    spendPieChart.options.plugins.legend.labels.font.size = 18;
     spendPieChart.update("none");
-
-    // Grab the image (High-res snapshot)
     const chartImg = spendPieChart.toBase64Image();
 
-    // REVERT everything for the web UI immediately
+    // Revert web UI settings
     spendPieChart.options.plugins.legend.labels.color = origColor;
     spendPieChart.options.plugins.legend.labels.font.size = origSize;
     spendPieChart.data.labels = origLabels;
     spendPieChart.update("none");
 
-    // Define dimensions for the PDF
-    const chartWidth = 420; // Wide enough to show legend clearly
-    const chartHeight = 180;
+    // --- FULL PAGE CHART LOGIC ---
+    const chartWidth = 500;
+    const chartHeight = 280;
+
+    // Force a brand new page
+    doc.addPage();
+
+    // Center coordinates
     const xPos = (595.28 - chartWidth) / 2;
-    let yPos = finalY + 70;
+    const yPos = 180;
 
-    doc.setFontSize(14);
+    // Big centered title
+    doc.setFontSize(22);
     doc.setTextColor(30, 41, 59);
+    doc.text("Spend Analysis by Category", 595.28 / 2, 120, {
+      align: "center",
+    });
 
-    if (yPos + chartHeight > 800) {
-      doc.addPage();
-      yPos = 60;
-    }
-
-    doc.text("Spend Analysis by Category", 40, yPos - 15);
+    // Draw the chart
     doc.addImage(chartImg, "PNG", xPos, yPos, chartWidth, chartHeight);
   }
 
-  // 6. Professional Footer (Clean Branding)
   const totalPages = doc.internal.getNumberOfPages();
   for (let i = 1; i <= totalPages; i++) {
     doc.setPage(i);
     doc.setDrawColor(200, 200, 200);
-    doc.line(40, 810, 555, 810); // Subtle horizontal line above footer
-
+    doc.line(40, 810, 555, 810);
     doc.setTextColor(150, 150, 150);
     doc.setFontSize(9);
     doc.setFont("helvetica", "italic");
@@ -958,15 +755,10 @@ function downloadPDF() {
     });
   }
 
-  // 7. Save the file
   doc.save(`QuickTotal_Report_${new Date().getTime()}.pdf`);
 }
 
-// ============================================================
-// RESET
-// ============================================================
 resetBtn.addEventListener("click", resetApp);
-
 function resetApp() {
   filesToProcess = [];
   fileInput.value = "";
@@ -975,15 +767,7 @@ function resetApp() {
   resultsContainer.style.display = "none";
   loadingEl.style.display = "none";
   browseBtn.textContent = "Browse Files";
-
   const breakdownContainer = document.getElementById("categoryBreakdown");
   if (breakdownContainer) breakdownContainer.style.display = "none";
-
-  const exportBtn = document.getElementById("exportCsvBtn");
-  if (exportBtn) exportBtn.style.display = "none";
-
-  const pdfBtn = document.getElementById("exportPdfBtn");
-  if (pdfBtn) pdfBtn.style.display = "none";
-
   window.scrollTo({ top: 0, behavior: "smooth" });
 }

@@ -17,23 +17,44 @@ load_dotenv()
 
 # ==========================================
 # 🛑 THE MAGIC DEVELOPER SWITCH 🛑
-DEV_MODE = True
+# REMEMBER TO CHANGE THIS TO False TO TEST REAL AI MODELS!
+DEV_MODE = False
 # ==========================================
 
 # --- API KEYS ---
-GEMINI_KEYS = [k for k in [os.getenv('GEMINI_KEY'), os.getenv('GEMINI_KEY_BACKUP')] if k]
-OPENROUTER_KEYS = [k for k in [os.getenv('key'), os.getenv('OPENROUTER_KEY_BACKUP')] if k]
+GEMINI_KEYS = [k for k in [os.getenv('GEMINI_KEY_1'),
+                            os.getenv('GEMINI_KEY_2'),
+                            os.getenv('GEMINI_KEY_3'),
+                            os.getenv('GEMINI_API_4'),
+                            os.getenv('GEMINI_API_5')
+                            ] if k]
+#GEMINI_KEYS=[]
+OPENROUTER_KEYS = [k for k in [os.getenv('OPENROUTER_KEY_1'),
+                            os.getenv('OPENROUTER_KEY_2'),
+                            os.getenv('OPENROUTER_KEY_3'),
+                            os.getenv('OPENROUTER_KEY_4'),
+                            os.getenv('OPENROUTER_KEY_5')
+                            ] if k]
+GITHUB_KEY = os.getenv('GITHUB_TOKEN')
+#GITHUB_KEY=[]
+GROQ_KEY = os.getenv('GROQ_API_KEY')
+#GROQ_KEY=[]
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 32 * 1024 * 1024
 
+# --- SMART ROUTING MODELS DICTIONARY ---
+# Note: EVERY model must start with openrouter:, groq:, or github:
 MODEL_NAMES = {
-    "google/gemini-2.0-flash-lite-preview-02-05:free": "Gemini 2.0 Lite",
-    "google/gemma-3-27b-it:free": "Gemma 3 27B",
-    "nvidia/nemotron-nano-12b-v2-vl:free": "Nemotron V2",
-    "mistralai/pixtral-12b:free": "Pixtral 12B Vision",
-    "meta-llama/llama-3.2-90b-vision-instruct:free": "Llama 3.2 Vision"
+    # 🥇 PREMIUM & EXCLUSIVE MODELS
+    "openrouter:openai/gpt-4o": "GPT-4o (Premium)",
+    "github:gpt-4o-mini": "GitHub GPT-4o-Mini",
+    "groq:meta-llama/llama-4-scout-17b-16e-instruct": "Groq Llama 4 Scout",
+    
+    # 🥈 OPENROUTER FREE FALLBACKS
+    "openrouter:google/gemma-3-27b-it:free": "Gemma 3 27B",
+    "openrouter:nvidia/nemotron-nano-12b-v2-vl:free": "Nemotron V2"
 }
 
 def get_latest_batch_id():
@@ -43,7 +64,8 @@ def get_latest_batch_id():
     try:
         with open(log_file, "r", encoding="utf-8") as f:
             content = f.read()
-            matches = re.findall(r'\|\s*Batch (\d+)\s*\|', content)
+            # --- FIXED: Now ignores markdown asterisks ** so batches count up properly ---
+            matches = re.findall(r'\|\s*(?:\*\*)?Batch (\d+)(?:\*\*)?\s*\|', content)
             if matches:
                 return int(max(matches, key=int))
     except Exception:
@@ -172,54 +194,70 @@ def gemini_fallback(img, timeline, mode='auto'):
     return [], 0, 0, 0, None
 
 def ai_fallback(img, timeline, mode='auto'):
-    if not OPENROUTER_KEYS:
-        timeline.append("ℹ️ OpenRouter: Skipped (No Keys)")
-        return [], 0, 0, 0, None
-    
     prompt = build_prompt(mode)
     img_b64 = img_to_base64(img)
 
-    for key_idx, api_key in enumerate(OPENROUTER_KEYS):
-        key_label = f" (Key {key_idx + 1})" if len(OPENROUTER_KEYS) > 1 else ""
-        for model_id, model_name in MODEL_NAMES.items():
-            try:
-                response = requests.post(
-                    url="https://openrouter.ai/api/v1/chat/completions",
-                    headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-                    json={
-                        "model": model_id,
-                        "messages": [{"role": "user", "content": [
-                            {"type": "text", "text": prompt},
-                            {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{img_b64}"}}
-                        ]}],
-                        "temperature": 0.1, 
-                        "max_tokens": 2048
-                    },
-                    timeout=45
-                )
-                resp_json = response.json()
-                if 'error' in resp_json:
-                    err_msg = resp_json['error'].get('message', str(resp_json['error']))
-                    if "Rate limit" in err_msg: err_msg = "Rate Limit Hit"
-                    elif "No endpoints" in err_msg: err_msg = "Model Offline"
-                    else: err_msg = err_msg[:40] + "..."
-                        
-                    timeline.append(f"❌ {model_name}{key_label}: {err_msg}")
-                    continue
-                
-                raw = resp_json['choices'][0]['message']['content'].strip()
-                data = parse_response(raw)
-                if not isinstance(data, dict) or not data.get('items'):
-                    timeline.append(f"❌ {model_name}{key_label}: Format Error")
-                    continue
+    for full_model_id, model_name in MODEL_NAMES.items():
+        # Smart Router Logic: Parse the prefix
+        try:
+            provider, model_id = full_model_id.split(":", 1)
+        except ValueError:
+            continue
+        
+        if provider == "github" and GITHUB_KEY:
+            api_url = "https://models.inference.ai.azure.com/chat/completions"
+            api_key = GITHUB_KEY
+        elif provider == "groq" and GROQ_KEY:
+            api_url = "https://api.groq.com/openai/v1/chat/completions"
+            api_key = GROQ_KEY
+        elif provider == "openrouter" and OPENROUTER_KEYS:
+            api_url = "https://openrouter.ai/api/v1/chat/completions"
+            api_key = OPENROUTER_KEYS[0]
+        else:
+            timeline.append(f"ℹ️ {model_name}: Skipped (Missing {provider.capitalize()} API Key)")
+            continue
 
-                calcs, total, img_qual, ai_acc = build_calculations(data, 'ai')
-                if len(calcs) > 0:
-                    timeline.append(f"✅ {model_name}{key_label}: Success")
-                    return calcs, total, img_qual, ai_acc, model_name
-            except Exception as e:
-                 timeline.append(f"❌ {model_name}{key_label}: Connection Error")
-                 continue
+        try:
+            response = requests.post(
+                url=api_url,
+                headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+                json={
+                    "model": model_id,
+                    "messages": [{"role": "user", "content": [
+                        {"type": "text", "text": prompt},
+                        {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{img_b64}"}}
+                    ]}],
+                    "temperature": 0.1, 
+                    "max_tokens": 2048
+                },
+                timeout=45
+            )
+            resp_json = response.json()
+            
+            if 'error' in resp_json:
+                err_msg = resp_json['error'].get('message', str(resp_json['error']))
+                if "Rate limit" in err_msg or "429" in err_msg: err_msg = "Rate Limit Hit"
+                elif "No endpoints" in err_msg: err_msg = "Model Offline"
+                else: err_msg = err_msg[:40] + "..."
+                    
+                timeline.append(f"❌ {model_name}: {err_msg}")
+                continue
+            
+            raw = resp_json['choices'][0]['message']['content'].strip()
+            data = parse_response(raw)
+            if not isinstance(data, dict) or not data.get('items'):
+                timeline.append(f"❌ {model_name}: Format Error")
+                continue
+
+            calcs, total, img_qual, ai_acc = build_calculations(data, 'ai')
+            if len(calcs) > 0:
+                timeline.append(f"✅ {model_name}: Success")
+                return calcs, total, img_qual, ai_acc, model_name
+                
+        except Exception as e:
+             timeline.append(f"❌ {model_name}: Connection Error")
+             continue
+             
     return [], 0, 0, 0, None
 
 @app.route('/')
@@ -261,7 +299,7 @@ def calculate():
         batch_num = get_latest_batch_id()
         if batch_num == 0: batch_num = 1
 
-    batch_id = f"Batch {batch_num}"
+    batch_id = f"**Batch {batch_num}**"
     
     batch_time = datetime.now().strftime("%I:%M:%S %p")
     batch_date = datetime.now().strftime("%d/%m/%y")
@@ -289,7 +327,7 @@ def calculate():
             image_count_info = f"{image_index} of {total_images}" 
             safe_filename = file.filename if file.filename != "image" else f"Image_{image_index}"
 
-            display_batch = f"**Batch {batch_num}**" if image_index == 1 else ""
+            display_batch = batch_id if image_index == 1 else ""
             display_time = formatted_datetime if image_index == 1 else ""
 
             if model and calcs:
@@ -310,6 +348,10 @@ def calculate():
                     'error': "Could not read data reliably. Please try cropping closer to the text."
                 })
                  log_performance(display_batch, display_time, safe_filename, image_count_info, "Failed", processing_timeline, processing_time, 0, 0)
+            
+            # Rate Limit safety delay: Give APIs a 4-second breather between images to prevent 429 Quota errors
+            if len(valid_files) > 1 and i < len(valid_files) - 1:
+                time.sleep(4)
 
         if not structured_results:
              return jsonify({'error': 'No readable data found.'})
