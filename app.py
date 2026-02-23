@@ -241,6 +241,40 @@ def calculate():
 
     except Exception as e: return jsonify({'error': f'Server error: {str(e)}'})
 
+# --- NEW VAULT ROUTE: SAVES DATA FOR FUTURE TRAINING ---
+@app.route('/save_training_data', methods=['POST'])
+def save_training_data():
+    try:
+        image_file = request.files.get('image')
+        json_data = request.form.get('json_data')
+
+        if not image_file or not json_data:
+            return jsonify({'error': 'Missing image or data'}), 400
+
+        # Create the vault folder if it doesn't exist yet
+        dataset_folder = 'training_dataset'
+        os.makedirs(dataset_folder, exist_ok=True)
+
+        # Generate a unique ID using the precise millisecond time
+        unique_id = f"receipt_{int(time.time() * 1000)}"
+
+        # Save Image
+        image_ext = os.path.splitext(image_file.filename)[1]
+        if not image_ext: image_ext = '.jpg'
+        image_path = os.path.join(dataset_folder, f"{unique_id}{image_ext}")
+        image_file.save(image_path)
+
+        # Save JSON
+        json_path = os.path.join(dataset_folder, f"{unique_id}.json")
+        with open(json_path, 'w', encoding='utf-8') as f:
+            parsed_data = json.loads(json_data)
+            json.dump(parsed_data, f, indent=4, ensure_ascii=False)
+
+        return jsonify({'success': True, 'message': 'Saved to dataset!'})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 if __name__ == '__main__':
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
     app.run(debug=True, port=5000)

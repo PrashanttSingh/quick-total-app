@@ -338,17 +338,19 @@ function renderThumbnails() {
   });
 }
 
-// FIXED: Now properly strips % signs and parses Integers so 100% turns Green instead of Red!
+// ============================================================
+// REVERSED COLORS: 90+ = Yellow, 50+ = Green, Below 50 = Red
+// ============================================================
 function getAccuracyInfo(score) {
   const num = parseInt(score) || 0;
-  if (num >= 90) return { color: "#34d399", text: "Excellent" }; // Green
-  if (num >= 70) return { color: "#fbbf24", text: "Good" }; // Yellow
-  if (num >= 50) return { color: "#ea580c", text: "Fair" }; // Orange
+
+  if (num >= 90) return { color: "#fbbf24", text: "Excellent" }; // Yellow / Gold
+  if (num >= 50) return { color: "#34d399", text: "Good" }; // Green
   return { color: "#ef4444", text: "Low Confidence" }; // Red
 }
 
 // ============================================================
-// API SUBMISSION (BOOTSTRAP 2-COLUMN GRID ON DESKTOP)
+// API SUBMISSION
 // ============================================================
 calculateBtn.addEventListener("click", async () => {
   if (filesToProcess.length === 0) return;
@@ -380,7 +382,7 @@ calculateBtn.addEventListener("click", async () => {
       const tempCard = document.createElement("div");
       tempCard.className =
         "receipt-card glass-panel h-100 animate-pop rounded-4 shadow-sm";
-      tempCard.dataset.imageIndex = i; // Store index for saving data later
+      tempCard.dataset.imageIndex = i;
       tempCard.innerHTML = `<div class="rc-header p-3 border-bottom border-secondary"><span>Document #${i + 1}</span><span style="color:#8b5cf6;">Processing... ⏳</span></div>`;
 
       colWrap.appendChild(tempCard);
@@ -412,15 +414,26 @@ calculateBtn.addEventListener("click", async () => {
                     <span class="editable-text item-name-field" contenteditable="true" spellcheck="false" title="Click to edit name">${item.expression}</span>
                     <span class="cat-badge editable-text item-cat-field" contenteditable="true" spellcheck="false" title="Click to edit category">${category}</span>
                 </div>
-                <span class="rc-item-val editable-text price-edit" contenteditable="true" spellcheck="false" title="Click to edit price">${isNeg ? "-" : "+"}₹${Math.abs(item.result).toFixed(2)}</span>
+                <span class="rc-item-val editable-text price-edit ${isNeg ? "val-neg" : ""}" contenteditable="true" spellcheck="false" title="Click to edit price">${isNeg ? "-" : "+"}₹${Math.abs(item.result).toFixed(2)}</span>
             </div>`;
         });
 
-        // Parse ints here so width doesn't break CSS (e.g. width: 100%%)
         const imgScoreNum = parseInt(result.image_quality) || 0;
         const accScoreNum = parseInt(result.ai_accuracy) || 0;
+
         let imgInfo = getAccuracyInfo(imgScoreNum);
         let accInfo = getAccuracyInfo(accScoreNum);
+
+        // ==========================================
+        // ✨ TRIGGER TEMPORARY NOTEBOOK LM GLOW ✨
+        // ==========================================
+        if (accScoreNum === 100) {
+          tempCard.classList.add("notebooklm-card-glow");
+          // Automatically remove the glow class after 4 seconds
+          setTimeout(() => {
+            tempCard.classList.remove("notebooklm-card-glow");
+          }, 4000);
+        }
 
         let accuracyHtml = `
             <div class="p-3" style="margin-top: 15px; border-top: 1px solid var(--glass-border); display: flex; flex-direction: column; gap: 12px;">
@@ -434,19 +447,18 @@ calculateBtn.addEventListener("click", async () => {
                 </div>
             </div>`;
 
-        // NEW UPGRADE: Added the Approve & Save button for training data
         tempCard.innerHTML = `
-            <div class="rc-header p-3 border-bottom border-secondary">
+            <div class="rc-header p-3 border-bottom border-secondary" style="position: relative; z-index: 2;">
                 <span>Document #${i + 1} <span class="entry-count" style="font-size:0.85em; font-weight:500; color:var(--text-muted);">(${itemCount} entries)</span></span>
                 <span class="rc-method-badge">${result.method}</span>
             </div>
-            <div class="rc-items-list">${itemsHtml}</div>
-            <div style="text-align: center; display: flex; justify-content: center; gap: 10px;" class="my-3">
+            <div class="rc-items-list" style="position: relative; z-index: 2;">${itemsHtml}</div>
+            <div style="position: relative; z-index: 2; text-align: center; display: flex; justify-content: center; gap: 10px;" class="my-3 flex-wrap px-2">
                 <div class="add-row-btn" title="Did the AI miss an item? Add it here.">+ Add Missing Item</div>
                 <div class="save-train-btn" title="Save this perfect receipt to your training dataset.">✅ Approve & Save</div>
             </div>
-            <div class="rc-subtotal px-3 py-2 border-top border-secondary border-opacity-25"><span>Subtotal</span><span>₹${result.subtotal.toFixed(2)}</span></div>
-            ${accuracyHtml}
+            <div class="rc-subtotal px-3 py-2 border-top border-secondary border-opacity-25" style="position: relative; z-index: 2;"><span>Subtotal</span><span>₹${result.subtotal.toFixed(2)}</span></div>
+            <div style="position: relative; z-index: 2;">${accuracyHtml}</div>
         `;
 
         grandTotal += result.subtotal;
@@ -505,7 +517,6 @@ receiptsList.addEventListener("keydown", (e) => {
 });
 
 receiptsList.addEventListener("click", async (e) => {
-  // Logic for adding a missing row
   if (e.target.classList.contains("add-row-btn")) {
     const card = e.target.closest(".receipt-card");
     const itemsList = card.querySelector(".rc-items-list");
@@ -525,14 +536,12 @@ receiptsList.addEventListener("click", async (e) => {
       countSpan.textContent = `(${itemsList.querySelectorAll(".rc-item").length} entries)`;
   }
 
-  // Logic for Saving Training Data
   if (e.target.classList.contains("save-train-btn")) {
     const btn = e.target;
     const card = btn.closest(".receipt-card");
     const imageIndex = parseInt(card.dataset.imageIndex);
     const fileToSave = filesToProcess[imageIndex];
 
-    // Scrape perfectly corrected data from the UI card
     let correctedItems = [];
     card.querySelectorAll(".rc-item").forEach((itemEl) => {
       let itemName = itemEl
@@ -551,12 +560,10 @@ receiptsList.addEventListener("click", async (e) => {
       });
     });
 
-    // Show saving state
     btn.textContent = "Saving... ⏳";
     btn.style.pointerEvents = "none";
 
     try {
-      // We will build this Python route next!
       const formData = new FormData();
       formData.append("image", fileToSave);
       formData.append("json_data", JSON.stringify({ items: correctedItems }));
@@ -575,9 +582,7 @@ receiptsList.addEventListener("click", async (e) => {
         throw new Error("Failed to save");
       }
     } catch (err) {
-      alert(
-        "Error saving training data. (We will build the Python route for this next!)",
-      );
+      alert("Error saving training data.");
       btn.textContent = "✅ Approve & Save";
       btn.style.pointerEvents = "auto";
     }

@@ -1,0 +1,184 @@
+{
+    "items": [
+        {
+            "item": "सामान",
+            "category": "Misc",
+            "amount": 105
+        },
+        {
+            "item": "टॉफी",
+            "category": "Food",
+            "amount": 10
+        },
+        {
+            "item": "दुध",
+            "category": "Dairy",
+            "amount": 140
+        },
+        {
+            "item": "चीप",
+            "category": "Food",
+            "amount": 15
+        },
+        {
+            "item": "चीप",
+            "category": "Food",
+            "amount": 35
+        },
+        {
+            "item": "सोस",
+            "category": "Food",
+            "amount": 15
+        },
+        {
+            "item": "आलू",
+            "category": "Vegetables",
+            "amount": 20
+        },
+        {
+            "item": "दुध",
+            "category": "Dairy",
+            "amount": 140
+        },
+        {
+            "item": "हींग",
+            "category": "Spices",
+            "amount": 10
+        },
+        {
+            "item": "बडी",
+            "category": "Food",
+            "amount": 10
+        },
+        {
+            "item": "रोटी",
+            "category": "Food",
+            "amount": 20
+        },
+        {
+            "item": "दुध",
+            "category": "Dairy",
+            "amount": 140
+        },
+        {
+            "item": "तेल",
+            "category": "Groceries",
+            "amount": 130
+        },
+        {
+            "item": "लौंग",
+            "category": "Spices",
+            "amount": 10
+        },
+        {
+            "item": "दुध",
+            "category": "Dairy",
+            "amount": 105
+        },
+        {
+            "item": "दुध",
+            "category": "Dairy",
+            "amount": 105
+        },
+        {
+            "item": "मठी",
+            "category": "Food",
+            "amount": 5
+        },
+        {
+            "item": "दुध",
+            "category": "Dairy",
+            "amount": 105
+        },
+        {
+            "item": "राई",
+            "category": "Spices",
+            "amount": 20
+        },
+        {
+            "item": "सामान",
+            "category": "Misc",
+            "amount": 91
+        },
+        {
+            "item": "दुध",
+            "category": "Dairy",
+            "amount": 140
+        },
+        {
+            "item": "नमकीन",
+            "category": "Food",
+            "amount": 20
+        },
+        {
+            "item": "पुजा सामान",
+            "category": "Religious",
+            "amount": 150
+        },
+        {
+            "item": "Chips",
+            "category": "Food",
+            "amount": 30
+        },
+        {
+            "item": "सकुरासा",
+            "category": "Food",
+            "amount": 30
+        },
+        {
+            "item": "दुध",
+            "category": "Dairy",
+            "amount": 105
+        },
+        {
+            "item": "Biscuits",
+            "category": "Food",
+            "amount": 5
+        },
+        {
+            "item": "Maggi",
+            "category": "Food",
+            "amount": 20
+        },
+        {
+            "item": "रास",
+            "category": "Food",
+            "amount": 30
+        },
+        {
+            "item": "सब्जी",
+            "category": "Vegetables",
+            "amount": 65
+        },
+        {
+            "item": "Bread",
+            "category": "Food",
+            "amount": 30
+        },
+        {
+            "item": "मीठास",
+            "category": "Food",
+            "amount": 20
+        },
+        {
+            "item": "मालव",
+            "category": "Food",
+            "amount": 10
+        },
+        {
+            "item": "दुध",
+            "category": "Dairy",
+            "amount": 105
+        },
+        {
+            "item": "Biscuit",
+            "category": "Food",
+            "amount": 10
+        },
+        {
+            "item": "मैदे",
+            "category": "Groceries",
+            "amount": 10
+        }
+    ]
+}
