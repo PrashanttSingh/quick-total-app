@@ -89,3 +89,36 @@
 | **Batch 25** | 02:27:47 AM<br>24/02/26 | `WhatsApp Image 2026-02-21 at 3.07.12 PM.jpeg` | 1 of 1 | ✅ Success | ⚠️ Gemini Key 1 Rate Limited<br>✅ Gemini 2.5 Flash: Success (Key 2) | 67.66s | <b>100%</b> | <b>100%</b> |
 | **Batch 26** | 02:41:46 AM<br>24/02/26 | `WhatsApp Image 2026-02-21 at 3.07.12 PM - Copy.jpeg` | 1 of 2 | ✅ Success | ⚠️ Gemini Key 1 Rate Limited<br>✅ Gemini 2.5 Flash: Success (Key 2) | 46.95s | <b>100%</b> | <b>75%</b> |
 |  |  | `PF-Screenshot (1).png` | 2 of 2 | ✅ Success | ⚠️ Gemini Key 1 Rate Limited<br>✅ Gemini 2.5 Flash: Success (Key 2) | 56.92s | <b>100%</b> | <b>100%</b> |
+| **Batch 27** | 11:53:50 PM<br>24/02/26 | `WhatsApp Image 2026-02-21 at 3.07.12 PM - Copy.jpeg` | 1 of 4 | ✅ Success | ✅ Gemini 2.5 Flash: Success (Key 1) | 37.84s | <b>100%</b> | <b>100%</b> |
+|  |  | `WhatsApp Image 2026-02-21 at 3.07.12 PM.jpeg` | 2 of 4 | ✅ Success | ✅ Gemini 2.5 Flash: Success (Key 1) | 27.95s | <b>100%</b> | <b>100%</b> |
+|  |  | `WhatsApp Image 2026-02-21 at 3.07.15 PM.jpeg` | 3 of 4 | ✅ Success | ✅ Gemini 2.5 Flash: Success (Key 1) | 238.96s | <b>100%</b> | <b>100%</b> |
+|  |  | `WhatsApp Image 2026-02-21 at 11.05.50 PM.jpeg` | 4 of 4 | ✅ Success | ✅ Gemini 2.5 Flash: Success (Key 1) | 12.56s | <b>88%</b> | <b>100%</b> |
+| **Batch 28** | 01:04:56 AM<br>25/02/26 | `OIP - Copy - Copy - Copy.jfif` | 1 of 1 | ✅ Success | ✅ Gemini 2.5 Flash: Success (Key 1) | 6.83s | <b>100%</b> | <b>100%</b> |
+| **Batch 29** | 01:07:12 AM<br>25/02/26 | `Addition-and-Subtraction-for-Kindergarten.webp` | 1 of 1 | ✅ Success | ✅ Gemini 2.5 Flash: Success (Key 1) | 14.16s | <b>100%</b> | <b>100%</b> |
+| **Batch 30** | 01:09:21 AM<br>25/02/26 | `WhatsApp Image 2026-02-21 at 3.07.12 PM - Copy - Copy.jpeg` | 1 of 4 | ✅ Success | ✅ Gemini 2.5 Flash: Success (Key 1) | 31.59s | <b>100%</b> | <b>100%</b> |
+| **Batch 30** | 01:09:28 AM<br>25/02/26 | `WhatsApp Image 2026-02-21 at 3.07.12 PM - Copy - Copy.jpeg` | 1 of 4 | ✅ Success | ✅ Gemini 2.5 Flash: Success (Key 1) | 33.48s | <b>100%</b> | <b>100%</b> |
+|  |  | `WhatsApp Image 2026-02-21 at 3.07.12 PM.jpeg` | 2 of 4 | ✅ Success | ✅ Gemini 2.5 Flash: Success (Key 1) | 34.37s | <b>100%</b> | <b>100%</b> |
+|  |  | `WhatsApp Image 2026-02-21 at 3.07.12 PM.jpeg` | 2 of 4 | ✅ Success | ✅ Gemini 2.5 Flash: Success (Key 1) | 44.04s | <b>100%</b> | <b>100%</b> |
+|  |  | `WhatsApp Image 2026-02-21 at 3.07.15 PM.jpeg` | 3 of 4 | ✅ Success | ✅ Gemini 2.5 Flash: Success (Key 1) | 40.48s | <b>100%</b> | <b>100%</b> |
+|  |  | `WhatsApp Image 2026-02-21 at 3.07.15 PM.jpeg` | 3 of 4 | ✅ Success | ✅ Gemini 2.5 Flash: Success (Key 1) | 49.28s | <b>100%</b> | <b>97%</b> |
+|  |  | `WhatsApp Image 2026-02-21 at 11.05.50 PM.jpeg` | 4 of 4 | ✅ Success | ✅ Gemini 2.5 Flash: Success (Key 1) | 15.48s | <b>60%</b> | <b>100%</b> |
+|  |  | `WhatsApp Image 2026-02-21 at 11.05.50 PM.jpeg` | 4 of 4 | ✅ Success | ✅ Gemini 2.5 Flash: Success (Key 1) | 15.42s | <b>60%</b> | <b>100%</b> |
+| **Batch 31** | 01:17:26 AM<br>25/02/26 | `WhatsApp Image 2026-02-21 at 3.07.12 PM - Copy - Copy.jpeg` | 1 of 3 | ✅ Success | ✅ Gemini 2.5 Flash: Success (Key 1) | 46.01s | <b>100%</b> | <b>100%</b> |
+|  |  | `WhatsApp Image 2026-02-21 at 3.07.12 PM.jpeg` | 2 of 3 | ✅ Success | ✅ Gemini 2.5 Flash: Success (Key 1) | 39.62s | <b>100%</b> | <b>100%</b> |
+|  |  | `WhatsApp Image 2026-02-21 at 11.05.50 PM.jpeg` | 3 of 3 | ✅ Success | ✅ Gemini 2.5 Flash: Success (Key 1) | 29.99s | <b>60%</b> | <b>100%</b> |
+| **Batch 32** | 01:54:38 AM<br>25/02/26 | `OIP - Copy - Copy - Copy.jfif` | 1 of 1 | ✅ Success | ✅ Gemini 2.5 Flash: Success (Key 1) | 9.04s | <b>0%</b> | <b>100%</b> |
+| **Batch 33** | 01:55:03 AM<br>25/02/26 | `OIP - Copy - Copy - Copy.jfif` | 1 of 1 | ✅ Success | ✅ Gemini 2.5 Flash: Success (Key 1) | 6.6s | <b>0%</b> | <b>100%</b> |
+| **Batch 34** | 02:19:16 AM<br>25/02/26 | `OIP - Copy - Copy - Copy.jfif` | 1 of 3 | ✅ Success | ✅ Gemini 2.5 Flash: Success (Key 1) | 6.78s | <b>95%</b> | <b>100%</b> |
+|  |  | `WhatsApp Image 2026-02-21 at 3.07.12 PM.jpeg` | 2 of 3 | ✅ Success | ✅ Gemini 2.5 Flash: Success (Key 1) | 28.61s | <b>70%</b> | <b>100%</b> |
+|  |  | `WhatsApp Image 2026-02-21 at 11.05.50 PM.jpeg` | 3 of 3 | ✅ Success | ⚠️ Gemini Key 1 Rate Limited<br>✅ Gemini 2.5 Flash: Success (Key 2) | 41.55s | <b>60%</b> | <b>100%</b> |
+| **Batch 35** | 02:26:55 AM<br>25/02/26 | `OIP - Copy - Copy - Copy.jfif` | 1 of 3 | ✅ Success | ⚠️ Gemini Key 1 Rate Limited<br>✅ Gemini 2.5 Flash: Success (Key 2) | 16.37s | <b>100%</b> | <b>100%</b> |
+| **Batch 36** | 02:27:32 AM<br>25/02/26 | `OIP - Copy - Copy - Copy.jfif` | 1 of 3 | ✅ Success | ✅ Gemini 2.5 Flash: Success (Key 1) | 11.25s | <b>100%</b> | <b>100%</b> |
+|  |  | `WhatsApp Image 2026-02-21 at 3.07.12 PM - Copy - Copy.jpeg` | 2 of 3 | ✅ Success | ⚠️ Gemini Key 1 Rate Limited<br>✅ Gemini 2.5 Flash: Success (Key 2) | 33.49s | <b>85%</b> | <b>100%</b> |
+|  |  | `WhatsApp Image 2026-02-21 at 11.05.50 PM.jpeg` | 3 of 3 | ✅ Success | ⚠️ Gemini Key 1 Rate Limited<br>✅ Gemini 2.5 Flash: Success (Key 2) | 22.96s | <b>60%</b> | <b>100%</b> |
+| **Batch 37** | 02:48:50 AM<br>25/02/26 | `OIP - Copy - Copy - Copy.jfif` | 1 of 3 | ✅ Success | ⚠️ Gemini Key 1 Rate Limited<br>✅ Gemini 2.5 Flash: Success (Key 2) | 16.0s | <b>100%</b> | <b>100%</b> |
+| **Batch 38** | 02:49:30 AM<br>25/02/26 | `OIP - Copy - Copy - Copy.jfif` | 1 of 3 | ✅ Success | ⚠️ Gemini Key 1 Rate Limited<br>✅ Gemini 2.5 Flash: Success (Key 2) | 15.6s | <b>100%</b> | <b>100%</b> |
+|  |  | `WhatsApp Image 2026-02-21 at 3.07.12 PM - Copy - Copy.jpeg` | 2 of 3 | ✅ Success | ⚠️ Gemini Key 1 Rate Limited<br>✅ Gemini 2.5 Flash: Success (Key 2) | 44.79s | <b>65%</b> | <b>90%</b> |
+|  |  | `WhatsApp Image 2026-02-21 at 3.07.12 PM.jpeg` | 3 of 3 | ✅ Success | ⚠️ Gemini Key 1 Rate Limited<br>✅ Gemini 2.5 Flash: Success (Key 2) | 60.1s | <b>75%</b> | <b>90%</b> |
+| **Batch 39** | 02:52:52 AM<br>25/02/26 | `OIP - Copy - Copy - Copy.jfif` | 1 of 3 | ✅ Success | ⚠️ Gemini Key 1 Rate Limited<br>✅ Gemini 2.5 Flash: Success (Key 2) | 8.01s | <b>100%</b> | <b>100%</b> |
+|  |  | `WhatsApp Image 2026-02-21 at 3.07.12 PM - Copy - Copy.jpeg` | 2 of 3 | ✅ Success | ⚠️ Gemini Key 1 Rate Limited<br>✅ Gemini 2.5 Flash: Success (Key 2) | 38.62s | <b>60%</b> | <b>85%</b> |
+|  |  | `WhatsApp Image 2026-02-21 at 3.07.12 PM.jpeg` | 3 of 3 | ✅ Success | ⚠️ Gemini Key 1 Rate Limited<br>✅ Gemini 2.5 Flash: Success (Key 2) | 38.97s | <b>65%</b> | <b>90%</b> |

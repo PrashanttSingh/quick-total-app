@@ -87,8 +87,7 @@ if (captureBtn) {
       base64Image,
       `camera_capture_${Date.now()}.jpg`,
     );
-    filesToProcess.push(newFile);
-    updateUIState();
+    addFiles([newFile]); // Route it through the new background process
     stopCamera();
   });
 }
@@ -217,7 +216,11 @@ if (applyCropBtn) {
       base64Image,
       `cropped_part_${Date.now()}.jpg`,
     );
+
+    // Maintain the quality score if it existed
+    newFile.precalcQuality = filesToProcess[activeFileIndex].precalcQuality;
     filesToProcess[activeFileIndex] = newFile;
+
     renderThumbnails();
     exitCropMode();
     imageModal.style.display = "none";
@@ -295,11 +298,46 @@ fileInput.addEventListener("change", (e) => {
   fileInput.value = "";
 });
 
-function addFiles(newFiles) {
+// ============================================================
+// ✨ THE "BACKGROUND MATH" UPGRADE
+// ============================================================
+async function addFiles(newFiles) {
   if (!newFiles || newFiles.length === 0) return;
-  filesToProcess = filesToProcess.concat(Array.from(newFiles));
+
+  const incomingFiles = Array.from(newFiles);
+
+  // 1. Instantly add files to UI so it feels responsive
+  for (let f of incomingFiles) {
+    f.precalcQuality = null; // Blank until server responds
+    filesToProcess.push(f);
+  }
   updateUIState();
+
+  // 2. Secretly send them to the backend OpenCV router in the background
+  for (
+    let i = filesToProcess.length - incomingFiles.length;
+    i < filesToProcess.length;
+    i++
+  ) {
+    fetchQualityInBackground(filesToProcess[i], i);
+  }
 }
+
+async function fetchQualityInBackground(fileObj, index) {
+  const fd = new FormData();
+  fd.append("image", fileObj);
+  try {
+    const res = await fetch("/analyze_image", { method: "POST", body: fd });
+    const data = await res.json();
+    // Save the score back to the specific file
+    fileObj.precalcQuality = data.quality;
+    // Refresh the thumbnails so the little badge appears!
+    renderThumbnails();
+  } catch (e) {
+    console.log("Background check failed, will calculate on process.");
+  }
+}
+
 function removeFile(index, event) {
   event.stopPropagation();
   filesToProcess.splice(index, 1);
@@ -331,26 +369,34 @@ function renderThumbnails() {
       div.className = "thumbnail-item animate-pop";
       div.style.animationDelay = `${index * 0.05}s`;
       div.onclick = () => openModal(file, index);
-      div.innerHTML = `<span class="thumb-number">#${index + 1}</span><img src="${e.target.result}"><div class="thumb-delete" onclick="removeFile(${index}, event)">×</div>`;
+
+      // Look here! If the background math is done, it shows the Sharpness Badge instantly!
+      let qualityBadge = "";
+      if (file.precalcQuality !== null) {
+        qualityBadge = `<div class="thumb-quality" title="OpenCV Sharpness Score">👁️ ${file.precalcQuality}%</div>`;
+      }
+
+      div.innerHTML = `
+        <span class="thumb-number">#${index + 1}</span>
+        <img src="${e.target.result}">
+        ${qualityBadge}
+        <div class="thumb-delete" onclick="removeFile(${index}, event)">×</div>
+      `;
       thumbnailGrid.appendChild(div);
     };
     reader.readAsDataURL(file);
   });
 }
 
-// ============================================================
-// REVERSED COLORS: 90+ = Yellow, 50+ = Green, Below 50 = Red
-// ============================================================
 function getAccuracyInfo(score) {
   const num = parseInt(score) || 0;
-
   if (num >= 90) return { color: "#fbbf24", text: "Excellent" }; // Yellow / Gold
   if (num >= 50) return { color: "#34d399", text: "Good" }; // Green
   return { color: "#ef4444", text: "Low Confidence" }; // Red
 }
 
 // ============================================================
-// API SUBMISSION
+// API SUBMISSION (Uses the Background Math!)
 // ============================================================
 calculateBtn.addEventListener("click", async () => {
   if (filesToProcess.length === 0) return;
@@ -375,6 +421,9 @@ calculateBtn.addEventListener("click", async () => {
       formData.append("images", file);
       formData.append("image_index", i + 1);
       formData.append("total_images", totalFiles);
+
+      // MAGIC: Send the pre-calculated math to the server so it skips that step!
+      formData.append("precalculated_quality", file.precalcQuality);
 
       const colWrap = document.createElement("div");
       colWrap.className = "col-12 col-md-6 mb-4";
@@ -424,12 +473,9 @@ calculateBtn.addEventListener("click", async () => {
         let imgInfo = getAccuracyInfo(imgScoreNum);
         let accInfo = getAccuracyInfo(accScoreNum);
 
-        // ==========================================
-        // ✨ TRIGGER TEMPORARY NOTEBOOK LM GLOW ✨
-        // ==========================================
+        // NOTEBOOK LM SHIMMER EFFECT
         if (accScoreNum === 100) {
           tempCard.classList.add("notebooklm-card-glow");
-          // Automatically remove the glow class after 4 seconds
           setTimeout(() => {
             tempCard.classList.remove("notebooklm-card-glow");
           }, 4000);
