@@ -304,6 +304,7 @@ fileInput.addEventListener("change", (e) => {
 async function addFiles(newFiles) {
   if (!newFiles || newFiles.length === 0) return;
 
+  // NO SORTING. This preserves the exact order you click/select the files in your computer.
   const incomingFiles = Array.from(newFiles);
 
   // 1. Instantly add files to UI so it feels responsive
@@ -437,6 +438,27 @@ calculateBtn.addEventListener("click", async () => {
       colWrap.appendChild(tempCard);
       receiptsList.appendChild(colWrap);
 
+      // ============================================================
+      // 🚧 BUG FIX: THE HARD GATEKEEPER
+      // ============================================================
+      // We check the pre-calculated quality score BEFORE sending to API
+      if (file.precalcQuality !== null && parseInt(file.precalcQuality) < 10) {
+        // 1. Immediately update UI to show a "Skipped" message, no waiting!
+        tempCard.innerHTML = `
+              <div class="rc-header p-3 border-bottom border-secondary">
+                  <span>Document #${i + 1}</span>
+                  <span class="val-neg">❌ Invalid Image</span>
+              </div>
+              <p class="p-3 text-muted" style="font-size: 0.9em; line-height: 1.6; color: #94a3b8;">
+                  This image appears to be too messy, blurry, or not a receipt (Score: ${file.precalcQuality}%).
+                  Processing skipped to save time and API costs.
+              </p>`;
+
+        // 2. We use 'continue' to skip the entire fetch request for this image!
+        continue;
+      }
+      // ============================================================
+
       try {
         const res = await fetch("/calculate", {
           method: "POST",
@@ -463,7 +485,11 @@ calculateBtn.addEventListener("click", async () => {
                     <span class="editable-text item-name-field" contenteditable="true" spellcheck="false" title="Click to edit name">${item.expression}</span>
                     <span class="cat-badge editable-text item-cat-field" contenteditable="true" spellcheck="false" title="Click to edit category">${category}</span>
                 </div>
-                <span class="rc-item-val editable-text price-edit ${isNeg ? "val-neg" : ""}" contenteditable="true" spellcheck="false" title="Click to edit price">${isNeg ? "-" : "+"}₹${Math.abs(item.result).toFixed(2)}</span>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span class="rc-item-val editable-text price-edit ${isNeg ? "val-neg" : ""}" contenteditable="true" spellcheck="false" title="Click to edit price">${isNeg ? "-" : "+"}₹${Math.abs(item.result).toFixed(2)}</span>
+                    <span class="inline-insert-btn" style="cursor:pointer; filter: grayscale(1); transition: 0.2s;" onmouseover="this.style.filter='none'" onmouseout="this.style.filter='grayscale(1)'" title="Insert missing item below">➕</span>
+                    <span class="inline-delete-btn" style="cursor:pointer; filter: grayscale(1); transition: 0.2s;" onmouseover="this.style.filter='none'" onmouseout="this.style.filter='grayscale(1)'" title="Delete mistake">🗑️</span>
+                </div>
             </div>`;
         });
 
@@ -563,6 +589,45 @@ receiptsList.addEventListener("keydown", (e) => {
 });
 
 receiptsList.addEventListener("click", async (e) => {
+  // 1. INLINE INSERT (+ BUTTON)
+  if (e.target.classList.contains("inline-insert-btn")) {
+    const currentRow = e.target.closest(".rc-item");
+    const newRow = document.createElement("div");
+    newRow.className = "rc-item animate-pop px-3";
+    newRow.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="editable-text item-name-field" contenteditable="true" spellcheck="false" title="Click to edit name">New Item</span>
+            <span class="cat-badge editable-text item-cat-field" contenteditable="true" spellcheck="false" title="Click to edit category">Misc</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <span class="rc-item-val editable-text price-edit" contenteditable="true" spellcheck="false" title="Click to edit price">+₹0.00</span>
+            <span class="inline-insert-btn" style="cursor:pointer; filter: grayscale(1);" onmouseover="this.style.filter='none'" onmouseout="this.style.filter='grayscale(1)'" title="Insert missing item below">➕</span>
+            <span class="inline-delete-btn" style="cursor:pointer; filter: grayscale(1);" onmouseover="this.style.filter='none'" onmouseout="this.style.filter='grayscale(1)'" title="Delete mistake">🗑️</span>
+        </div>
+    `;
+    // Insert immediately below the row you clicked
+    currentRow.parentNode.insertBefore(newRow, currentRow.nextSibling);
+    newRow.querySelector(".item-name-field").focus();
+
+    const card = e.target.closest(".receipt-card");
+    const countSpan = card.querySelector(".entry-count");
+    if (countSpan)
+      countSpan.textContent = `(${card.querySelectorAll(".rc-item").length} entries)`;
+  }
+
+  // 2. INLINE DELETE (TRASH CAN BUTTON)
+  if (e.target.classList.contains("inline-delete-btn")) {
+    const row = e.target.closest(".rc-item");
+    const card = row.closest(".receipt-card");
+    row.remove(); // Deletes the row
+
+    const countSpan = card.querySelector(".entry-count");
+    if (countSpan)
+      countSpan.textContent = `(${card.querySelectorAll(".rc-item").length} entries)`;
+    recalculateLiveMath();
+  }
+
+  // 3. EXISTING BIG ADD BUTTON AT BOTTOM
   if (e.target.classList.contains("add-row-btn")) {
     const card = e.target.closest(".receipt-card");
     const itemsList = card.querySelector(".rc-items-list");
@@ -573,10 +638,14 @@ receiptsList.addEventListener("click", async (e) => {
             <span class="editable-text item-name-field" contenteditable="true" spellcheck="false" title="Click to edit name">New Item</span>
             <span class="cat-badge editable-text item-cat-field" contenteditable="true" spellcheck="false" title="Click to edit category">Misc</span>
         </div>
-        <span class="rc-item-val editable-text price-edit" contenteditable="true" spellcheck="false" title="Click to edit price">+₹0.00</span>
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <span class="rc-item-val editable-text price-edit" contenteditable="true" spellcheck="false" title="Click to edit price">+₹0.00</span>
+            <span class="inline-insert-btn" style="cursor:pointer; filter: grayscale(1);" onmouseover="this.style.filter='none'" onmouseout="this.style.filter='grayscale(1)'" title="Insert missing item below">➕</span>
+            <span class="inline-delete-btn" style="cursor:pointer; filter: grayscale(1);" onmouseover="this.style.filter='none'" onmouseout="this.style.filter='grayscale(1)'" title="Delete mistake">🗑️</span>
+        </div>
     `;
     itemsList.appendChild(newRow);
-    newRow.querySelector(".editable-text").focus();
+    newRow.querySelector(".item-name-field").focus();
     const countSpan = card.querySelector(".entry-count");
     if (countSpan)
       countSpan.textContent = `(${itemsList.querySelectorAll(".rc-item").length} entries)`;
