@@ -91,6 +91,14 @@ def img_to_base64(img_pil):
 # =================================================================
 def build_prompt():
     return """You are an elite financial AI. Extract data from this image. Output ONLY a valid JSON object.
+
+CRITICAL RULE FOR EXTRACTION ORDER:
+You MUST extract the items in the EXACT physical order they appear on the receipt. 
+Read strictly from Top to Bottom, Line by Line. 
+If there are two columns, read the left side of the row, then the right side, before moving down. 
+DO NOT sort the items alphabetically. DO NOT group them by category. 
+You must output the JSON array so that the first item in the list is the physical top item on the paper, and the last item is the physical bottom item.
+
 CRITICAL RULES:
 1. DO NOT extract the final "Total", "Subtotal", "Grand Total", "योग", "कुल", "जमा" (Jama), or any summations at the bottom of the page. ONLY extract the individual purchased line items.
 2. "total_elements_present" must ONLY count actual purchasable line items, NOT headers, footers, or addresses.
@@ -241,6 +249,10 @@ def calculate():
             processing_timeline = []
             
             img_raw = Image.open(file.stream).convert('RGB')
+            
+            # 👇 The Anti-Freeze Fix: Shrink images so they process in 2 seconds, not 10 minutes!
+            img_raw.thumbnail((1600, 1600)) 
+            
             img = enhance_poor_image(img_raw)
 
             # Let the AI completely judge itself!
