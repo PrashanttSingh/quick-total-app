@@ -1,6 +1,7 @@
 // GLOBAL STATE
 let filesToProcess = [];
 let spendPieChart = null;
+let draggedItemIndex = null;
 
 // ELEMENTS
 const dropZone = document.getElementById("dropZone");
@@ -87,7 +88,7 @@ if (captureBtn) {
       base64Image,
       `camera_capture_${Date.now()}.jpg`,
     );
-    addFiles([newFile]); // Route it through the new background process
+    addFiles([newFile]);
     stopCamera();
   });
 }
@@ -217,7 +218,6 @@ if (applyCropBtn) {
       `cropped_part_${Date.now()}.jpg`,
     );
 
-    // Maintain the quality score if it existed
     newFile.precalcQuality = filesToProcess[activeFileIndex].precalcQuality;
     filesToProcess[activeFileIndex] = newFile;
 
@@ -298,23 +298,18 @@ fileInput.addEventListener("change", (e) => {
   fileInput.value = "";
 });
 
-// ============================================================
-// ✨ THE "BACKGROUND MATH" UPGRADE
-// ============================================================
 async function addFiles(newFiles) {
   if (!newFiles || newFiles.length === 0) return;
 
-  // NO SORTING. This preserves the exact order you click/select the files in your computer.
   const incomingFiles = Array.from(newFiles);
 
-  // 1. Instantly add files to UI so it feels responsive
   for (let f of incomingFiles) {
-    f.precalcQuality = null; // Blank until server responds
+    f.precalcQuality = null;
+    f.previewUrl = URL.createObjectURL(f);
     filesToProcess.push(f);
   }
   updateUIState();
 
-  // 2. Secretly send them to the backend OpenCV router in the background
   for (
     let i = filesToProcess.length - incomingFiles.length;
     i < filesToProcess.length;
@@ -330,12 +325,10 @@ async function fetchQualityInBackground(fileObj, index) {
   try {
     const res = await fetch("/analyze_image", { method: "POST", body: fd });
     const data = await res.json();
-    // Save the score back to the specific file
     fileObj.precalcQuality = data.quality;
-    // Refresh the thumbnails so the little badge appears!
     renderThumbnails();
   } catch (e) {
-    console.log("Background check failed, will calculate on process.");
+    console.log("Background check failed.");
   }
 }
 
@@ -363,42 +356,116 @@ function updateUIState() {
 
 function renderThumbnails() {
   thumbnailGrid.innerHTML = "";
+
   filesToProcess.forEach((file, index) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const div = document.createElement("div");
-      div.className = "thumbnail-item animate-pop";
-      div.style.animationDelay = `${index * 0.05}s`;
-      div.onclick = () => openModal(file, index);
+    const div = document.createElement("div");
+    div.className = "thumbnail-item animate-pop";
+    div.style.animationDelay = `${index * 0.05}s`;
+    div.draggable = true;
 
-      // Look here! If the background math is done, it shows the Sharpness Badge instantly!
-      let qualityBadge = "";
-      if (file.precalcQuality !== null) {
-        qualityBadge = `<div class="thumb-quality" title="OpenCV Sharpness Score">👁️ ${file.precalcQuality}%</div>`;
+    div.addEventListener("dragstart", (e) => {
+      draggedItemIndex = index;
+      setTimeout(() => (div.style.opacity = "0.4"), 0);
+    });
+
+    div.addEventListener("dragend", (e) => {
+      div.style.opacity = "1";
+      draggedItemIndex = null;
+    });
+
+    div.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      div.style.transform = "scale(1.05)";
+      div.style.border = "2px dashed #8b5cf6";
+    });
+
+    div.addEventListener("dragleave", (e) => {
+      div.style.transform = "none";
+      div.style.border = "none";
+    });
+
+    div.addEventListener("drop", (e) => {
+      e.preventDefault();
+      div.style.transform = "none";
+      div.style.border = "none";
+
+      if (draggedItemIndex === null || draggedItemIndex === index) return;
+
+      const draggedFile = filesToProcess.splice(draggedItemIndex, 1)[0];
+      filesToProcess.splice(index, 0, draggedFile);
+      renderThumbnails();
+    });
+
+    div.addEventListener("click", (e) => {
+      if (!e.target.classList.contains("thumb-delete")) {
+        openModal(file, index);
       }
+    });
 
-      div.innerHTML = `
-        <span class="thumb-number">#${index + 1}</span>
-        <img src="${e.target.result}">
-        ${qualityBadge}
-        <div class="thumb-delete" onclick="removeFile(${index}, event)">×</div>
-      `;
-      thumbnailGrid.appendChild(div);
-    };
-    reader.readAsDataURL(file);
+    let qualityBadge = "";
+    if (file.precalcQuality !== null) {
+      qualityBadge = `<div class="thumb-quality" title="OpenCV Sharpness Score">👁️ ${file.precalcQuality}%</div>`;
+    }
+
+    div.innerHTML = `
+      <span class="thumb-number">#${index + 1}</span>
+      <img src="${file.previewUrl}" draggable="false" style="pointer-events: none;">
+      ${qualityBadge}
+      <div class="thumb-delete" onclick="removeFile(${index}, event)">×</div>
+    `;
+    thumbnailGrid.appendChild(div);
   });
 }
 
 function getAccuracyInfo(score) {
   const num = parseInt(score) || 0;
-  if (num >= 90) return { color: "#fbbf24", text: "Excellent" }; // Yellow / Gold
-  if (num >= 50) return { color: "#34d399", text: "Good" }; // Green
-  return { color: "#ef4444", text: "Low Confidence" }; // Red
+  if (num >= 90) return { color: "#fbbf24", text: "Excellent" };
+  if (num >= 50) return { color: "#34d399", text: "Good" };
+  return { color: "#ef4444", text: "Low Confidence" };
 }
 
-// ============================================================
-// API SUBMISSION (Uses the Background Math!)
-// ============================================================
+// 📌 UPDATED: Added comprehensive Hindi words to Categories
+function guessCategory(text) {
+  const lower = text.toLowerCase();
+
+  if (
+    /(doodh|milk|maggi|soybean|aata|atta|rice|sugar|tea|coffee|dal|pulse|paneer|bread|butter|snack|biscuit|oil|masala|spices|vegetable|fruit|drink|parle|lays|दूध|मैगी|आटा|चीनी|चाय|दाल|पनीर|ब्रेड|मक्खन|तेल|मसाला|सब्जी|फल)/i.test(
+      lower,
+    )
+  )
+    return "Groceries";
+
+  if (
+    /(shirt|kurta|pant|jeans|tshirt|shoes|clothing|fabric|suit|शर्ट|कुर्ता|पैंट|कपड़ा|जूते)/i.test(
+      lower,
+    )
+  )
+    return "Clothing";
+
+  if (
+    /(wire|cable|phone|battery|charger|usb|electronics|led|bulb|plug|adaptor|तार|केबल|बैटरी|चार्जर|बल्ब)/i.test(
+      lower,
+    )
+  )
+    return "Electronics";
+
+  if (
+    /(tablet|paracetamol|medicine|syrup|doctor|pharmacy|pill|medical|clinic|दवा|गोली|सिरप|डॉक्टर)/i.test(
+      lower,
+    )
+  )
+    return "Medical";
+
+  if (
+    /(auto|cab|uber|ola|bus|train|ticket|travel|petrol|fuel|diesel|ऑटो|कैब|बस|ट्रेन|टिकट|पेट्रोल|डीजल)/i.test(
+      lower,
+    )
+  )
+    return "Transport";
+
+  return "Misc";
+}
+
 calculateBtn.addEventListener("click", async () => {
   if (filesToProcess.length === 0) return;
 
@@ -422,8 +489,6 @@ calculateBtn.addEventListener("click", async () => {
       formData.append("images", file);
       formData.append("image_index", i + 1);
       formData.append("total_images", totalFiles);
-
-      // MAGIC: Send the pre-calculated math to the server so it skips that step!
       formData.append("precalculated_quality", file.precalcQuality);
 
       const colWrap = document.createElement("div");
@@ -433,31 +498,23 @@ calculateBtn.addEventListener("click", async () => {
       tempCard.className =
         "receipt-card glass-panel h-100 animate-pop rounded-4 shadow-sm";
       tempCard.dataset.imageIndex = i;
+      tempCard.dataset.filename = file.name;
       tempCard.innerHTML = `<div class="rc-header p-3 border-bottom border-secondary"><span>Document #${i + 1}</span><span style="color:#8b5cf6;">Processing... ⏳</span></div>`;
 
       colWrap.appendChild(tempCard);
       receiptsList.appendChild(colWrap);
 
-      // ============================================================
-      // 🚧 BUG FIX: THE HARD GATEKEEPER
-      // ============================================================
-      // We check the pre-calculated quality score BEFORE sending to API
-      if (file.precalcQuality !== null && parseInt(file.precalcQuality) < 10) {
-        // 1. Immediately update UI to show a "Skipped" message, no waiting!
+      if (file.precalcQuality !== null && parseInt(file.precalcQuality) < 2) {
         tempCard.innerHTML = `
               <div class="rc-header p-3 border-bottom border-secondary">
                   <span>Document #${i + 1}</span>
                   <span class="val-neg">❌ Invalid Image</span>
               </div>
               <p class="p-3 text-muted" style="font-size: 0.9em; line-height: 1.6; color: #94a3b8;">
-                  This image appears to be too messy, blurry, or not a receipt (Score: ${file.precalcQuality}%).
-                  Processing skipped to save time and API costs.
+                  Skipped to save time and API costs. This image appears to be too messy, blurry, or not a receipt (Score: ${file.precalcQuality}%).
               </p>`;
-
-        // 2. We use 'continue' to skip the entire fetch request for this image!
         continue;
       }
-      // ============================================================
 
       try {
         const res = await fetch("/calculate", {
@@ -467,8 +524,7 @@ calculateBtn.addEventListener("click", async () => {
         const data = await res.json();
 
         if (data.error || !data.results || data.results[0].error) {
-          const errorMsg = data.error || data.results[0].error;
-          tempCard.innerHTML = `<div class="rc-header p-3 border-bottom border-secondary"><span>Document #${i + 1}</span><span class="val-neg">Failed</span></div><p class="p-3">${errorMsg}</p>`;
+          tempCard.innerHTML = `<div class="rc-header p-3 border-bottom border-secondary"><span>Document #${i + 1}</span><span class="val-neg">Failed</span></div><p class="p-3">Error processing image.</p>`;
           continue;
         }
 
@@ -487,6 +543,7 @@ calculateBtn.addEventListener("click", async () => {
                 </div>
                 <div style="display: flex; align-items: center; gap: 12px;">
                     <span class="rc-item-val editable-text price-edit ${isNeg ? "val-neg" : ""}" contenteditable="true" spellcheck="false" title="Click to edit price">${isNeg ? "-" : "+"}₹${Math.abs(item.result).toFixed(2)}</span>
+                    <span class="inline-mic-btn" style="cursor:pointer; filter: grayscale(1); transition: 0.2s;" onmouseover="this.style.filter='none'" onmouseout="this.style.filter='grayscale(1)'" title="Speak item and price (e.g., 'Doodh 40')">🎙️</span>
                     <span class="inline-insert-btn" style="cursor:pointer; filter: grayscale(1); transition: 0.2s;" onmouseover="this.style.filter='none'" onmouseout="this.style.filter='grayscale(1)'" title="Insert missing item below">➕</span>
                     <span class="inline-delete-btn" style="cursor:pointer; filter: grayscale(1); transition: 0.2s;" onmouseover="this.style.filter='none'" onmouseout="this.style.filter='grayscale(1)'" title="Delete mistake">🗑️</span>
                 </div>
@@ -495,29 +552,15 @@ calculateBtn.addEventListener("click", async () => {
 
         const imgScoreNum = parseInt(result.image_quality) || 0;
         const accScoreNum = parseInt(result.ai_accuracy) || 0;
-
         let imgInfo = getAccuracyInfo(imgScoreNum);
         let accInfo = getAccuracyInfo(accScoreNum);
 
-        // NOTEBOOK LM SHIMMER EFFECT
         if (accScoreNum === 100) {
           tempCard.classList.add("notebooklm-card-glow");
           setTimeout(() => {
             tempCard.classList.remove("notebooklm-card-glow");
           }, 4000);
         }
-
-        let accuracyHtml = `
-            <div class="p-3" style="margin-top: 15px; border-top: 1px solid var(--glass-border); display: flex; flex-direction: column; gap: 12px;">
-                <div>
-                    <div class="accuracy-label"><span>Image Quality</span><span style="color: ${imgInfo.color};">${imgScoreNum}%</span></div>
-                    <div class="accuracy-bar-bg"><div class="accuracy-bar-fill" style="width: ${imgScoreNum}%; background: ${imgInfo.color};"></div></div>
-                </div>
-                <div>
-                    <div class="accuracy-label"><span>AI Accuracy</span><span style="color: ${accInfo.color};">${accScoreNum}%</span></div>
-                    <div class="accuracy-bar-bg"><div class="accuracy-bar-fill" style="width: ${accScoreNum}%; background: ${accInfo.color};"></div></div>
-                </div>
-            </div>`;
 
         tempCard.innerHTML = `
             <div class="rc-header p-3 border-bottom border-secondary" style="position: relative; z-index: 2;">
@@ -529,56 +572,57 @@ calculateBtn.addEventListener("click", async () => {
                 <div class="add-row-btn" title="Did the AI miss an item? Add it here.">+ Add Missing Item</div>
                 <div class="save-train-btn" title="Save this perfect receipt to your training dataset.">✅ Approve & Save</div>
             </div>
-            <div class="rc-subtotal px-3 py-2 border-top border-secondary border-opacity-25" style="position: relative; z-index: 2;"><span>Subtotal</span><span>₹${result.subtotal.toFixed(2)}</span></div>
-            <div style="position: relative; z-index: 2;">${accuracyHtml}</div>
+            <div class="rc-subtotal px-3 py-2 border-top border-secondary border-opacity-25" style="position: relative; z-index: 2;"><span>Subtotal</span><span class="rc-subtotal-val">₹${result.subtotal.toFixed(2)}</span></div>
+            <div class="p-3 border-top border-secondary border-opacity-25" style="position: relative; z-index: 2;">
+                <div class="accuracy-label"><span>Image Quality</span><span style="color: ${imgInfo.color};">${imgScoreNum}%</span></div>
+                <div class="accuracy-bar-bg"><div class="accuracy-bar-fill" style="width: ${imgScoreNum}%; background: ${imgInfo.color};"></div></div>
+                <div class="accuracy-label mt-2"><span>AI Accuracy</span><span style="color: ${accInfo.color};">${accScoreNum}%</span></div>
+                <div class="accuracy-bar-bg"><div class="accuracy-bar-fill" style="width: ${accScoreNum}%; background: ${accInfo.color};"></div></div>
+            </div>
         `;
 
         grandTotal += result.subtotal;
         successfulDocs++;
       } catch (err) {
-        tempCard.innerHTML = `<div class="rc-header p-3"><span>Document #${i + 1}</span><span class="val-neg">Error</span></div><p class="px-3">Connection Error: ${err.message}</p>`;
+        tempCard.innerHTML = `<div class="rc-header p-3"><span>Document #${i + 1}</span><span class="val-neg">Error</span></div><p class="px-3">Server Error.</p>`;
       }
     }
-  } catch (globalErr) {
-    alert("An unexpected error occurred during processing.");
   } finally {
     loadingEl.style.display = "none";
     actionButtons.style.display = "flex";
-
     if (successfulDocs > 0) {
       grandTotalValue.textContent = `₹${grandTotal.toFixed(2)}`;
       grandTotalCard.style.display = "flex";
       recalculateLiveMath();
-      window.scrollTo({
-        top: document.getElementById("resultsContainer").offsetTop - 20,
-        behavior: "smooth",
-      });
     }
   }
 });
 
-// ============================================================
-// INTERACTIVE EVENT LISTENERS
-// ============================================================
 receiptsList.addEventListener("focusin", (e) => {
   if (e.target.classList.contains("editable-text")) {
     const text = e.target.textContent.trim();
-    if (
-      text === "New Item" ||
-      text === "+₹0.00" ||
-      text === "-₹0.00" ||
-      text === "Misc"
-    )
+    if (["New Item", "+₹0.00", "-₹0.00", "Misc"].includes(text))
       e.target.textContent = "";
   }
 });
 
-receiptsList.addEventListener("focusout", (e) => {
+// 📌 UPDATED: Added LIVE Input Event to instantly guess Categories and update math as you type!
+receiptsList.addEventListener("input", (e) => {
+  if (e.target.classList.contains("item-name-field")) {
+    const row = e.target.closest(".rc-item");
+    const catField = row.querySelector(".item-cat-field");
+    if (catField) {
+      catField.textContent = guessCategory(e.target.textContent);
+    }
+  }
+
   if (
     e.target.classList.contains("price-edit") ||
-    e.target.classList.contains("cat-badge")
-  )
+    e.target.classList.contains("cat-badge") ||
+    e.target.classList.contains("item-name-field")
+  ) {
     recalculateLiveMath();
+  }
 });
 
 receiptsList.addEventListener("keydown", (e) => {
@@ -589,7 +633,73 @@ receiptsList.addEventListener("keydown", (e) => {
 });
 
 receiptsList.addEventListener("click", async (e) => {
-  // 1. INLINE INSERT (+ BUTTON)
+  if (e.target.classList.contains("inline-mic-btn")) {
+    const micBtn = e.target;
+    const row = micBtn.closest(".rc-item");
+    const nameField = row.querySelector(".item-name-field");
+    const priceField = row.querySelector(".price-edit");
+    const catField = row.querySelector(".item-cat-field");
+
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Voice input is not supported in this browser. Please use Chrome.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    // 📌 UPDATED: Set language to hi-IN to recognize Hindi script natively
+    recognition.lang = "hi-IN";
+    recognition.continuous = false;
+
+    micBtn.style.filter = "none";
+    micBtn.textContent = "🔴";
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+
+      const priceMatch = transcript.match(/[\d.]+/);
+      let priceVal = 0;
+      let itemName = transcript;
+
+      if (priceMatch) {
+        priceVal = parseFloat(priceMatch[0]);
+        itemName = transcript
+          .replace(priceMatch[0], "")
+          .replace(
+            /rupees|rupee|rs|rupaye|rupay|rupya|bucks|₹|रुपये|रुपया/gi,
+            "",
+          )
+          .replace(/\s+/g, " ")
+          .trim();
+      }
+
+      nameField.textContent = itemName;
+      priceField.textContent = `+₹${priceVal.toFixed(2)}`;
+
+      if (catField) {
+        catField.textContent = guessCategory(itemName);
+      }
+
+      recalculateLiveMath();
+      micBtn.textContent = "🎙️";
+      micBtn.style.filter = "grayscale(1)";
+    };
+
+    recognition.onerror = () => {
+      micBtn.textContent = "🎙️";
+      micBtn.style.filter = "grayscale(1)";
+      alert(
+        "Voice not heard. Wait for the 🔴 red circle to appear before speaking.",
+      );
+    };
+    recognition.onend = () => {
+      micBtn.textContent = "🎙️";
+      micBtn.style.filter = "grayscale(1)";
+    };
+    recognition.start();
+  }
+
   if (e.target.classList.contains("inline-insert-btn")) {
     const currentRow = e.target.closest(".rc-item");
     const newRow = document.createElement("div");
@@ -601,11 +711,11 @@ receiptsList.addEventListener("click", async (e) => {
         </div>
         <div style="display: flex; align-items: center; gap: 12px;">
             <span class="rc-item-val editable-text price-edit" contenteditable="true" spellcheck="false" title="Click to edit price">+₹0.00</span>
-            <span class="inline-insert-btn" style="cursor:pointer; filter: grayscale(1);" onmouseover="this.style.filter='none'" onmouseout="this.style.filter='grayscale(1)'" title="Insert missing item below">➕</span>
-            <span class="inline-delete-btn" style="cursor:pointer; filter: grayscale(1);" onmouseover="this.style.filter='none'" onmouseout="this.style.filter='grayscale(1)'" title="Delete mistake">🗑️</span>
+            <span class="inline-mic-btn" style="cursor:pointer; filter: grayscale(1); transition: 0.2s;" onmouseover="this.style.filter='none'" onmouseout="this.style.filter='grayscale(1)'" title="Speak item and price (e.g., 'Doodh 40')">🎙️</span>
+            <span class="inline-insert-btn" style="cursor:pointer; filter: grayscale(1); transition: 0.2s;" onmouseover="this.style.filter='none'" onmouseout="this.style.filter='grayscale(1)'" title="Insert missing item below">➕</span>
+            <span class="inline-delete-btn" style="cursor:pointer; filter: grayscale(1); transition: 0.2s;" onmouseover="this.style.filter='none'" onmouseout="this.style.filter='grayscale(1)'" title="Delete mistake">🗑️</span>
         </div>
     `;
-    // Insert immediately below the row you clicked
     currentRow.parentNode.insertBefore(newRow, currentRow.nextSibling);
     newRow.querySelector(".item-name-field").focus();
 
@@ -613,21 +723,19 @@ receiptsList.addEventListener("click", async (e) => {
     const countSpan = card.querySelector(".entry-count");
     if (countSpan)
       countSpan.textContent = `(${card.querySelectorAll(".rc-item").length} entries)`;
+    recalculateLiveMath();
   }
 
-  // 2. INLINE DELETE (TRASH CAN BUTTON)
   if (e.target.classList.contains("inline-delete-btn")) {
     const row = e.target.closest(".rc-item");
     const card = row.closest(".receipt-card");
-    row.remove(); // Deletes the row
-
+    row.remove();
     const countSpan = card.querySelector(".entry-count");
     if (countSpan)
       countSpan.textContent = `(${card.querySelectorAll(".rc-item").length} entries)`;
     recalculateLiveMath();
   }
 
-  // 3. EXISTING BIG ADD BUTTON AT BOTTOM
   if (e.target.classList.contains("add-row-btn")) {
     const card = e.target.closest(".receipt-card");
     const itemsList = card.querySelector(".rc-items-list");
@@ -640,8 +748,9 @@ receiptsList.addEventListener("click", async (e) => {
         </div>
         <div style="display: flex; align-items: center; gap: 12px;">
             <span class="rc-item-val editable-text price-edit" contenteditable="true" spellcheck="false" title="Click to edit price">+₹0.00</span>
-            <span class="inline-insert-btn" style="cursor:pointer; filter: grayscale(1);" onmouseover="this.style.filter='none'" onmouseout="this.style.filter='grayscale(1)'" title="Insert missing item below">➕</span>
-            <span class="inline-delete-btn" style="cursor:pointer; filter: grayscale(1);" onmouseover="this.style.filter='none'" onmouseout="this.style.filter='grayscale(1)'" title="Delete mistake">🗑️</span>
+            <span class="inline-mic-btn" style="cursor:pointer; filter: grayscale(1); transition: 0.2s;" onmouseover="this.style.filter='none'" onmouseout="this.style.filter='grayscale(1)'" title="Speak item and price (e.g., 'Doodh 40')">🎙️</span>
+            <span class="inline-insert-btn" style="cursor:pointer; filter: grayscale(1); transition: 0.2s;" onmouseover="this.style.filter='none'" onmouseout="this.style.filter='grayscale(1)'" title="Insert missing item below">➕</span>
+            <span class="inline-delete-btn" style="cursor:pointer; filter: grayscale(1); transition: 0.2s;" onmouseover="this.style.filter='none'" onmouseout="this.style.filter='grayscale(1)'" title="Delete mistake">🗑️</span>
         </div>
     `;
     itemsList.appendChild(newRow);
@@ -649,6 +758,7 @@ receiptsList.addEventListener("click", async (e) => {
     const countSpan = card.querySelector(".entry-count");
     if (countSpan)
       countSpan.textContent = `(${itemsList.querySelectorAll(".rc-item").length} entries)`;
+    recalculateLiveMath();
   }
 
   if (e.target.classList.contains("save-train-btn")) {
@@ -659,19 +769,15 @@ receiptsList.addEventListener("click", async (e) => {
 
     let correctedItems = [];
     card.querySelectorAll(".rc-item").forEach((itemEl) => {
-      let itemName = itemEl
-        .querySelector(".item-name-field")
-        .textContent.trim();
-      let itemCat = itemEl.querySelector(".item-cat-field").textContent.trim();
-      let itemAmountRaw = itemEl
-        .querySelector(".price-edit")
-        .textContent.replace(/[^\d.-]/g, "");
-      let itemAmount = parseFloat(itemAmountRaw) || 0;
-
       correctedItems.push({
-        item: itemName,
-        category: itemCat,
-        amount: itemAmount,
+        item: itemEl.querySelector(".item-name-field").textContent.trim(),
+        category: itemEl.querySelector(".item-cat-field").textContent.trim(),
+        amount:
+          parseFloat(
+            itemEl
+              .querySelector(".price-edit")
+              .textContent.replace(/[^\d.-]/g, ""),
+          ) || 0,
       });
     });
 
@@ -687,15 +793,14 @@ receiptsList.addEventListener("click", async (e) => {
         method: "POST",
         body: formData,
       });
-
+      // 📌 UPDATED: Changes to a clickable "Update Dataset" button!
       if (res.ok) {
-        btn.textContent = "Saved to Dataset 🎉";
-        btn.style.background = "rgba(16, 185, 129, 0.4)";
+        btn.textContent = "Update Dataset 🔄";
+        btn.style.background = "rgba(59, 130, 246, 0.4)";
         btn.style.color = "white";
         btn.style.border = "none";
-      } else {
-        throw new Error("Failed to save");
-      }
+        btn.style.pointerEvents = "auto";
+      } else throw new Error("Failed");
     } catch (err) {
       alert("Error saving training data.");
       btn.textContent = "✅ Approve & Save";
@@ -723,36 +828,29 @@ function recalculateLiveMath() {
       else priceElement.classList.remove("val-neg");
 
       cardSubtotal += value;
-      let catName = catElement ? catElement.textContent.trim() : "Misc";
-      if (catName === "") catName = "Misc";
+      let catName = catElement.textContent.trim() || "Misc";
       catName =
         catName.charAt(0).toUpperCase() + catName.slice(1).toLowerCase();
-      if (catElement) catElement.textContent = catName;
-
-      if (!categoryTotals[catName]) categoryTotals[catName] = 0;
-      categoryTotals[catName] += value;
+      catElement.textContent = catName;
+      categoryTotals[catName] = (categoryTotals[catName] || 0) + value;
     });
-
-    const subtotalElement = card.querySelector(".rc-subtotal span:last-child");
-    if (subtotalElement)
-      subtotalElement.textContent = `₹${cardSubtotal.toFixed(2)}`;
+    const subVal = card.querySelector(".rc-subtotal-val");
+    if (subVal) subVal.textContent = `₹${cardSubtotal.toFixed(2)}`;
     newGrandTotal += cardSubtotal;
   });
-
   if (grandTotalValue)
     grandTotalValue.textContent = `₹${newGrandTotal.toFixed(2)}`;
 
   let breakdownContainer = document.getElementById("categoryBreakdown");
-
   if (newGrandTotal === 0 && Object.keys(categoryTotals).length === 0) {
     breakdownContainer.style.display = "none";
   } else {
     breakdownContainer.style.display = "block";
     let breakdownHtml = `<h3>📊 Spend by Category</h3>`;
-
     const sortedCats = Object.entries(categoryTotals).sort(
       (a, b) => b[1] - a[1],
     );
+
     sortedCats.forEach(([cat, val]) => {
       if (val === 0) return;
       const percentage =
@@ -766,31 +864,30 @@ function recalculateLiveMath() {
             <span>₹${val.toFixed(2)} <span style="font-size:0.8em; color:var(--text-muted); margin-left:5px;">(${percentage}%)</span></span>
         </div>`;
     });
-
     breakdownHtml += `<div class="chart-wrapper"><canvas id="spendChart"></canvas></div>`;
     breakdownContainer.innerHTML = breakdownHtml;
 
     const ctx = document.getElementById("spendChart");
     if (ctx) {
       if (spendPieChart) spendPieChart.destroy();
-      const chartLabels = sortedCats.map((item) => item[0]);
-      const chartData = sortedCats.map((item) => item[1]);
-      const pieColors = [
-        "#8b5cf6",
-        "#ec4899",
-        "#3b82f6",
-        "#10b981",
-        "#f59e0b",
-        "#ef4444",
-        "#14b8a6",
-      ];
-
       spendPieChart = new Chart(ctx, {
         type: "doughnut",
         data: {
-          labels: chartLabels,
+          labels: sortedCats.map((item) => item[0]),
           datasets: [
-            { data: chartData, backgroundColor: pieColors, borderWidth: 0 },
+            {
+              data: sortedCats.map((item) => item[1]),
+              backgroundColor: [
+                "#8b5cf6",
+                "#ec4899",
+                "#3b82f6",
+                "#10b981",
+                "#f59e0b",
+                "#ef4444",
+                "#14b8a6",
+              ],
+              borderWidth: 0,
+            },
           ],
         },
         options: {
@@ -809,31 +906,17 @@ function recalculateLiveMath() {
 }
 
 function downloadCSV() {
-  let csvContent = "S.No.,Document,Item Name,Category,Price\n";
-  let serialNumber = 1;
-  document.querySelectorAll(".receipt-card").forEach((card, index) => {
-    const docName = `Document #${index + 1}`;
-    card.querySelectorAll(".rc-item").forEach((itemEl) => {
-      const spans = itemEl.querySelectorAll(".editable-text");
-      if (spans.length >= 3) {
-        let itemName = spans[0].textContent.trim().replace(/,/g, "");
-        let category = spans[1].textContent.trim().replace(/,/g, "");
-        let priceRaw = spans[2].textContent.trim().replace(/[^\d.-]/g, "");
-        csvContent += `${serialNumber},${docName},${itemName},${category},${priceRaw}\n`;
-        serialNumber++;
-      }
+  let csv = "S.No.,Document,Item,Category,Price\n";
+  let sno = 1;
+  document.querySelectorAll(".receipt-card").forEach((card, i) => {
+    card.querySelectorAll(".rc-item").forEach((item) => {
+      csv += `${sno++},Document #${i + 1},${item.querySelector(".item-name-field").textContent.replace(/,/g, "")},${item.querySelector(".item-cat-field").textContent.replace(/,/g, "")},${item.querySelector(".price-edit").textContent.replace(/[^\d.-]/g, "")}\n`;
     });
   });
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-  const link = document.createElement("a");
-  link.setAttribute("href", URL.createObjectURL(blob));
-  link.setAttribute(
-    "download",
-    `QuickTotal_Export_${new Date().getTime()}.csv`,
-  );
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+  a.download = `QuickTotal_Export_${Date.now()}.csv`;
+  a.click();
 }
 
 function downloadPDF() {
@@ -848,81 +931,110 @@ function downloadPDF() {
   doc.setTextColor(100, 116, 139);
   doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 40, 70);
 
-  const tableRows = [];
-  let sno = 1;
-  document.querySelectorAll(".receipt-card").forEach((card) => {
+  let docCursor = 90;
+
+  document.querySelectorAll(".receipt-card").forEach((card, cardIndex) => {
+    if (docCursor > 700) {
+      doc.addPage();
+      docCursor = 50;
+    }
+
+    const filename = card.dataset.filename || `Document #${cardIndex + 1}`;
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(30, 41, 59);
+    doc.text(`Bill Source: ${filename}`, 40, docCursor);
+    docCursor += 15;
+
+    const subtotalText =
+      card.querySelector(".rc-subtotal-val")?.textContent || "₹0.00";
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(100, 116, 139);
+    doc.text(
+      `Subtotal: Rs. ${subtotalText.replace(/₹/g, "").trim()}`,
+      40,
+      docCursor,
+    );
+    docCursor += 15;
+
+    const tableRows = [];
+    let sno = 1;
     card.querySelectorAll(".rc-item").forEach((itemEl) => {
-      const spans = itemEl.querySelectorAll(".editable-text");
-      if (spans.length >= 3) {
-        tableRows.push([
-          sno++,
-          spans[0].textContent.trim(),
-          spans[1].textContent.trim(),
-          `Rs. ${spans[2].textContent.trim().replace(/₹/g, "").trim()}`,
-        ]);
-      }
+      tableRows.push([
+        sno++,
+        itemEl.querySelector(".item-name-field").textContent.trim(),
+        itemEl.querySelector(".item-cat-field").textContent.trim(),
+        `Rs. ${itemEl.querySelector(".price-edit").textContent.replace(/₹/g, "").trim()}`,
+      ]);
     });
+
+    doc.autoTable({
+      head: [["S.No.", "Item Name", "Category", "Price"]],
+      body: tableRows,
+      startY: docCursor,
+      theme: "striped",
+      headStyles: { fillColor: [139, 92, 246] },
+      styles: { font: "helvetica", fontSize: 11 },
+      margin: { left: 40, right: 40 },
+    });
+
+    docCursor = doc.lastAutoTable.finalY + 40;
   });
 
-  doc.autoTable({
-    head: [["S.No.", "Item Name", "Category", "Price"]],
-    body: tableRows,
-    startY: 90,
-    theme: "striped",
-    headStyles: { fillColor: [139, 92, 246] },
-    margin: { top: 90 },
-    styles: { font: "helvetica", fontSize: 11 },
-  });
+  if (docCursor > 700) {
+    doc.addPage();
+    docCursor = 50;
+  }
 
-  const finalY = doc.lastAutoTable.finalY || 90;
-  doc.setFontSize(14);
+  doc.setFontSize(16);
   doc.setFont("helvetica", "bold");
-  doc.setTextColor(30, 41, 59);
+  doc.setTextColor(139, 92, 246);
   doc.text(
-    `Grand Total: Rs. ${document.getElementById("grandTotalValue").textContent.replace(/₹/g, "").trim()}`,
+    `Overall Grand Total: Rs. ${document.getElementById("grandTotalValue").textContent.replace(/₹/g, "").trim()}`,
     40,
-    finalY + 30,
+    docCursor,
   );
+  docCursor += 50;
 
   if (spendPieChart) {
-    const origColor = spendPieChart.options.plugins.legend.labels.color;
-    const origSize =
-      spendPieChart.options.plugins.legend.labels.font.size || 12;
-    const origLabels = [...spendPieChart.data.labels];
-    const dataArray = spendPieChart.data.datasets[0].data;
-    const totalSum = dataArray.reduce((acc, val) => acc + Number(val), 0);
+    const chartData = spendPieChart.data.datasets[0].data;
+    const totalSum = chartData.reduce((acc, val) => acc + Number(val), 0);
 
-    spendPieChart.data.labels = origLabels.map(
-      (label, index) =>
-        `${label}: ${totalSum > 0 ? ((Number(dataArray[index]) / totalSum) * 100).toFixed(1) : 0}%`,
-    );
-    spendPieChart.options.plugins.legend.labels.color = "#000000";
-    spendPieChart.options.plugins.legend.labels.font.size = 18;
-    spendPieChart.update("none");
-    const chartImg = spendPieChart.toBase64Image();
+    if (totalSum > 0) {
+      const origLabels = [...spendPieChart.data.labels];
+      spendPieChart.data.labels = origLabels.map(
+        (label, index) =>
+          `${label}: ${((Number(chartData[index]) / totalSum) * 100).toFixed(1)}%`,
+      );
 
-    // Revert web UI settings
-    spendPieChart.options.plugins.legend.labels.color = origColor;
-    spendPieChart.options.plugins.legend.labels.font.size = origSize;
-    spendPieChart.data.labels = origLabels;
-    spendPieChart.update("none");
+      spendPieChart.options.plugins.legend.labels.color = "#000000";
+      spendPieChart.options.plugins.legend.labels.font.size = 18;
+      spendPieChart.update("none");
+      const chartImg = spendPieChart.toBase64Image();
 
-    // --- FULL PAGE CHART LOGIC ---
-    const chartWidth = 500;
-    const chartHeight = 280;
+      spendPieChart.options.plugins.legend.labels.color = "#e2e8f0";
+      spendPieChart.options.plugins.legend.labels.font.size = 12;
+      spendPieChart.data.labels = origLabels;
+      spendPieChart.update("none");
 
-    doc.addPage();
-
-    const xPos = (595.28 - chartWidth) / 2;
-    const yPos = 180;
-
-    doc.setFontSize(22);
-    doc.setTextColor(30, 41, 59);
-    doc.text("Spend Analysis by Category", 595.28 / 2, 120, {
-      align: "center",
-    });
-
-    doc.addImage(chartImg, "PNG", xPos, yPos, chartWidth, chartHeight);
+      const chartWidth = 500;
+      const chartHeight = 280;
+      doc.addPage();
+      doc.setFontSize(22);
+      doc.setTextColor(30, 41, 59);
+      doc.text("Total Spend Analysis by Tag", 595.28 / 2, 120, {
+        align: "center",
+      });
+      doc.addImage(
+        chartImg,
+        "PNG",
+        (595.28 - chartWidth) / 2,
+        180,
+        chartWidth,
+        chartHeight,
+      );
+    }
   }
 
   const totalPages = doc.internal.getNumberOfPages();
@@ -938,19 +1050,19 @@ function downloadPDF() {
     });
   }
 
-  doc.save(`QuickTotal_Report_${new Date().getTime()}.pdf`);
+  doc.save(`QuickTotal_Financial_Report_${new Date().getTime()}.pdf`);
 }
 
 resetBtn.addEventListener("click", resetApp);
 function resetApp() {
   filesToProcess = [];
-  fileInput.value = "";
-  dropZone.style.display = "block";
+  thumbnailGrid.innerHTML = "";
+  receiptsList.innerHTML = "";
   previewArea.style.display = "none";
+  dropZone.style.display = "block";
   resultsContainer.style.display = "none";
   loadingEl.style.display = "none";
   browseBtn.textContent = "Browse Files";
-  const breakdownContainer = document.getElementById("categoryBreakdown");
-  if (breakdownContainer) breakdownContainer.style.display = "none";
+  grandTotalCard.style.display = "none";
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
