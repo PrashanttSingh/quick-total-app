@@ -424,87 +424,64 @@ function getAccuracyInfo(score) {
   return { color: "#ef4444", text: "Low Confidence" };
 }
 
-// ✨ ADVANCED CATEGORY BRAIN ✨
 function guessCategory(text) {
   const lower = text.toLowerCase();
-
-  // Drinks / Cold Drinks
   if (
     /(coca|cola|pepsi|sprite|fanta|limca|maza|cold drink|beverage|water|soda|juice|chai|coffee|tea|drink|piv|shikanji)/i.test(
       lower,
     )
   )
     return "Beverages";
-
-  // Dairy specific
   if (/(doodh|milk|paneer|curd|dahi|butter|cheese|ghee|dairy)/i.test(lower))
     return "Dairy";
-
-  // Snacks / Junk Food
   if (
     /(maggi|biscuit|namkeen|chips|kurkure|lays|snack|chocolate|candy|sweet|mithai|parle|samosa)/i.test(
       lower,
     )
   )
     return "Snacks";
-
-  // Base Groceries
   if (
     /(aata|atta|rice|sugar|dal|pulse|oil|masala|spices|vegetable|fruit|onion|potato|tomato|grocery|kirana|sabzi|chini|salt|namak)/i.test(
       lower,
     )
   )
     return "Groceries";
-
-  // Clothing
   if (
     /(shirt|kurta|pant|jeans|tshirt|shoes|clothing|fabric|suit|wear|garment|chappal|sandal)/i.test(
       lower,
     )
   )
     return "Clothing & Footwear";
-
-  // Electronics
   if (
     /(wire|cable|phone|battery|charger|usb|electronics|led|bulb|plug|adaptor|mobile|laptop|earphone|headphone)/i.test(
       lower,
     )
   )
     return "Electronics";
-
-  // Medical
   if (
     /(tablet|paracetamol|medicine|syrup|doctor|pharmacy|pill|medical|clinic|hospital|bandaid)/i.test(
       lower,
     )
   )
     return "Medical";
-
-  // Transport
   if (
     /(auto|cab|uber|ola|bus|train|ticket|travel|petrol|fuel|diesel|cng|parking|toll|flight)/i.test(
       lower,
     )
   )
     return "Transport";
-
-  // Education & Math
   if (
     /(book|pen|pencil|paper|notebook|stationary|eraser|school|college|fee|tuition|math|science|exam)/i.test(
       lower,
     )
   )
     return "Education & Stationery";
-
-  // Utilities
   if (
     /(bill|recharge|tax|rent|emi|insurance|water bill|electricity|gas)/i.test(
       lower,
     )
   )
     return "Bills & Utilities";
-
-  // Catch Math Problem strings (e.g., "2+3=", "14 x 5")
   if (
     /^[0-9+\-/*=xX\s()]+$/.test(text) ||
     text.includes("+") ||
@@ -512,7 +489,6 @@ function guessCategory(text) {
     text.includes("=")
   )
     return "Math Problem";
-
   return "Misc";
 }
 
@@ -555,14 +531,7 @@ calculateBtn.addEventListener("click", async () => {
       receiptsList.appendChild(colWrap);
 
       if (file.precalcQuality !== null && parseInt(file.precalcQuality) < 2) {
-        tempCard.innerHTML = `
-              <div class="rc-header p-3 border-bottom border-secondary">
-                  <span>Document #${i + 1}</span>
-                  <span class="val-neg">❌ Invalid Image</span>
-              </div>
-              <p class="p-3 text-muted" style="font-size: 0.9em; line-height: 1.6; color: #94a3b8;">
-                  Skipped to save time and API costs. This image appears to be too messy, blurry, or not a receipt (Score: ${file.precalcQuality}%).
-              </p>`;
+        tempCard.innerHTML = `<div class="rc-header p-3 border-bottom border-secondary"><span>Document #${i + 1}</span><span class="val-neg">❌ Invalid Image</span></div><p class="p-3 text-muted" style="font-size: 0.9em; line-height: 1.6; color: #94a3b8;">Skipped to save time and API costs. This image appears to be too messy, blurry, or not a receipt (Score: ${file.precalcQuality}%).</p>`;
         continue;
       }
 
@@ -572,7 +541,6 @@ calculateBtn.addEventListener("click", async () => {
           body: formData,
         });
         const data = await res.json();
-
         if (data.error || !data.results || data.results[0].error) {
           tempCard.innerHTML = `<div class="rc-header p-3 border-bottom border-secondary"><span>Document #${i + 1}</span><span class="val-neg">Failed</span></div><p class="p-3">Error processing image.</p>`;
           continue;
@@ -593,9 +561,9 @@ calculateBtn.addEventListener("click", async () => {
                 </div>
                 <div style="display: flex; align-items: center; gap: 12px;">
                     <span class="rc-item-val editable-text price-edit ${isNeg ? "val-neg" : ""}" contenteditable="true" spellcheck="false" title="Click to edit price">${isNeg ? "-" : "+"}₹${Math.abs(item.result).toFixed(2)}</span>
-                    <span class="inline-mic-btn" style="cursor:pointer; filter: grayscale(1); transition: 0.2s;" onmouseover="this.style.filter='none'" onmouseout="this.style.filter='grayscale(1)'" title="Speak item and price (e.g., 'Doodh 40')">🎙️</span>
-                    <span class="inline-insert-btn" style="cursor:pointer; filter: grayscale(1); transition: 0.2s;" onmouseover="this.style.filter='none'" onmouseout="this.style.filter='grayscale(1)'" title="Insert missing item below">➕</span>
-                    <span class="inline-delete-btn" style="cursor:pointer; filter: grayscale(1); transition: 0.2s;" onmouseover="this.style.filter='none'" onmouseout="this.style.filter='grayscale(1)'" title="Delete mistake">🗑️</span>
+                    <span class="inline-mic-btn" style="cursor:pointer; filter: grayscale(1); transition: 0.2s;" title="Speak item and price">🎙️</span>
+                    <span class="inline-insert-btn" style="cursor:pointer; filter: grayscale(1); transition: 0.2s;" title="Insert missing item below">➕</span>
+                    <span class="inline-delete-btn" style="cursor:pointer; filter: grayscale(1); transition: 0.2s;" title="Delete mistake">🗑️</span>
                 </div>
             </div>`;
         });
@@ -619,8 +587,8 @@ calculateBtn.addEventListener("click", async () => {
             </div>
             <div class="rc-items-list" style="position: relative; z-index: 2;">${itemsHtml}</div>
             <div style="position: relative; z-index: 2; text-align: center; display: flex; justify-content: center; gap: 10px;" class="my-3 flex-wrap px-2">
-                <div class="add-row-btn" title="Did the AI miss an item? Add it here.">+ Add Missing Item</div>
-                <div class="save-train-btn" title="Save this perfect receipt to your training dataset.">✅ Approve & Save</div>
+                <div class="add-row-btn" title="Add Missing Item">+ Add Missing Item</div>
+                <div class="save-train-btn" title="Save to training dataset.">✅ Approve & Save</div>
             </div>
             <div class="rc-subtotal px-3 py-2 border-top border-secondary border-opacity-25" style="position: relative; z-index: 2;"><span>Subtotal</span><span class="rc-subtotal-val">₹${result.subtotal.toFixed(2)}</span></div>
             <div class="p-3 border-top border-secondary border-opacity-25" style="position: relative; z-index: 2;">
@@ -630,7 +598,6 @@ calculateBtn.addEventListener("click", async () => {
                 <div class="accuracy-bar-bg"><div class="accuracy-bar-fill" style="width: ${accScoreNum}%; background: ${accInfo.color};"></div></div>
             </div>
         `;
-
         grandTotal += result.subtotal;
         successfulDocs++;
       } catch (err) {
@@ -656,15 +623,19 @@ receiptsList.addEventListener("focusin", (e) => {
   }
 });
 
+// 📌 THE CURSOR FIX: Safe Live Updates
 receiptsList.addEventListener("input", (e) => {
+  // 1. Instant Category Update while typing
   if (e.target.classList.contains("item-name-field")) {
     const row = e.target.closest(".rc-item");
     const catField = row.querySelector(".item-cat-field");
-    if (catField) {
+    // Ensure we don't overwrite if the user is somehow editing the category manually
+    if (catField && document.activeElement !== catField) {
       catField.textContent = guessCategory(e.target.textContent);
     }
   }
 
+  // 2. Trigger recalculation but safely
   if (
     e.target.classList.contains("price-edit") ||
     e.target.classList.contains("cat-badge") ||
@@ -688,28 +659,18 @@ receiptsList.addEventListener("click", async (e) => {
     const nameField = row.querySelector(".item-name-field");
     const priceField = row.querySelector(".price-edit");
     const catField = row.querySelector(".item-cat-field");
-
     const SpeechRecognition =
       window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      alert("Voice input is not supported in this browser. Please use Chrome.");
-      return;
-    }
-
+    if (!SpeechRecognition) return alert("Voice input not supported.");
     const recognition = new SpeechRecognition();
     recognition.lang = "hi-IN";
-    recognition.continuous = false;
-
     micBtn.style.filter = "none";
     micBtn.textContent = "🔴";
-
     recognition.onresult = (event) => {
       let transcript = event.results[0][0].transcript;
-
       const priceMatch = transcript.match(/[\d.]+/);
       let priceVal = 0;
       let itemName = transcript;
-
       if (priceMatch) {
         priceVal = parseFloat(priceMatch[0]);
         itemName = transcript
@@ -718,14 +679,12 @@ receiptsList.addEventListener("click", async (e) => {
             /rupees|rupee|rs|rupaye|rupay|rupya|bucks|₹|रुपये|रुपया/gi,
             "",
           )
-          .replace(/[।.,]/g, "") // Removes Punctuation marks
+          .replace(/[।.,]/g, "")
           .replace(/\s+/g, " ")
           .trim();
       } else {
         itemName = itemName.replace(/[।.,]/g, "").trim();
       }
-
-      // Hinglish Dictionary
       const enDict = {
         मिल्क: "Milk",
         ब्रेड: "Bread",
@@ -739,29 +698,21 @@ receiptsList.addEventListener("click", async (e) => {
         पेप्सी: "Pepsi",
         "कोल्ड ड्रिंक": "Cold Drink",
       };
-
       for (const [hiWord, enWord] of Object.entries(enDict)) {
         itemName = itemName.replace(new RegExp(hiWord, "gi"), enWord);
       }
-
       nameField.textContent = itemName;
       priceField.textContent = `+₹${priceVal.toFixed(2)}`;
-
       if (catField) {
         catField.textContent = guessCategory(itemName);
       }
-
       recalculateLiveMath();
       micBtn.textContent = "🎙️";
       micBtn.style.filter = "grayscale(1)";
     };
-
     recognition.onerror = () => {
       micBtn.textContent = "🎙️";
       micBtn.style.filter = "grayscale(1)";
-      alert(
-        "Voice not heard. Wait for the 🔴 red circle to appear before speaking.",
-      );
     };
     recognition.onend = () => {
       micBtn.textContent = "🎙️";
@@ -774,21 +725,9 @@ receiptsList.addEventListener("click", async (e) => {
     const currentRow = e.target.closest(".rc-item");
     const newRow = document.createElement("div");
     newRow.className = "rc-item animate-pop px-3";
-    newRow.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 8px;">
-            <span class="editable-text item-name-field" contenteditable="true" spellcheck="false" title="Click to edit name">New Item</span>
-            <span class="cat-badge editable-text item-cat-field" contenteditable="true" spellcheck="false" title="Click to edit category">Misc</span>
-        </div>
-        <div style="display: flex; align-items: center; gap: 12px;">
-            <span class="rc-item-val editable-text price-edit" contenteditable="true" spellcheck="false" title="Click to edit price">+₹0.00</span>
-            <span class="inline-mic-btn" style="cursor:pointer; filter: grayscale(1); transition: 0.2s;" onmouseover="this.style.filter='none'" onmouseout="this.style.filter='grayscale(1)'" title="Speak item and price (e.g., 'Doodh 40')">🎙️</span>
-            <span class="inline-insert-btn" style="cursor:pointer; filter: grayscale(1); transition: 0.2s;" onmouseover="this.style.filter='none'" onmouseout="this.style.filter='grayscale(1)'" title="Insert missing item below">➕</span>
-            <span class="inline-delete-btn" style="cursor:pointer; filter: grayscale(1); transition: 0.2s;" onmouseover="this.style.filter='none'" onmouseout="this.style.filter='grayscale(1)'" title="Delete mistake">🗑️</span>
-        </div>
-    `;
+    newRow.innerHTML = `<div style="display: flex; align-items: center; gap: 8px;"><span class="editable-text item-name-field" contenteditable="true" spellcheck="false">New Item</span><span class="cat-badge editable-text item-cat-field" contenteditable="true" spellcheck="false">Misc</span></div><div style="display: flex; align-items: center; gap: 12px;"><span class="rc-item-val editable-text price-edit" contenteditable="true" spellcheck="false">+₹0.00</span><span class="inline-mic-btn" style="cursor:pointer; filter: grayscale(1); transition: 0.2s;">🎙️</span><span class="inline-insert-btn" style="cursor:pointer; filter: grayscale(1); transition: 0.2s;">➕</span><span class="inline-delete-btn" style="cursor:pointer; filter: grayscale(1); transition: 0.2s;">🗑️</span></div>`;
     currentRow.parentNode.insertBefore(newRow, currentRow.nextSibling);
     newRow.querySelector(".item-name-field").focus();
-
     const card = e.target.closest(".receipt-card");
     const countSpan = card.querySelector(".entry-count");
     if (countSpan)
@@ -811,18 +750,7 @@ receiptsList.addEventListener("click", async (e) => {
     const itemsList = card.querySelector(".rc-items-list");
     const newRow = document.createElement("div");
     newRow.className = "rc-item animate-pop px-3";
-    newRow.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 8px;">
-            <span class="editable-text item-name-field" contenteditable="true" spellcheck="false" title="Click to edit name">New Item</span>
-            <span class="cat-badge editable-text item-cat-field" contenteditable="true" spellcheck="false" title="Click to edit category">Misc</span>
-        </div>
-        <div style="display: flex; align-items: center; gap: 12px;">
-            <span class="rc-item-val editable-text price-edit" contenteditable="true" spellcheck="false" title="Click to edit price">+₹0.00</span>
-            <span class="inline-mic-btn" style="cursor:pointer; filter: grayscale(1); transition: 0.2s;" onmouseover="this.style.filter='none'" onmouseout="this.style.filter='grayscale(1)'" title="Speak item and price (e.g., 'Doodh 40')">🎙️</span>
-            <span class="inline-insert-btn" style="cursor:pointer; filter: grayscale(1); transition: 0.2s;" onmouseover="this.style.filter='none'" onmouseout="this.style.filter='grayscale(1)'" title="Insert missing item below">➕</span>
-            <span class="inline-delete-btn" style="cursor:pointer; filter: grayscale(1); transition: 0.2s;" onmouseover="this.style.filter='none'" onmouseout="this.style.filter='grayscale(1)'" title="Delete mistake">🗑️</span>
-        </div>
-    `;
+    newRow.innerHTML = `<div style="display: flex; align-items: center; gap: 8px;"><span class="editable-text item-name-field" contenteditable="true" spellcheck="false">New Item</span><span class="cat-badge editable-text item-cat-field" contenteditable="true" spellcheck="false">Misc</span></div><div style="display: flex; align-items: center; gap: 12px;"><span class="rc-item-val editable-text price-edit" contenteditable="true" spellcheck="false">+₹0.00</span><span class="inline-mic-btn" style="cursor:pointer; filter: grayscale(1); transition: 0.2s;">🎙️</span><span class="inline-insert-btn" style="cursor:pointer; filter: grayscale(1); transition: 0.2s;">➕</span><span class="inline-delete-btn" style="cursor:pointer; filter: grayscale(1); transition: 0.2s;">🗑️</span></div>`;
     itemsList.appendChild(newRow);
     newRow.querySelector(".item-name-field").focus();
     const countSpan = card.querySelector(".entry-count");
@@ -836,7 +764,6 @@ receiptsList.addEventListener("click", async (e) => {
     const card = btn.closest(".receipt-card");
     const imageIndex = parseInt(card.dataset.imageIndex);
     const fileToSave = filesToProcess[imageIndex];
-
     let correctedItems = [];
     card.querySelectorAll(".rc-item").forEach((itemEl) => {
       correctedItems.push({
@@ -850,17 +777,13 @@ receiptsList.addEventListener("click", async (e) => {
           ) || 0,
       });
     });
-
     btn.textContent = "Saving... ⏳";
     btn.style.pointerEvents = "none";
-
     try {
       const formData = new FormData();
       formData.append("image", fileToSave);
-      // ✨ NEW: Sending the original filename so Python knows what to overwrite!
       formData.append("original_filename", fileToSave.name);
       formData.append("json_data", JSON.stringify({ items: correctedItems }));
-
       const res = await fetch("/save_training_data", {
         method: "POST",
         body: formData,
@@ -880,6 +803,7 @@ receiptsList.addEventListener("click", async (e) => {
   }
 });
 
+// 📌 THE SECOND PART OF THE CURSOR FIX: Only rewrite text Content if NOT actively typed on!
 function recalculateLiveMath() {
   let newGrandTotal = 0;
   let categoryTotals = {};
@@ -887,22 +811,32 @@ function recalculateLiveMath() {
   document.querySelectorAll(".receipt-card").forEach((card) => {
     let cardSubtotal = 0;
     card.querySelectorAll(".rc-item").forEach((itemEl) => {
+      const nameElement = itemEl.querySelector(".item-name-field");
       const priceElement = itemEl.querySelector(".price-edit");
       const catElement = itemEl.querySelector(".cat-badge");
 
       let rawText = priceElement.textContent.replace(/[^\d.-]/g, "");
       let value = parseFloat(rawText) || 0;
       const isNeg = value < 0;
-      priceElement.textContent = `${isNeg ? "-" : "+"}₹${Math.abs(value).toFixed(2)}`;
+
+      // ✅ This strictly prevents the cursor jump by checking if the user is typing in it!
+      if (document.activeElement !== priceElement) {
+        priceElement.textContent = `${isNeg ? "-" : "+"}₹${Math.abs(value).toFixed(2)}`;
+      }
 
       if (isNeg) priceElement.classList.add("val-neg");
       else priceElement.classList.remove("val-neg");
 
       cardSubtotal += value;
       let catName = catElement.textContent.trim() || "Misc";
-      catName =
-        catName.charAt(0).toUpperCase() + catName.slice(1).toLowerCase();
-      catElement.textContent = catName;
+
+      // ✅ Also protect the category badge cursor if the user is manually editing it
+      if (document.activeElement !== catElement) {
+        catName =
+          catName.charAt(0).toUpperCase() + catName.slice(1).toLowerCase();
+        catElement.textContent = catName;
+      }
+
       categoryTotals[catName] = (categoryTotals[catName] || 0) + value;
     });
     const subVal = card.querySelector(".rc-subtotal-val");
@@ -921,23 +855,16 @@ function recalculateLiveMath() {
     const sortedCats = Object.entries(categoryTotals).sort(
       (a, b) => b[1] - a[1],
     );
-
     sortedCats.forEach(([cat, val]) => {
       if (val === 0) return;
       const percentage =
         newGrandTotal !== 0
           ? Math.abs((val / newGrandTotal) * 100).toFixed(1)
           : 0;
-      breakdownHtml += `
-        <div class="cat-row">
-            <span style="font-weight: 500; color: #c4b5fd;">${cat}</span>
-            <div style="flex-grow: 1; border-bottom: 1px dotted rgba(255,255,255,0.2); margin: 0 15px; position: relative; top: -4px;"></div>
-            <span>₹${val.toFixed(2)} <span style="font-size:0.8em; color:var(--text-muted); margin-left:5px;">(${percentage}%)</span></span>
-        </div>`;
+      breakdownHtml += `<div class="cat-row"><span style="font-weight: 500; color: #c4b5fd;">${cat}</span><div style="flex-grow: 1; border-bottom: 1px dotted rgba(255,255,255,0.2); margin: 0 15px; position: relative; top: -4px;"></div><span>₹${val.toFixed(2)} <span style="font-size:0.8em; color:var(--text-muted); margin-left:5px;">(${percentage}%)</span></span></div>`;
     });
     breakdownHtml += `<div class="chart-wrapper"><canvas id="spendChart"></canvas></div>`;
     breakdownContainer.innerHTML = breakdownHtml;
-
     const ctx = document.getElementById("spendChart");
     if (ctx) {
       if (spendPieChart) spendPieChart.destroy();
@@ -976,152 +903,137 @@ function recalculateLiveMath() {
   }
 }
 
+// ==========================================
+// 1. REPLACEMENT: EXPORT CSV FUNCTION
+// ==========================================
 function downloadCSV() {
-  let csv = "S.No.,Document,Item,Category,Price\n";
-  let sno = 1;
-  document.querySelectorAll(".receipt-card").forEach((card, i) => {
-    card.querySelectorAll(".rc-item").forEach((item) => {
-      csv += `${sno++},Document #${i + 1},${item.querySelector(".item-name-field").textContent.replace(/,/g, "")},${item.querySelector(".item-cat-field").textContent.replace(/,/g, "")},${item.querySelector(".price-edit").textContent.replace(/[^\d.-]/g, "")}\n`;
+  // Prevent the default href="#" jump
+  const e = window.event;
+  if (e) e.preventDefault();
+
+  try {
+    // \uFEFF is the UTF-8 BOM which forces Excel to read Hindi characters properly
+    let csvContent = "\uFEFF" + "S.No.,Item Name,Category,Price\n";
+    let sno = 1;
+
+    // Notice: The 'Document' column is completely removed here!
+    document.querySelectorAll(".receipt-card").forEach((card) => {
+      card.querySelectorAll(".rc-item").forEach((item) => {
+        let name = item.querySelector(".item-name-field").textContent.replace(/,/g, "").trim();
+        let cat = item.querySelector(".item-cat-field").textContent.replace(/,/g, "").trim();
+        let price = item.querySelector(".price-edit").textContent.replace(/[^\d.-]/g, "").trim();
+
+        csvContent += `${sno},"${name}","${cat}",${price}\n`;
+        sno++;
+      });
     });
-  });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
-  a.download = `QuickTotal_Export_${Date.now()}.csv`;
-  a.click();
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `QuickTotal_Export_${new Date().getTime()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  } catch (error) {
+    console.error("CSV Export Error:", error);
+    alert("Something went wrong downloading the CSV.");
+  }
 }
 
-function downloadPDF() {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF("p", "pt", "a4");
+// ==========================================
+// 2. REPLACEMENT: EXPORT PDF FUNCTION
+// ==========================================
+async function downloadPDF() {
+  // Prevent the default href="#" jump
+  const e = window.event;
+  if (e) e.preventDefault();
 
-  doc.setFontSize(22);
-  doc.setTextColor(139, 92, 246);
-  doc.text("QuickTotal Financial Report", 40, 50);
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF("p", "pt", "a4");
+    let docCursor = 50;
 
-  doc.setFontSize(10);
-  doc.setTextColor(100, 116, 139);
-  doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 40, 70);
-
-  let docCursor = 90;
-
-  document.querySelectorAll(".receipt-card").forEach((card, cardIndex) => {
-    if (docCursor > 700) {
-      doc.addPage();
-      docCursor = 50;
+    // A. Dynamically load a Hindi-supporting font to stop the jibberish
+    try {
+      const fontUrl = "https://cdn.jsdelivr.net/gh/googlefonts/noto-fonts/hinted/ttf/NotoSansDevanagari/NotoSansDevanagari-Regular.ttf";
+      const response = await fetch(fontUrl);
+      const buffer = await response.arrayBuffer();
+      const base64String = btoa(new Uint8Array(buffer).reduce((data, byte) => data + String.fromCharCode(byte), ''));
+      doc.addFileToVFS("NotoSansDevanagari.ttf", base64String);
+      doc.addFont("NotoSansDevanagari.ttf", "NotoSansDevanagari", "normal");
+      doc.setFont("NotoSansDevanagari");
+    } catch (err) {
+      console.warn("Could not load Hindi font. Falling back to default.");
+      doc.setFont("helvetica");
     }
 
-    const filename = card.dataset.filename || `Document #${cardIndex + 1}`;
-    doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(30, 41, 59);
-    doc.text(`Bill Source: ${filename}`, 40, docCursor);
-    docCursor += 15;
-
-    const subtotalText =
-      card.querySelector(".rc-subtotal-val")?.textContent || "₹0.00";
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "normal");
+    // B. Setup Headers
+    doc.setFontSize(22);
+    doc.setTextColor(139, 92, 246);
+    doc.text("QuickTotal Financial Report", 40, docCursor);
+    docCursor += 20;
+    
+    doc.setFontSize(10);
     doc.setTextColor(100, 116, 139);
-    doc.text(
-      `Subtotal: Rs. ${subtotalText.replace(/₹/g, "").trim()}`,
-      40,
-      docCursor,
-    );
-    docCursor += 15;
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 40, docCursor);
+    docCursor += 40;
 
-    const tableRows = [];
+    // C. Inject the Pie Chart!
+    const chartCanvas = document.getElementById("spendChart"); 
+    if (chartCanvas) {
+      const imgData = chartCanvas.toDataURL("image/png");
+      doc.addImage(imgData, "PNG", 180, docCursor, 200, 200); // Centered roughly
+      docCursor += 230;
+    }
+
+    // D. Build the Table Data
     let sno = 1;
-    card.querySelectorAll(".rc-item").forEach((itemEl) => {
-      tableRows.push([
-        sno++,
-        itemEl.querySelector(".item-name-field").textContent.trim(),
-        itemEl.querySelector(".item-cat-field").textContent.trim(),
-        `Rs. ${itemEl.querySelector(".price-edit").textContent.replace(/₹/g, "").trim()}`,
-      ]);
+    let tableRows = [];
+    document.querySelectorAll(".receipt-card").forEach((card) => {
+      card.querySelectorAll(".rc-item").forEach((itemEl) => {
+        tableRows.push([
+          sno++,
+          itemEl.querySelector(".item-name-field").textContent.trim(),
+          itemEl.querySelector(".item-cat-field").textContent.trim(),
+          `Rs. ${itemEl.querySelector(".price-edit").textContent.replace(/₹/g, "").trim()}`
+        ]);
+      });
     });
 
+    // E. Print Table with Hindi Font
     doc.autoTable({
       head: [["S.No.", "Item Name", "Category", "Price"]],
       body: tableRows,
       startY: docCursor,
       theme: "striped",
       headStyles: { fillColor: [139, 92, 246] },
-      styles: { font: "helvetica", fontSize: 11 },
+      styles: { font: "NotoSansDevanagari", fontSize: 11 }, // Apply Hindi font
       margin: { left: 40, right: 40 },
     });
 
     docCursor = doc.lastAutoTable.finalY + 40;
-  });
 
-  if (docCursor > 700) {
-    doc.addPage();
-    docCursor = 50;
-  }
-
-  doc.setFontSize(16);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(139, 92, 246);
-  doc.text(
-    `Overall Grand Total: Rs. ${document.getElementById("grandTotalValue").textContent.replace(/₹/g, "").trim()}`,
-    40,
-    docCursor,
-  );
-  docCursor += 50;
-
-  if (spendPieChart) {
-    const chartData = spendPieChart.data.datasets[0].data;
-    const totalSum = chartData.reduce((acc, val) => acc + Number(val), 0);
-
-    if (totalSum > 0) {
-      const origLabels = [...spendPieChart.data.labels];
-      spendPieChart.data.labels = origLabels.map(
-        (label, index) =>
-          `${label}: ${((Number(chartData[index]) / totalSum) * 100).toFixed(1)}%`,
-      );
-
-      spendPieChart.options.plugins.legend.labels.color = "#000000";
-      spendPieChart.options.plugins.legend.labels.font.size = 18;
-      spendPieChart.update("none");
-      const chartImg = spendPieChart.toBase64Image();
-
-      spendPieChart.options.plugins.legend.labels.color = "#e2e8f0";
-      spendPieChart.options.plugins.legend.labels.font.size = 12;
-      spendPieChart.data.labels = origLabels;
-      spendPieChart.update("none");
-
-      const chartWidth = 500;
-      const chartHeight = 280;
+    // F. Page break logic
+    if (docCursor > 700) {
       doc.addPage();
-      doc.setFontSize(22);
-      doc.setTextColor(30, 41, 59);
-      doc.text("Total Spend Analysis by Tag", 595.28 / 2, 120, {
-        align: "center",
-      });
-      doc.addImage(
-        chartImg,
-        "PNG",
-        (595.28 - chartWidth) / 2,
-        180,
-        chartWidth,
-        chartHeight,
-      );
+      docCursor = 50;
     }
-  }
 
-  const totalPages = doc.internal.getNumberOfPages();
-  for (let i = 1; i <= totalPages; i++) {
-    doc.setPage(i);
-    doc.setDrawColor(200, 200, 200);
-    doc.line(40, 810, 555, 810);
-    doc.setTextColor(150, 150, 150);
-    doc.setFontSize(9);
-    doc.setFont("helvetica", "italic");
-    doc.text("Report generated by QuickTotal App", 595.28 / 2, 825, {
-      align: "center",
-    });
-  }
+    // G. Add Grand Total Safely
+    const grandTotalEl = document.getElementById("grandTotalValue");
+    const grandTotalText = grandTotalEl ? grandTotalEl.textContent.replace(/₹/g, "").trim() : "0";
+    
+    doc.setFontSize(16);
+    doc.setTextColor(139, 92, 246);
+    doc.text(`Overall Grand Total: Rs. ${grandTotalText}`, 40, docCursor);
 
-  doc.save(`QuickTotal_Financial_Report_${new Date().getTime()}.pdf`);
+    doc.save(`QuickTotal_Financial_Report_${new Date().getTime()}.pdf`);
+  } catch (error) {
+    console.error("PDF Export Error:", error);
+    alert("Something went wrong downloading the PDF. Please check the console.");
+  }
 }
 
 resetBtn.addEventListener("click", resetApp);
