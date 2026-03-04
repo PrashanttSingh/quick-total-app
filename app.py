@@ -15,8 +15,6 @@ import google.generativeai as genai
 
 load_dotenv()
 
-DEV_MODE = False
-
 # --- API KEYS ---
 GEMINI_KEYS = [k for k in [os.getenv('GEMINI_KEY_1'), os.getenv('GEMINI_KEY_2'), os.getenv('GEMINI_KEY_3'), os.getenv('GEMINI_KEY_4'), os.getenv('GEMINI_KEY_5')] if k]
 OPENROUTER_KEYS = [k for k in [os.getenv('OPENROUTER_KEY_1'), os.getenv('OPENROUTER_KEY_2'), os.getenv('OPENROUTER_KEY_3'), os.getenv('OPENROUTER_KEY_4'), os.getenv('OPENROUTER_KEY_5')] if k]
@@ -71,11 +69,8 @@ def calculate_ink_density_score(img_pil):
         total_pixels = thresh.size
         black_pixels = total_pixels - cv2.countNonZero(thresh)
         density_percent = (black_pixels / total_pixels) * 100
-        confidence_score = int(max(0, 100 - (density_percent * 2.5)))
-        return min(100, confidence_score)
-    except Exception as e:
-        print(f"Density Error: {e}")
-        return 0
+        return min(100, int(max(0, 100 - (density_percent * 2.5))))
+    except: return 0
 
 def img_to_base64(img_pil):
     img_pil.thumbnail((1200, 1200)) 
@@ -84,32 +79,24 @@ def img_to_base64(img_pil):
     return base64.b64encode(buffer.getvalue()).decode('utf-8')
 
 # =================================================================
-# 🧠 UPDATED AI PROMPT: For Math Sheets AND Receipts with Columns
+# 🧠 ULTIMATE PROMPT: RECEIPTS + MATH + COLUMNS
 # =================================================================
 def build_prompt():
     return """You are an elite AI. Extract data from this image. Output ONLY a valid JSON object.
 
 CRITICAL RULE FOR EXTRACTION ORDER (COLUMNS):
-Warning: If this is a multi-column document, you MUST read Column 1 completely from top to bottom first. Then, move to Column 2 and read it completely from top to bottom. DO NOT read left-to-right across the columns. Output the JSON array strictly following this vertical column-by-column sequence.
+Warning: If this is a multi-column document, you MUST read Column 1 completely from top to bottom first. Then, move to Column 2 and read it completely from top to bottom. DO NOT read left-to-right across columns.
 
 DOCUMENT TYPE RULES:
-This image could be a RECEIPT or a MATH WORKSHEET.
-- IF RECEIPT: Extract the purchased item name as "item" and the price as "amount". If handwriting is unreadable, leave "item" as "" but extract the "amount".
-- IF MATH WORKSHEET: Extract the math equation (e.g., "2 + 3 =") as the "item", and the numerical answer (e.g., 5.0) as the "amount". If no answer is written, give it an amount of 0.0.
+- IF RECEIPT: Extract item name as "item" and price as "amount". If messy, leave "item" as "" but extract "amount".
+- IF MATH WORKSHEET: Extract equation (e.g. "2+3=") as "item", and numerical answer as "amount". If blank, use 0.0.
 
-GENERAL RULES:
-1. Read ALL text regardless of ink color (red, black, green, etc.).
-2. DO NOT extract the final "Total", "Subtotal", or summations at the bottom.
-3. Act like a human: Evaluate the physical image and your own extraction.
-   - "image_readability_score" (0-100)
-   - "ai_confidence_score" (0-100)
-
-EXPECTED FORMAT EXACTLY:
+EXPECTED FORMAT:
 {
   "image_readability_score": 85,
   "ai_confidence_score": 95,
   "total_elements_present": 2,
-  "items": [{"item": "Data", "amount": 10.0, "category": "Misc"}, {"item": "2 + 3 =", "amount": 5.0, "category": "Math Problem"}]
+  "items": [{"item": "Coca-Cola", "amount": 40.0, "category": "Beverages"}, {"item": "2 + 3 =", "amount": 5.0, "category": "Math Problem"}]
 }"""
 
 def parse_response(raw):
@@ -120,10 +107,8 @@ def parse_response(raw):
 
 def build_calculations(parsed_data, source_type):
     if not isinstance(parsed_data, dict): return [], 0, 0, "-"
-    
     image_quality = parsed_data.get('image_readability_score', 0)
     ai_accuracy = parsed_data.get('ai_confidence_score', 0)
-    
     calculations, subtotal = [], 0
     items_list = parsed_data.get('items', [])
     if isinstance(items_list, list):
@@ -132,17 +117,13 @@ def build_calculations(parsed_data, source_type):
             item = str(entry.get('item', '')).strip()
             category = str(entry.get('category', 'Misc')).strip()
             try: amount = float(entry.get('amount', 0))
-            except: continue
-            
+            except: amount = 0.0
             calculations.append({'expression': item, 'category': category, 'result': round(amount, 2), 'type': source_type})
             subtotal += amount
-                
     return calculations, round(subtotal, 2), image_quality, f"{ai_accuracy}%"
 
 def gemini_fallback(img, timeline):
-    if not GEMINI_KEYS:
-        timeline.append("ℹ️ Gemini: Skipped")
-        return [], 0, 0, "-", None
+    if not GEMINI_KEYS: return [], 0, 0, "-", None
     prompt = build_prompt()
     for i, api_key in enumerate(GEMINI_KEYS):
         try:
@@ -152,62 +133,27 @@ def gemini_fallback(img, timeline):
             data = parse_response(res.text)
             if data and data.get('items'):
                 calcs, total, q, acc = build_calculations(data, 'gemini')
-                timeline.append(f"✅ Gemini 2.5 Flash: Success (Key {i+1})")
+                timeline.append(f"✅ Gemini: Success")
                 return calcs, total, q, acc, "Gemini 2.5 Flash"
-        except Exception as e:
-            if "429" in str(e): timeline.append(f"⚠️ Gemini Key {i+1} Rate Limited")
-            else: timeline.append(f"❌ Gemini Error")
-            continue
+        except: continue
     return [], 0, 0, "-", None
 
 def ai_fallback(img, timeline):
     prompt = build_prompt()
     img_b64 = img_to_base64(img)
-
     for full_model_id, model_name in MODEL_NAMES.items():
-        try: provider, model_id = full_model_id.split(":", 1)
-        except: continue
-        
-        keys_to_try = []
-        if provider == "openrouter": keys_to_try = OPENROUTER_KEYS
-        elif provider == "github" and GITHUB_KEY: keys_to_try = [GITHUB_KEY]
-        elif provider == "groq" and GROQ_KEY: keys_to_try = [GROQ_KEY]
-        
-        if not keys_to_try: continue
-
-        url = "https://openrouter.ai/api/v1/chat/completions" if provider == "openrouter" else "https://models.inference.ai.azure.com/chat/completions" if provider == "github" else "https://api.groq.com/openai/v1/chat/completions"
-
-        for i, key in enumerate(keys_to_try):
-            try:
-                payload = {
-                    "model": model_id, 
-                    "messages": [{"role": "user", "content": [{"type": "text", "text": prompt}, {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{img_b64}"}}]}], 
-                    "temperature": 0.1, "max_tokens": 2048
-                }
-                
-                if provider == "groq" or (provider == "openrouter" and "openai" in model_id):
-                    payload["response_format"] = {"type": "json_object"}
-
-                resp = requests.post(url=url, headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"}, json=payload, timeout=45)
-                
-                if resp.status_code == 429:
-                    timeline.append(f"⚠️ {model_name} Key {i+1} Rate Limited")
-                    continue
-                elif resp.status_code != 200:
-                    timeline.append(f"❌ {model_name}: API Error {resp.status_code}")
-                    break
-
+        try:
+            provider, model_id = full_model_id.split(":", 1)
+            keys = OPENROUTER_KEYS if provider == "openrouter" else [GITHUB_KEY] if GITHUB_KEY else [GROQ_KEY]
+            url = "https://openrouter.ai/api/v1/chat/completions" if provider == "openrouter" else "https://api.groq.com/openai/v1/chat/completions"
+            for key in keys:
+                resp = requests.post(url=url, headers={"Authorization": f"Bearer {key}"}, json={"model": model_id, "messages": [{"role": "user", "content": [{"type":"text","text":prompt}, {"type":"image_url","image_url":{"url":f"data:image/jpeg;base64,{img_b64}"}}]}], "temperature": 0.1}, timeout=45)
                 data = parse_response(resp.json()['choices'][0]['message']['content'])
                 if data and data.get('items'):
                     calcs, total, q, acc = build_calculations(data, 'ai')
                     timeline.append(f"✅ {model_name}: Success")
                     return calcs, total, q, acc, model_name
-                else:
-                    timeline.append(f"❌ {model_name}: Format Error")
-                    break
-            except Exception as e:
-                 timeline.append(f"❌ {model_name}: Connection Error")
-                 break
+        except: continue
     return [], 0, 0, "-", None
 
 @app.route('/')
@@ -217,102 +163,42 @@ def index(): return render_template('index.html')
 def analyze_image():
     try:
         file = request.files.get('image')
-        if not file: return jsonify({'quality': 0})
         img_raw = Image.open(file.stream).convert('RGB')
-        quality = calculate_ink_density_score(img_raw)
-        return jsonify({'quality': quality})
-    except:
-        return jsonify({'quality': 0})
+        return jsonify({'quality': calculate_ink_density_score(img_raw)})
+    except: return jsonify({'quality': 0})
 
 @app.route('/calculate', methods=['POST'])
 def calculate():
-    files = request.files.getlist('images')
-    valid_files = [f for f in files if f.filename != '']
+    file = request.files.getlist('images')[0]
     image_index = int(request.form.get('image_index', 1))
     total_images = int(request.form.get('total_images', 1))
-    
-    if image_index == 1: batch_num = get_latest_batch_id() + 1
-    else: batch_num = max(1, get_latest_batch_id())
-    batch_id = f"**Batch {batch_num}**"
-    formatted_datetime = f"{datetime.now().strftime('%I:%M:%S %p')}<br>{datetime.now().strftime('%d/%m/%y')}"
+    batch_num = get_latest_batch_id() + (1 if image_index == 1 else 0)
+    start_time = time.time()
+    timeline = []
+    img_raw = Image.open(file.stream).convert('RGB')
+    img_raw.thumbnail((1600, 1600))
+    img = enhance_poor_image(img_raw)
+    calcs, subtotal, img_qual, ai_acc, model = gemini_fallback(img, timeline)
+    if not model: calcs, subtotal, img_qual, ai_acc, model = ai_fallback(img, timeline)
+    processing_time = round(time.time() - start_time, 2)
+    log_performance(f"**Batch {batch_num}**", datetime.now().strftime('%H:%M:%S'), file.filename, f"{image_index}/{total_images}", "Success" if model else "Failed", timeline, processing_time, img_qual, ai_acc)
+    return jsonify({'results': [{'index': image_index, 'items': calcs, 'subtotal': subtotal, 'image_quality': img_qual, 'ai_accuracy': ai_acc, 'method': model}]})
 
-    structured_results, grand_total, used_methods = [], 0.0, set()
-
-    try:
-        for i, file in enumerate(valid_files):
-            start_time = time.time()
-            processing_timeline = []
-            
-            img_raw = Image.open(file.stream).convert('RGB')
-            img_raw.thumbnail((1600, 1600)) 
-            img = enhance_poor_image(img_raw)
-
-            calcs, subtotal, img_qual, ai_acc, model = gemini_fallback(img, processing_timeline)
-            if not model:
-                 calcs, subtotal, img_qual, ai_acc, model = ai_fallback(img, processing_timeline)
-
-            processing_time = round(time.time() - start_time, 2)
-            display_batch = batch_id if image_index == 1 else ""
-            display_time = formatted_datetime if image_index == 1 else ""
-
-            if model and calcs:
-                used_methods.add(model)
-                grand_total += subtotal
-                structured_results.append({
-                    'index': image_index, 'items': calcs, 'subtotal': subtotal,
-                    'image_quality': img_qual, 
-                    'ai_accuracy': ai_acc, 'method': model
-                })
-                log_performance(display_batch, display_time, file.filename, f"{image_index} of {total_images}", "Success", processing_timeline, processing_time, img_qual, ai_acc)
-            else:
-                 structured_results.append({'index': image_index, 'error': "Could not read data reliably."})
-                 log_performance(display_batch, display_time, file.filename, f"{image_index} of {total_images}", "Failed", processing_timeline, processing_time, "-", "-")
-            
-            if len(valid_files) > 1 and i < len(valid_files) - 1: time.sleep(4)
-
-        if not structured_results: return jsonify({'error': 'No readable data found.'})
-        return jsonify({'results': structured_results, 'grand_total': round(grand_total, 2), 'methods_used': list(used_methods)})
-
-    except Exception as e: return jsonify({'error': f'Server error: {str(e)}'})
-
-# ✨ UPDATED: Now safely overwrites using the original filename
 @app.route('/save_training_data', methods=['POST'])
 def save_training_data():
     try:
         image_file = request.files.get('image')
         json_data = request.form.get('json_data')
         original_filename = request.form.get('original_filename', 'unknown_file')
-
-        if not image_file or not json_data:
-            return jsonify({'error': 'Missing image or data'}), 400
-
         dataset_folder = 'training_dataset'
         os.makedirs(dataset_folder, exist_ok=True)
-
-        # Extract base name to overwrite properly
-        base_name = os.path.splitext(original_filename)[0]
-        if not base_name or base_name == 'unknown_file':
-            base_name = f"receipt_{int(time.time() * 1000)}"
-
-        # Make it safe for saving
-        base_name = re.sub(r'[^a-zA-Z0-9_\-]', '_', base_name)
-
-        image_ext = os.path.splitext(image_file.filename)[1]
-        if not image_ext: image_ext = '.jpg'
-        
-        image_path = os.path.join(dataset_folder, f"{base_name}{image_ext}")
+        base_name = re.sub(r'[^a-zA-Z0-9_\-]', '_', os.path.splitext(original_filename)[0])
+        image_path = os.path.join(dataset_folder, f"{base_name}.jpg")
         image_file.save(image_path)
-
-        json_path = os.path.join(dataset_folder, f"{base_name}.json")
-        with open(json_path, 'w', encoding='utf-8') as f:
-            parsed_data = json.loads(json_data)
-            json.dump(parsed_data, f, indent=4, ensure_ascii=False)
-
-        return jsonify({'success': True, 'message': 'Saved to dataset!'})
-
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        with open(os.path.join(dataset_folder, f"{base_name}.json"), 'w', encoding='utf-8') as f:
+            json.dump(json.loads(json_data), f, indent=4, ensure_ascii=False)
+        return jsonify({'success': True})
+    except Exception as e: return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
     app.run(debug=True, port=5000)
