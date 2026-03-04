@@ -424,44 +424,94 @@ function getAccuracyInfo(score) {
   return { color: "#ef4444", text: "Low Confidence" };
 }
 
-// 📌 UPDATED: Added comprehensive Hindi words to Categories
+// ✨ ADVANCED CATEGORY BRAIN ✨
 function guessCategory(text) {
   const lower = text.toLowerCase();
 
+  // Drinks / Cold Drinks
   if (
-    /(doodh|milk|maggi|soybean|aata|atta|rice|sugar|tea|coffee|dal|pulse|paneer|bread|butter|snack|biscuit|oil|masala|spices|vegetable|fruit|drink|parle|lays|दूध|मैगी|आटा|चीनी|चाय|दाल|पनीर|ब्रेड|मक्खन|तेल|मसाला|सब्जी|फल)/i.test(
+    /(coca|cola|pepsi|sprite|fanta|limca|maza|cold drink|beverage|water|soda|juice|chai|coffee|tea|drink|piv|shikanji)/i.test(
+      lower,
+    )
+  )
+    return "Beverages";
+
+  // Dairy specific
+  if (/(doodh|milk|paneer|curd|dahi|butter|cheese|ghee|dairy)/i.test(lower))
+    return "Dairy";
+
+  // Snacks / Junk Food
+  if (
+    /(maggi|biscuit|namkeen|chips|kurkure|lays|snack|chocolate|candy|sweet|mithai|parle|samosa)/i.test(
+      lower,
+    )
+  )
+    return "Snacks";
+
+  // Base Groceries
+  if (
+    /(aata|atta|rice|sugar|dal|pulse|oil|masala|spices|vegetable|fruit|onion|potato|tomato|grocery|kirana|sabzi|chini|salt|namak)/i.test(
       lower,
     )
   )
     return "Groceries";
 
+  // Clothing
   if (
-    /(shirt|kurta|pant|jeans|tshirt|shoes|clothing|fabric|suit|शर्ट|कुर्ता|पैंट|कपड़ा|जूते)/i.test(
+    /(shirt|kurta|pant|jeans|tshirt|shoes|clothing|fabric|suit|wear|garment|chappal|sandal)/i.test(
       lower,
     )
   )
-    return "Clothing";
+    return "Clothing & Footwear";
 
+  // Electronics
   if (
-    /(wire|cable|phone|battery|charger|usb|electronics|led|bulb|plug|adaptor|तार|केबल|बैटरी|चार्जर|बल्ब)/i.test(
+    /(wire|cable|phone|battery|charger|usb|electronics|led|bulb|plug|adaptor|mobile|laptop|earphone|headphone)/i.test(
       lower,
     )
   )
     return "Electronics";
 
+  // Medical
   if (
-    /(tablet|paracetamol|medicine|syrup|doctor|pharmacy|pill|medical|clinic|दवा|गोली|सिरप|डॉक्टर)/i.test(
+    /(tablet|paracetamol|medicine|syrup|doctor|pharmacy|pill|medical|clinic|hospital|bandaid)/i.test(
       lower,
     )
   )
     return "Medical";
 
+  // Transport
   if (
-    /(auto|cab|uber|ola|bus|train|ticket|travel|petrol|fuel|diesel|ऑटो|कैब|बस|ट्रेन|टिकट|पेट्रोल|डीजल)/i.test(
+    /(auto|cab|uber|ola|bus|train|ticket|travel|petrol|fuel|diesel|cng|parking|toll|flight)/i.test(
       lower,
     )
   )
     return "Transport";
+
+  // Education & Math
+  if (
+    /(book|pen|pencil|paper|notebook|stationary|eraser|school|college|fee|tuition|math|science|exam)/i.test(
+      lower,
+    )
+  )
+    return "Education & Stationery";
+
+  // Utilities
+  if (
+    /(bill|recharge|tax|rent|emi|insurance|water bill|electricity|gas)/i.test(
+      lower,
+    )
+  )
+    return "Bills & Utilities";
+
+  // Catch Math Problem strings (e.g., "2+3=", "14 x 5")
+  if (
+    /^[0-9+\-/*=xX\s()]+$/.test(text) ||
+    text.includes("+") ||
+    text.includes("-") ||
+    text.includes("=")
+  )
+    return "Math Problem";
 
   return "Misc";
 }
@@ -606,7 +656,6 @@ receiptsList.addEventListener("focusin", (e) => {
   }
 });
 
-// 📌 UPDATED: Added LIVE Input Event to instantly guess Categories and update math as you type!
 receiptsList.addEventListener("input", (e) => {
   if (e.target.classList.contains("item-name-field")) {
     const row = e.target.closest(".rc-item");
@@ -648,7 +697,6 @@ receiptsList.addEventListener("click", async (e) => {
     }
 
     const recognition = new SpeechRecognition();
-    // 📌 UPDATED: Set language to hi-IN to recognize Hindi script natively
     recognition.lang = "hi-IN";
     recognition.continuous = false;
 
@@ -656,7 +704,7 @@ receiptsList.addEventListener("click", async (e) => {
     micBtn.textContent = "🔴";
 
     recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript;
+      let transcript = event.results[0][0].transcript;
 
       const priceMatch = transcript.match(/[\d.]+/);
       let priceVal = 0;
@@ -670,8 +718,30 @@ receiptsList.addEventListener("click", async (e) => {
             /rupees|rupee|rs|rupaye|rupay|rupya|bucks|₹|रुपये|रुपया/gi,
             "",
           )
+          .replace(/[।.,]/g, "") // Removes Punctuation marks
           .replace(/\s+/g, " ")
           .trim();
+      } else {
+        itemName = itemName.replace(/[।.,]/g, "").trim();
+      }
+
+      // Hinglish Dictionary
+      const enDict = {
+        मिल्क: "Milk",
+        ब्रेड: "Bread",
+        बिस्किट: "Biscuit",
+        बटर: "Butter",
+        सॉस: "Sauce",
+        चीज: "Cheese",
+        पनीर: "Paneer",
+        मैगी: "Maggi",
+        "कोका कोला": "Coca-Cola",
+        पेप्सी: "Pepsi",
+        "कोल्ड ड्रिंक": "Cold Drink",
+      };
+
+      for (const [hiWord, enWord] of Object.entries(enDict)) {
+        itemName = itemName.replace(new RegExp(hiWord, "gi"), enWord);
       }
 
       nameField.textContent = itemName;
@@ -787,13 +857,14 @@ receiptsList.addEventListener("click", async (e) => {
     try {
       const formData = new FormData();
       formData.append("image", fileToSave);
+      // ✨ NEW: Sending the original filename so Python knows what to overwrite!
+      formData.append("original_filename", fileToSave.name);
       formData.append("json_data", JSON.stringify({ items: correctedItems }));
 
       const res = await fetch("/save_training_data", {
         method: "POST",
         body: formData,
       });
-      // 📌 UPDATED: Changes to a clickable "Update Dataset" button!
       if (res.ok) {
         btn.textContent = "Update Dataset 🔄";
         btn.style.background = "rgba(59, 130, 246, 0.4)";

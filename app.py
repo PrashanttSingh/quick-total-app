@@ -84,31 +84,32 @@ def img_to_base64(img_pil):
     return base64.b64encode(buffer.getvalue()).decode('utf-8')
 
 # =================================================================
-# 🧠 UPDATED AI PROMPT: For Columns, Colors, and Missing Names
+# 🧠 UPDATED AI PROMPT: For Math Sheets AND Receipts with Columns
 # =================================================================
 def build_prompt():
-    return """You are an elite financial AI. Extract data from this image. Output ONLY a valid JSON object.
+    return """You are an elite AI. Extract data from this image. Output ONLY a valid JSON object.
 
-CRITICAL RULE FOR EXTRACTION ORDER:
-Warning: This is a multi-column receipt. You MUST read Column 1 completely from top to bottom first. Then, move to Column 2 and read it completely from top to bottom. DO NOT read left-to-right across the columns.
-You must output the JSON array strictly following this vertical column-by-column sequence.
+CRITICAL RULE FOR EXTRACTION ORDER (COLUMNS):
+Warning: If this is a multi-column document, you MUST read Column 1 completely from top to bottom first. Then, move to Column 2 and read it completely from top to bottom. DO NOT read left-to-right across the columns. Output the JSON array strictly following this vertical column-by-column sequence.
 
-CRITICAL RULES:
-1. Read ALL text regardless of ink color (including red, black, green, or any other color).
-2. DO NOT extract the final "Total", "Subtotal", "Grand Total", "योग", "कुल", "जमा" (Jama), or any summations at the bottom of the page. ONLY extract the individual purchased line items.
-3. "total_elements_present" must ONLY count actual purchasable line items, NOT headers, footers, or addresses.
-4. UNREADABLE ITEMS: If the handwriting is too messy, blurry, or cursive to read the item name, you MUST STILL extract the amount/number. Leave the "item" name as an empty string (""), but ensure the "amount" is captured perfectly. Never skip a price just because the name is illegible.
-5. If a word has no price next to it, give it an amount of 0.0.
-6. Act like a human: Evaluate the physical image and your own extraction. Provide two integer scores:
-   - "image_readability_score" (0-100): How physically blurry, dark, or messy is the photo?
-   - "ai_confidence_score" (0-100): How confident are you that you perfectly extracted the math and text without errors?
+DOCUMENT TYPE RULES:
+This image could be a RECEIPT or a MATH WORKSHEET.
+- IF RECEIPT: Extract the purchased item name as "item" and the price as "amount". If handwriting is unreadable, leave "item" as "" but extract the "amount".
+- IF MATH WORKSHEET: Extract the math equation (e.g., "2 + 3 =") as the "item", and the numerical answer (e.g., 5.0) as the "amount". If no answer is written, give it an amount of 0.0.
+
+GENERAL RULES:
+1. Read ALL text regardless of ink color (red, black, green, etc.).
+2. DO NOT extract the final "Total", "Subtotal", or summations at the bottom.
+3. Act like a human: Evaluate the physical image and your own extraction.
+   - "image_readability_score" (0-100)
+   - "ai_confidence_score" (0-100)
 
 EXPECTED FORMAT EXACTLY:
 {
   "image_readability_score": 85,
   "ai_confidence_score": 95,
-  "total_elements_present": 8,
-  "items": [{"item": "Data", "amount": 10.0, "category": "Misc"}, {"item": "", "amount": 45.0, "category": "Misc"}]
+  "total_elements_present": 2,
+  "items": [{"item": "Data", "amount": 10.0, "category": "Misc"}, {"item": "2 + 3 =", "amount": 5.0, "category": "Math Problem"}]
 }"""
 
 def parse_response(raw):
@@ -133,7 +134,6 @@ def build_calculations(parsed_data, source_type):
             try: amount = float(entry.get('amount', 0))
             except: continue
             
-            # Allow items with blank names through (so prices aren't skipped!)
             calculations.append({'expression': item, 'category': category, 'result': round(amount, 2), 'type': source_type})
             subtotal += amount
                 
@@ -275,11 +275,13 @@ def calculate():
 
     except Exception as e: return jsonify({'error': f'Server error: {str(e)}'})
 
+# ✨ UPDATED: Now safely overwrites using the original filename
 @app.route('/save_training_data', methods=['POST'])
 def save_training_data():
     try:
         image_file = request.files.get('image')
         json_data = request.form.get('json_data')
+        original_filename = request.form.get('original_filename', 'unknown_file')
 
         if not image_file or not json_data:
             return jsonify({'error': 'Missing image or data'}), 400
@@ -287,14 +289,21 @@ def save_training_data():
         dataset_folder = 'training_dataset'
         os.makedirs(dataset_folder, exist_ok=True)
 
-        unique_id = f"receipt_{int(time.time() * 1000)}"
+        # Extract base name to overwrite properly
+        base_name = os.path.splitext(original_filename)[0]
+        if not base_name or base_name == 'unknown_file':
+            base_name = f"receipt_{int(time.time() * 1000)}"
+
+        # Make it safe for saving
+        base_name = re.sub(r'[^a-zA-Z0-9_\-]', '_', base_name)
 
         image_ext = os.path.splitext(image_file.filename)[1]
         if not image_ext: image_ext = '.jpg'
-        image_path = os.path.join(dataset_folder, f"{unique_id}{image_ext}")
+        
+        image_path = os.path.join(dataset_folder, f"{base_name}{image_ext}")
         image_file.save(image_path)
 
-        json_path = os.path.join(dataset_folder, f"{unique_id}.json")
+        json_path = os.path.join(dataset_folder, f"{base_name}.json")
         with open(json_path, 'w', encoding='utf-8') as f:
             parsed_data = json.loads(json_data)
             json.dump(parsed_data, f, indent=4, ensure_ascii=False)

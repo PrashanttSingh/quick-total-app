@@ -170,3 +170,54 @@
 |  |  | `WhatsApp Image 2026-02-25 at 2.49.47 PM (2).jpeg` | 22 of 22 | ✅ Success | ✅ Gemini 2.5 Flash: Success (Key 1) | 30.87s | <b>70%</b> | <b>85%</b> |
 | **Batch 55** | 06:34:07 PM<br>28/02/26 | `OIP - Copy - Copy - Copy.jfif` | 1 of 2 | ✅ Success | ✅ Gemini 2.5 Flash: Success (Key 1) | 10.98s | <b>95%</b> | <b>99%</b> |
 |  |  | `download.webp` | 2 of 2 | ✅ Success | ⚠️ Gemini Key 1 Rate Limited<br>✅ Gemini 2.5 Flash: Success (Key 2) | 23.28s | <b>98%</b> | <b>99%</b> |
+| **Batch 56** | 07:17:28 PM<br>28/02/26 | `Addition-and-Subtraction-for-Kindergarten.webp` | 1 of 2 | ✅ Success | ⚠️ Gemini Key 1 Rate Limited<br>✅ Gemini 2.5 Flash: Success (Key 2) | 15.99s | <b>100%</b> | <b>100%</b> |
+|  |  | `OIP - Copy - Copy - Copy.jfif` | 2 of 2 | ✅ Success | ⚠️ Gemini Key 1 Rate Limited<br>✅ Gemini 2.5 Flash: Success (Key 2) | 37.21s | <b>95%</b> | <b>98%</b> |
+| **Batch 57** | 07:20:20 PM<br>28/02/26 | `Addition-and-Subtraction-for-Kindergarten.webp` | 1 of 2 | ✅ Success | ⚠️ Gemini Key 1 Rate Limited<br>✅ Gemini 2.5 Flash: Success (Key 2) | 46.37s | <b>100%</b> | <b>100%</b> |
+|  |  | `OIP - Copy - Copy - Copy.jfif` | 2 of 2 | ✅ Success | ⚠️ Gemini Key 1 Rate Limited<br>✅ Gemini 2.5 Flash: Success (Key 2) | 8.37s | <b>95%</b> | <b>98%</b> |
+| **Batch 58** | 08:12:46 PM<br>28/02/26 | `1#.jpg` | 1 of 2 | ✅ Success | ⚠️ Gemini Key 1 Rate Limited<br>✅ Gemini 2.5 Flash: Success (Key 2) | 88.22s | <b>85%</b> | <b>90%</b> |
+|  |  | `1.jpeg` | 2 of 2 | ✅ Success | ⚠️ Gemini Key 1 Rate Limited<br>✅ Gemini 2.5 Flash: Success (Key 2) | 60.78s | <b>85%</b> | <b>90%</b> |
+| **Batch 59** | 12:08:07 AM<br>01/03/26 | `10.jpeg` | 1 of 9 | ✅ Success | ✅ Gemini 2.5 Flash: Success (Key 1) | 63.64s | <b>88%</b> | <b>90%</b> |
+|  |  | `2.jpeg` | 2 of 9 | ✅ Success | ✅ Gemini 2.5 Flash: Success (Key 1) | 74.45s | <b>75%</b> | <b>90%</b> |
+|  |  | `3.jpeg` | 3 of 9 | ✅ Success | ⚠️ Gemini Key 1 Rate Limited<br>✅ Gemini 2.5 Flash: Success (Key 2) | 122.26s | <b>85%</b> | <b>95%</b> |
+|  |  | `4.jpeg` | 4 of 9 | ✅ Success | ⚠️ Gemini Key 1 Rate Limited<br>✅ Gemini 2.5 Flash: Success (Key 2) | 92.8s | <b>70%</b> | <b>85%</b> |
+|  |  | `5.jpeg` | 5 of 9 | ✅ Success | ⚠️ Gemini Key 1 Rate Limited<br>✅ Gemini 2.5 Flash: Success (Key 2) | 87.62s | <b>75%</b> | <b>80%</b> |
+|  |  | `6.jpeg` | 6 of 9 | ✅ Success | ⚠️ Gemini Key 1 Rate Limited<br>✅ Gemini 2.5 Flash: Success (Key 2) | 99.72s | <b>70%</b> | <b>85%</b> |
+|  |  | `7.jpeg` | 7 of 9 | ✅ Success | ⚠️ Gemini Key 1 Rate Limited<br>✅ Gemini 2.5 Flash: Success (Key 2) | 80.31s | <b>90%</b> | <b>95%</b> |
+|  |  | `8.jpeg` | 8 of 9 | ✅ Success | ⚠️ Gemini Key 1 Rate Limited<br>✅ Gemini 2.5 Flash: Success (Key 2) | 60.4s | <b>75%</b> | <b>90%</b> |
+|  |  | `9.jpeg` | 9 of 9 | ✅ Success | ⚠️ Gemini Key 1 Rate Limited<br>✅ Gemini 2.5 Flash: Success (Key 2) | 79.49s | <b>85%</b> | <b>90%</b> |
+| **Batch 60** | 01:23:34 | `2.jpeg` | 1/4 | ✅ Success | ✅ Gemini: Success | 427.17s | <b>70%</b> | <b>85%</b> |
+| **Batch 60** | 01:25:35 | `3.jpeg` | 2/4 | ✅ Success | ✅ Gemini: Success | 120.14s | <b>85%</b> | <b>95%</b> |
+| **Batch 61** | 01:27:02 | `2.jpeg` | 1/3 | ✅ Success | ✅ Gemini: Success | 193.78s | <b>85%</b> | <b>92%</b> |
+| **Batch 62** | 10:18:01 | `cropped_part_1772426834872.jpg` | 1/1 | ✅ Success | ✅ Gemini: Success | 44.63s | <b>85%</b> | <b>95%</b> |
+| **Batch 63** | 10:19:56 | `cropped_part_1772426834872.jpg` | 1/1 | ✅ Success | ✅ Gemini: Success | 30.13s | <b>75%</b> | <b>90%</b> |
+| **Batch 64** | 10:52:40 | `3.jpeg` | 1/1 | ✅ Success | ✅ Gemini: Success | 35.49s | <b>80%</b> | <b>90%</b> |
+| **Batch 65** | 11:07:26 | `5.jpeg` | 1/1 | ✅ Success | ✅ Gemini: Success | 42.34s | <b>85%</b> | <b>90%</b> |
+| **Batch 66** | 11:19:59 | `6.jpeg` | 1/1 | ✅ Success | ✅ Gemini: Success | 45.08s | <b>85%</b> | <b>90%</b> |
+| **Batch 67** | 13:17:33 | `7.jpeg` | 1/1 | ✅ Success | ✅ Gemini: Success | 67.99s | <b>85%</b> | <b>70%</b> |
+| **Batch 68** | 13:26:00 | `8.jpeg` | 1/1 | ✅ Success | ✅ Gemini: Success | 40.4s | <b>85%</b> | <b>95%</b> |
+| **Batch 69** | 13:37:11 | `9.jpeg` | 1/1 | ✅ Success | ✅ Gemini: Success | 42.71s | <b>85%</b> | <b>95%</b> |
+| **Batch 70** | 13:51:26 | `10.jpeg` | 1/1 | ✅ Success | ✅ Gemini: Success | 54.4s | <b>85%</b> | <b>95%</b> |
+| **Batch 71** | 14:14:00 | `11.jpeg` | 1/1 | ✅ Success | ✅ Gemini: Success | 38.0s | <b>85%</b> | <b>90%</b> |
+| **Batch 72** | 14:17:13 | `11.jpeg` | 1/1 | ✅ Success | ✅ Gemini: Success | 65.92s | <b>85%</b> | <b>90%</b> |
+| **Batch 73** | 14:28:41 | `12.jpeg` | 1/1 | ✅ Success | ✅ Gemini: Success | 72.54s | <b>85%</b> | <b>90%</b> |
+| **Batch 74** | 14:49:44 | `13.jpeg` | 1/1 | ✅ Success | ✅ Gemini: Success | 44.58s | <b>85%</b> | <b>95%</b> |
+| **Batch 75** | 15:24:27 | `14.jpeg` | 1/1 | ✅ Success | ✅ Gemini: Success | 104.8s | <b>85%</b> | <b>95%</b> |
+| **Batch 76** | 15:48:33 | `15.jpeg` | 1/1 | ✅ Success | ✅ Gemini: Success | 29.11s | <b>85%</b> | <b>90%</b> |
+| **Batch 77** | 16:40:41 | `17.jpeg` | 1/1 | ✅ Success | ✅ Gemini: Success | 66.87s | <b>85%</b> | <b>95%</b> |
+| **Batch 78** | 16:52:43 | `17.jpeg` | 1/1 | ✅ Success | ✅ Gemini: Success | 49.94s | <b>85%</b> | <b>90%</b> |
+| **Batch 79** | 17:16:30 | `18.jpeg` | 1/1 | ✅ Success | ✅ Gemini: Success | 50.13s | <b>85%</b> | <b>90%</b> |
+| **Batch 80** | 17:28:32 | `19.jpeg` | 1/1 | ✅ Success | ✅ Gemini: Success | 47.7s | <b>85%</b> | <b>95%</b> |
+| **Batch 81** | 17:42:48 | `20.jpeg` | 1/1 | ✅ Success | ✅ Gemini: Success | 39.25s | <b>78%</b> | <b>92%</b> |
+| **Batch 82** | 17:45:02 | `20.jpeg` | 1/1 | ✅ Success | ✅ Gemini: Success | 38.13s | <b>75%</b> | <b>90%</b> |
+| **Batch 83** | 17:46:22 | `20.jpeg` | 1/1 | ✅ Success | ✅ Gemini: Success | 47.99s | <b>85%</b> | <b>95%</b> |
+| **Batch 84** | 17:50:14 | `21.jpeg` | 1/1 | ✅ Success | ✅ Gemini: Success | 52.85s | <b>88%</b> | <b>92%</b> |
+| **Batch 85** | 18:48:48 | `22.jpeg` | 1/1 | ✅ Success | ✅ Gemini: Success | 42.39s | <b>85%</b> | <b>95%</b> |
+| **Batch 86** | 18:54:43 | `23.jpeg` | 1/1 | ✅ Success | ✅ Gemini: Success | 43.93s | <b>85%</b> | <b>95%</b> |
+| **Batch 87** | 18:56:00 | `23.jpeg` | 1/4 | ✅ Success | ✅ Gemini: Success | 35.32s | <b>85%</b> | <b>95%</b> |
+| **Batch 87** | 18:56:11 | `26.jpeg` | 2/4 | ✅ Success | ✅ Gemini: Success | 9.97s | <b>85%</b> | <b>95%</b> |
+| **Batch 87** | 18:56:42 | `24.jpeg` | 3/4 | ✅ Success | ✅ Gemini: Success | 31.42s | <b>85%</b> | <b>95%</b> |
+| **Batch 87** | 18:57:17 | `25.jpeg` | 4/4 | ✅ Success | ✅ Gemini: Success | 34.13s | <b>85%</b> | <b>95%</b> |
+| **Batch 88** | 00:47:26 | `26.jpeg` | 1/1 | ✅ Success | ✅ Gemini: Success | 9.63s | <b>90%</b> | <b>98%</b> |
+| **Batch 89** | 00:52:18 | `26.jpeg` | 1/1 | ✅ Success | ✅ Gemini: Success | 16.25s | <b>85%</b> | <b>95%</b> |
+| **Batch 90** | 00:53:54 | `26.jpeg` | 1/1 | ✅ Success | ✅ Gemini: Success | 19.24s | <b>85%</b> | <b>95%</b> |
+| **Batch 91** | 00:56:39 | `26.jpeg` | 1/1 | ✅ Success | ✅ Gemini: Success | 13.3s | <b>85%</b> | <b>95%</b> |
