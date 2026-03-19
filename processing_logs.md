@@ -221,3 +221,9 @@
 | **Batch 89** | 00:52:18 | `26.jpeg` | 1/1 | ✅ Success | ✅ Gemini: Success | 16.25s | <b>85%</b> | <b>95%</b> |
 | **Batch 90** | 00:53:54 | `26.jpeg` | 1/1 | ✅ Success | ✅ Gemini: Success | 19.24s | <b>85%</b> | <b>95%</b> |
 | **Batch 91** | 00:56:39 | `26.jpeg` | 1/1 | ✅ Success | ✅ Gemini: Success | 13.3s | <b>85%</b> | <b>95%</b> |
+| **Batch 92** | 19:02:56 | `test_receipt.jpg` | 1/1 | ✅ Success | ⚠️ Local Custom AI: Failed to parse output<br>✅ Gemini: Success | 732.75s | <b>90%</b> | <b>98%</b> |
+| **Batch 93** | 23:13:47 | `26.jpeg` | 1/1 | ✅ Success | ❌ Cloud Custom AI: Failed (HTTPSConnectionPool(host='barn)<br>✅ Gemini: Success | 23.71s | <b>90%</b> | <b>98%</b> |
+| **Batch 94** | 23:28:24 | `26.jpeg` | 1/1 | ✅ Success | ❌ Cloud Custom AI: Failed (HTTPSConnectionPool(host='barn)<br>✅ Gemini: Success | 15.39s | <b>85%</b> | <b>95%</b> |
+| **Batch 95** | 23:34:40 | `26.jpeg` | 1/1 | ✅ Success | ❌ Cloud Custom AI: Failed (HTTPSConnectionPool(host='barn)<br>✅ Gemini: Success | 13.93s | <b>88%</b> | <b>97%</b> |
+| **Batch 96** | 16:25:12 | `26.jpeg` | 1/1 | ✅ Success | ⚡ Cloud Custom AI (Kaggle): Success | 62.97s | <b>0%</b> | <b>0%</b> |
+| **Batch 97** | 16:28:10 | `26.jpeg` | 1/1 | ✅ Success | ❌ Cloud Custom AI: Failed (HTTPSConnectionPool(host='barn)<br>✅ Gemini: Success | 17.42s | <b>85%</b> | <b>95%</b> |
