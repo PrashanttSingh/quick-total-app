@@ -1,18 +1,16 @@
 /* ═══════════════════════════════════════════
-   GLASSMORPHISM THEME (BOOTSTRAP EDITION)
+   PREMIUM RETAIL THEME (Depth & Animation)
 ═══════════════════════════════════════════ */
 :root {
-  --primary-grad: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  --primary-solid: #8b5cf6;
-  --bg-dark: #0f172a;
-  --glass-bg: rgba(255, 255, 255, 0.05);
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --text-bright: #ffffff;
-  --text-muted: #94a3b8;
-  --danger: #fb7185;
-  --success: #34d399;
-  --radius: 16px;
-  --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  --primary-solid: #3b82f6;
+  --bg-dark: #f1f5f9; /* Changed to a cool slate-gray for contrast */
+  --glass-bg: #ffffff; /* Pure white for the 'Island' */
+  --glass-border: #e2e8f0;
+  --text-bright: #0f172a;
+  --text-muted: #64748b;
+  --success: #10b981;
+  --radius: 24px;
+  --shadow-soft: 0 10px 30px -5px rgba(0, 0, 0, 0.08); /* Stronger premium shadow */
 }
 
 body {
@@ -23,29 +21,72 @@ body {
   position: relative;
 }
 
+/* Hide the old glowing orbs */
 body::before,
 body::after {
-  content: "";
-  position: fixed;
-  z-index: -1;
-  filter: blur(120px);
-  opacity: 0.3;
-}
-body::before {
-  width: 500px;
-  height: 500px;
-  background: #6366f1;
-  top: -150px;
-  left: -150px;
-}
-body::after {
-  width: 400px;
-  height: 400px;
-  background: #06b6d4;
-  bottom: -100px;
-  right: -100px;
+  display: none;
 }
 
+/* ✨ NEW: Animated Card Depth */
+.glass-panel {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-soft);
+  border-radius: var(--radius);
+  padding: 20px;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+}
+.glass-panel:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.12);
+}
+
+/* ✨ NEW: Elastic Upload Zone */
+.upload-zone {
+  border: 2px dashed #cbd5e1;
+  border-radius: 20px;
+  background: #f8fafc;
+  padding: 60px 20px;
+  text-align: center;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Bouncy hover effect */
+  cursor: pointer;
+}
+.upload-zone:hover,
+.upload-zone.dragover {
+  border-color: var(--primary-solid);
+  background: #f0fdf4; /* Very subtle green tint on hover */
+  transform: scale(1.02);
+}
+.upload-icon {
+  transition: transform 0.3s ease;
+}
+.upload-zone:hover .upload-icon {
+  transform: translateY(-5px);
+}
+
+/* Base Pill Styles */
+.tag-pill {
+  background: #ffffff;
+  border-radius: 30px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
+  border: 1px solid #e2e8f0;
+  cursor: pointer;
+  font-weight: 600;
+  color: #64748b;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  padding: 8px 20px;
+  display: flex;
+  align-items: center;
+}
+.tag-pill:hover {
+  border-color: #3b82f6;
+  color: #3b82f6;
+  background: #eff6ff;
+  transform: translateY(-2px);
+}
 /* ═══════════════════════════════════════════
    COMPONENTS
 ═══════════════════════════════════════════ */
@@ -691,4 +732,448 @@ body::after {
   backdrop-filter: blur(4px);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
   animation: popIn 0.3s ease-out forwards;
+}
+
+/* ═══════════════════════════════════════════
+   ✨ ENTERPRISE AI DATA-STREAM BACKGROUND ✨
+═══════════════════════════════════════════ */
+
+/* 1. Precision Dot Grid Background */
+body {
+  background-image: radial-gradient(
+    rgba(148, 163, 184, 0.25) 1px,
+    transparent 1px
+  );
+  background-size: 24px 24px;
+  background-position: center center;
+}
+
+/* ✨ AMBIENT AURORA: Gives the background a living, premium depth */
+.animated-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  /* The Ambient Glows */
+  background-image:
+    radial-gradient(
+      circle at 15% 50%,
+      rgba(59, 130, 246, 0.04) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 85% 30%,
+      rgba(16, 185, 129, 0.04) 0%,
+      transparent 50%
+    );
+}
+
+/* 2. The Holographic Receipt Cards */
+.floating-receipt {
+  position: absolute;
+  width: 160px;
+  height: 220px;
+  background: rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(59, 130, 246, 0.15); /* Subtle corporate blue edge */
+  border-radius: 12px;
+  box-shadow:
+    0 8px 32px rgba(15, 23, 42, 0.03),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  overflow: hidden;
+  animation: dataStreamFloat linear infinite;
+  opacity: 0;
+}
+
+/* 3. Injecting Actual Math & Code via CSS Content! */
+.floating-receipt::after {
+  content: "EXTRACTING...\A ------------------\A QTY  ITEM    AMT \A 01   Aata    ₹450\A 02   Dal     ₹120\A 01   Sugar   ₹045\A ------------------\A SUBTOTAL:  ₹615\A TAX (5%):  ₹030\A TOTAL:     ₹645\A \A [AI Confidence: 99%]\A [Status: VERIFIED]";
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 9px;
+  font-weight: 600;
+  color: rgba(100, 116, 139, 0.5); /* Muted slate gray */
+  white-space: pre; /* Forces the line breaks (\A) to work */
+  line-height: 1.6;
+}
+
+/* 4. The Active AI Scanning Laser */
+.floating-receipt::before {
+  content: "";
+  position: absolute;
+  top: -100%;
+  left: 0;
+  width: 100%;
+  height: 200%;
+  background: linear-gradient(
+    to bottom,
+    transparent 45%,
+    rgba(16, 185, 129, 0.1) 49%,
+    /* Soft green glow */ rgba(16, 185, 129, 0.5) 50%,
+    /* Sharp green laser */ rgba(16, 185, 129, 0.1) 51%,
+    transparent 55%
+  );
+  animation: aiScanner 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  z-index: 2;
+}
+
+/* Smooth, vertical data-center float */
+@keyframes dataStreamFloat {
+  0% {
+    transform: translateY(110vh) scale(0.9);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-30vh) scale(1);
+    opacity: 0;
+  }
+}
+
+/* The sweeping laser animation */
+@keyframes aiScanner {
+  0% {
+    transform: translateY(-50%);
+  }
+  100% {
+    transform: translateY(50%);
+  }
+}
+
+/* Staggering the timing and positions for a natural data flow */
+.receipt-1 {
+  left: 8%;
+  animation-duration: 28s;
+  animation-delay: 0s;
+}
+.receipt-2 {
+  left: 25%;
+  animation-duration: 35s;
+  animation-delay: -12s;
+  transform: scale(0.85);
+  opacity: 0.6;
+}
+.receipt-3 {
+  right: 20%;
+  animation-duration: 30s;
+  animation-delay: -5s;
+  transform: scale(1.1);
+}
+.receipt-4 {
+  right: 5%;
+  animation-duration: 40s;
+  animation-delay: -18s;
+  transform: scale(0.9);
+}
+
+/* Keep it clean on mobile */
+@media (max-width: 768px) {
+  .receipt-2,
+  .receipt-4 {
+    display: none;
+  }
+  .floating-receipt {
+    transform: scale(0.8);
+  }
+}
+/* ✨ BRANDING: Sleek Gradient Logo */
+.logo h1 {
+  background: linear-gradient(135deg, #0f172a 0%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ✨ MICRO-INTERACTION: Breathing Upload Arrow */
+@keyframes breathe {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.upload-icon svg {
+  animation: breathe 3s ease-in-out infinite;
+  filter: drop-shadow(
+    0 4px 6px rgba(59, 130, 246, 0.2)
+  ); /* Adds a soft blue glow to the arrow */
+}
+
+/* Stop the breathing when hovered (so it doesn't look glitchy) */
+.upload-zone:hover .upload-icon svg {
+  animation: none;
+  transform: translateY(-5px);
+}
+
+/* ═══════════════════════════════════════════
+   📱 MOBILE & NARROW SCREEN OPTIMIZATIONS 📱
+═══════════════════════════════════════════ */
+@media (max-width: 768px) {
+  /* 1. Hide the background animations on phone screens to prevent clutter */
+  .animated-bg {
+    display: none;
+  }
+
+  /* 2. Shrink the logo and badge to fit nicely */
+  .logo h1 {
+    font-size: 1.25rem !important;
+  }
+  .logo .badge {
+    font-size: 10px !important;
+    padding: 4px 8px !important;
+  }
+
+  /* 3. Make the Tag Pills a swipeable horizontal row */
+  .pill-container {
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    justify-content: center !important;
+    padding-bottom: 8px; /* Room for scroll */
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+    mask-image: linear-gradient(
+      to right,
+      black 90%,
+      transparent 100%
+    ); /* Fades the edge */
+    -webkit-mask-image: linear-gradient(to right, black 90%, transparent 100%);
+  }
+  /* ... (your existing mobile pill-container css) ... */
+
+  /* ✨ NEW: COMPACT MOBILE LAYOUT (Keeps buttons above the fold) ✨ */
+
+  /* 1. Pull the whole page up slightly */
+  .container {
+    padding-top: 10px !important;
+  }
+  header.mb-4 {
+    margin-bottom: 15px !important;
+  }
+
+  /* 2. Shrink the massive padding inside the upload box */
+  .upload-zone {
+    padding: 25px 15px !important;
+  }
+
+  /* 3. Make the icon, heading, and text smaller to save vertical space */
+  .upload-icon {
+    margin-bottom: 10px !important;
+  }
+  .upload-icon svg {
+    width: 42px !important;
+    height: 42px !important;
+  }
+  .upload-zone h3 {
+    font-size: 20px !important;
+    margin-bottom: 4px !important;
+  }
+  .upload-zone p {
+    font-size: 13px !important;
+    margin-bottom: 20px !important;
+  }
+
+  /* 4. Make the buttons less chunky so they fit side-by-side or stack neatly */
+  #dropZone .btn {
+    padding: 12px 24px !important;
+    font-size: 14px !important;
+    width: 100% !important; /* Forces them to stack cleanly on tiny phones */
+    max-width: 280px;
+  }
+
+  /* 5. Tighten the gap between the two buttons */
+  #dropZone .gap-3 {
+    gap: 10px !important;
+  }
+
+  /* Hide the ugly scrollbar but keep the scroll functionality */
+  .pill-container::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tag-pill {
+    font-size: 12px;
+    padding: 6px 14px;
+    white-space: nowrap; /* Prevents text from wrapping inside the pill */
+  }
+
+  /* Shrink the upload box padding slightly for phones */
+  .upload-zone {
+    padding: 40px 15px;
+  }
+}
+
+/* ✨ PREMIUM CUSTOM DROPDOWNS (Replaces Native OS Menus) ✨ */
+.premium-dropdown {
+  background-color: #f8fafc !important;
+  border: 2px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  padding: 12px 16px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  color: #1e293b !important;
+  transition: all 0.2s ease;
+}
+.premium-dropdown:hover {
+  border-color: #cbd5e1 !important;
+  background-color: #ffffff !important;
+}
+.premium-dropdown:focus,
+.premium-dropdown[aria-expanded="true"] {
+  border-color: #3b82f6 !important;
+  background-color: #ffffff !important;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1) !important;
+}
+
+/* The Popup Menu */
+.premium-dropdown-menu {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+  padding: 8px;
+  margin-top: 6px !important;
+}
+.premium-dropdown-menu .dropdown-item {
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #334155;
+  transition: all 0.2s ease;
+}
+.premium-dropdown-menu .dropdown-item:hover {
+  background-color: #f1f5f9;
+  color: #0f172a;
+}
+.premium-dropdown-menu .dropdown-item.active {
+  background-color: #eff6ff;
+  color: #3b82f6;
+  font-weight: 600;
+}
+/* ==========================================
+   ✨ POST-UPLOAD UI MODERNIZATION (Kills Dark Navy)
+========================================== */
+
+/* 1. OVERRIDE THE OLD GLASS PANEL */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(10px) !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+/* 2. PREMIUM RECEIPT CARDS */
+.receipt-card {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.04) !important;
+  color: #1e293b !important;
+}
+
+/* Card Header */
+.rc-header {
+  background: #f8fafc !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  color: #334155 !important;
+  font-weight: 700;
+  border-top-left-radius: 15px;
+  border-top-right-radius: 15px;
+}
+
+/* Individual Receipt Items */
+.rc-item {
+  border-bottom: 1px solid #f1f5f9 !important;
+  color: #475569 !important;
+  transition: background 0.2s ease;
+}
+.rc-item:hover {
+  background: #f8fafc !important;
+}
+
+/* Editable Text & Prices */
+.item-name-field {
+  color: #0f172a !important;
+  font-weight: 600;
+}
+.price-edit {
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  background: #f1f5f9 !important;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+.price-edit.val-neg {
+  color: #ef4444 !important;
+  background: rgba(239, 68, 68, 0.1) !important;
+}
+
+/* Subtotal Area */
+.rc-subtotal {
+  background: #f8fafc !important;
+  border-top: 2px dashed #e2e8f0 !important;
+  color: #0f172a !important;
+  font-weight: 800;
+}
+.rc-subtotal-val {
+  color: #3b82f6 !important;
+}
+
+/* 3. THE THUMBNAIL GRID (Preview Area) */
+.thumbnail-item {
+  background: #ffffff !important;
+  border: 2px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02) !important;
+}
+.thumb-number {
+  background: #3b82f6 !important;
+  color: white !important;
+  font-weight: 700 !important;
+}
+.thumb-delete {
+  background: #ef4444 !important;
+  color: white !important;
+}
+
+/* 4. CATEGORY PILLS */
+.cat-badge {
+  background: #f1f5f9 !important;
+  color: #64748b !important;
+  border: 1px solid #e2e8f0 !important;
+  font-weight: 600 !important;
+  border-radius: 20px !important;
+  padding: 2px 10px !important;
+}
+
+/* Premium Alignment Guard for Responsive Rows */
+.utils-wrapper {
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: nowrap !important;
+}
+
+.utils-wrapper button {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.utils-wrapper button:hover {
+  background: #f8fafc !important;
+  transform: translateY(-1px);
+}
+
+.utils-wrapper button.inline-delete-btn:hover {
+  background: #fef2f2 !important;
+  border-color: #fca5a5 !important;
 }

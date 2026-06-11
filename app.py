@@ -15,6 +15,12 @@ import google.generativeai as genai
 
 load_dotenv()
 
+# =================================================================
+# 🔗 CLOUD GPU API LINK (PASTE YOUR CLOUDFLARE URL HERE)
+# =================================================================
+CLOUD_AI_URL = "https://[paste-your-link-here].trycloudflare.com/predict" 
+
+
 # --- API KEYS ---
 GEMINI_KEYS = [k for k in [os.getenv('GEMINI_KEY_1'), os.getenv('GEMINI_KEY_2'), os.getenv('GEMINI_KEY_3'), os.getenv('GEMINI_KEY_4'), os.getenv('GEMINI_KEY_5')] if k]
 OPENROUTER_KEYS = [k for k in [os.getenv('OPENROUTER_KEY_1'), os.getenv('OPENROUTER_KEY_2'), os.getenv('OPENROUTER_KEY_3'), os.getenv('OPENROUTER_KEY_4'), os.getenv('OPENROUTER_KEY_5')] if k]
@@ -78,9 +84,6 @@ def img_to_base64(img_pil):
     img_pil.save(buffer, format='JPEG', quality=80)
     return base64.b64encode(buffer.getvalue()).decode('utf-8')
 
-# =================================================================
-# 🧠 ULTIMATE PROMPT: RECEIPTS + MATH + COLUMNS
-# =================================================================
 def build_prompt():
     return """You are an elite AI. Extract data from this image. Output ONLY a valid JSON object.
 
@@ -122,6 +125,47 @@ def build_calculations(parsed_data, source_type):
             subtotal += amount
     return calculations, round(subtotal, 2), image_quality, f"{ai_accuracy}%"
 
+# =================================================================
+# 1️⃣ FIRST LAYER: CLOUD GPU API (KAGGLE + CLOUDFLARE)
+# =================================================================
+def local_model_fallback(img_pil, timeline):
+    if "YOUR-NGROK-URL" in CLOUD_AI_URL or "paste-your-link-here" in CLOUD_AI_URL:
+        timeline.append("⚠️ Cloud AI Link not set. Skipping to Gemini.")
+        print("⏭️  [LOG] Skipping Kaggle: No valid Cloudflare URL provided.")
+        return [], 0, 0, "-", None
+
+    try:
+        print(f"🚀 [LOG] Sending image to Kaggle AI ({CLOUD_AI_URL})...")
+        img_b64 = img_to_base64(img_pil)
+        
+        # ⚡ Clean, direct POST request (Ngrok headers completely removed!)
+        response = requests.post(CLOUD_AI_URL, json={"image": img_b64}, timeout=60)
+        
+        if response.status_code == 200:
+            data = response.json()
+            if data and data.get('items'):
+                calcs, total, q, acc = build_calculations(data, 'cloud_custom_ai')
+                print("✅ [LOG] KAGGLE SUCCESS! The Custom AI read the receipt.")
+                timeline.append(f"⚡ Cloud Custom AI (Kaggle): Success")
+                return calcs, total, q, acc, "QuickTotal Custom Qwen (Cloud)"
+            else:
+                print(f"⚠️ [LOG] Kaggle returned data, but no JSON items: {data}")
+                timeline.append(f"⚠️ Cloud Custom AI (Kaggle): Failed to parse JSON")
+        else:
+            print(f"❌ [LOG] Kaggle Error: HTTP {response.status_code}")
+            print(f"❌ [LOG] Details: {response.text[:200]}")
+            timeline.append(f"⚠️ Cloud AI Error: Status {response.status_code}")
+            
+    except Exception as e:
+        print(f"❌ [LOG] Connection to Kaggle Failed! Error: {str(e)[:100]}")
+        timeline.append(f"❌ Cloud Custom AI: Failed ({str(e)[:30]})")
+    
+    print("🔄 [LOG] Falling back to Gemini...")
+    return [], 0, 0, "-", None
+
+# =================================================================
+# 2️⃣ SECOND LAYER: GEMINI API
+# =================================================================
 def gemini_fallback(img, timeline):
     if not GEMINI_KEYS: return [], 0, 0, "-", None
     prompt = build_prompt()
@@ -138,6 +182,9 @@ def gemini_fallback(img, timeline):
         except: continue
     return [], 0, 0, "-", None
 
+# =================================================================
+# 3️⃣ THIRD LAYER: OPENROUTER / GROQ API
+# =================================================================
 def ai_fallback(img, timeline):
     prompt = build_prompt()
     img_b64 = img_to_base64(img)
@@ -175,13 +222,26 @@ def calculate():
     batch_num = get_latest_batch_id() + (1 if image_index == 1 else 0)
     start_time = time.time()
     timeline = []
+    
     img_raw = Image.open(file.stream).convert('RGB')
     img_raw.thumbnail((1600, 1600))
     img = enhance_poor_image(img_raw)
-    calcs, subtotal, img_qual, ai_acc, model = gemini_fallback(img, timeline)
-    if not model: calcs, subtotal, img_qual, ai_acc, model = ai_fallback(img, timeline)
+    
+    # 💥 THE HYBRID WATERFALL 💥
+    # 1. Try Kaggle Cloud Custom AI First
+    calcs, subtotal, img_qual, ai_acc, model = local_model_fallback(img, timeline)
+    
+    # 2. If it fails, try Gemini
+    if not model: 
+        calcs, subtotal, img_qual, ai_acc, model = gemini_fallback(img, timeline)
+        
+    # 3. If that fails, try OpenRouter/Groq
+    if not model: 
+        calcs, subtotal, img_qual, ai_acc, model = ai_fallback(img, timeline)
+        
     processing_time = round(time.time() - start_time, 2)
     log_performance(f"**Batch {batch_num}**", datetime.now().strftime('%H:%M:%S'), file.filename, f"{image_index}/{total_images}", "Success" if model else "Failed", timeline, processing_time, img_qual, ai_acc)
+    
     return jsonify({'results': [{'index': image_index, 'items': calcs, 'subtotal': subtotal, 'image_quality': img_qual, 'ai_accuracy': ai_acc, 'method': model}]})
 
 @app.route('/save_training_data', methods=['POST'])
@@ -190,15 +250,20 @@ def save_training_data():
         image_file = request.files.get('image')
         json_data = request.form.get('json_data')
         original_filename = request.form.get('original_filename', 'unknown_file')
+        
+        # Save to local training_dataset folder ONLY (Supabase removed)
         dataset_folder = 'training_dataset'
         os.makedirs(dataset_folder, exist_ok=True)
         base_name = re.sub(r'[^a-zA-Z0-9_\-]', '_', os.path.splitext(original_filename)[0])
         image_path = os.path.join(dataset_folder, f"{base_name}.jpg")
         image_file.save(image_path)
+        
         with open(os.path.join(dataset_folder, f"{base_name}.json"), 'w', encoding='utf-8') as f:
             json.dump(json.loads(json_data), f, indent=4, ensure_ascii=False)
+            
         return jsonify({'success': True})
-    except Exception as e: return jsonify({'error': str(e)}), 500
+    except Exception as e: 
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

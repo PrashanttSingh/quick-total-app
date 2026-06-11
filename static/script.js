@@ -2,6 +2,21 @@
 let filesToProcess = [];
 let spendPieChart = null;
 let draggedItemIndex = null;
+// --- GLOBAL SETTINGS HELPERS ---
+function getSym() {
+  const map = {
+    INR: "₹",
+    USD: "$",
+    EUR: "€",
+    GBP: "£",
+    AUD: "A$",
+    SAR: "SAR ",
+  };
+  return map[localStorage.getItem("settingsCurrency") || "INR"];
+}
+function getLang() {
+  return localStorage.getItem("settingsLanguage") || "en-IN";
+}
 
 // ELEMENTS
 const dropZone = document.getElementById("dropZone");
@@ -354,69 +369,54 @@ function updateUIState() {
   renderThumbnails();
 }
 
+// ==========================================
+// 💥 CLEAN THUMBNAIL RENDERER (SVG EDITION)
+// ==========================================
 function renderThumbnails() {
-  thumbnailGrid.innerHTML = "";
+  const grid = document.getElementById("thumbnailGrid");
+  if (!grid) return;
 
-  filesToProcess.forEach((file, index) => {
-    const div = document.createElement("div");
-    div.className = "thumbnail-item animate-pop";
-    div.style.animationDelay = `${index * 0.05}s`;
-    div.draggable = true;
+  grid.innerHTML = "";
 
-    div.addEventListener("dragstart", (e) => {
-      draggedItemIndex = index;
-      setTimeout(() => (div.style.opacity = "0.4"), 0);
-    });
+  // Strictly check for your actual app data array
+  if (!filesToProcess || filesToProcess.length === 0) return;
 
-    div.addEventListener("dragend", (e) => {
-      div.style.opacity = "1";
-      draggedItemIndex = null;
-    });
+  filesToProcess.forEach((fileItem, index) => {
+    try {
+      const div = document.createElement("div");
 
-    div.addEventListener("dragover", (e) => {
-      e.preventDefault();
-      div.style.transform = "scale(1.05)";
-      div.style.border = "2px dashed #8b5cf6";
-    });
+      // This perfectly connects to your style.css!
+      div.className = "thumbnail-item position-relative";
 
-    div.addEventListener("dragleave", (e) => {
-      div.style.transform = "none";
-      div.style.border = "none";
-    });
+      let imgSrc = fileItem.previewUrl || "";
 
-    div.addEventListener("drop", (e) => {
-      e.preventDefault();
-      div.style.transform = "none";
-      div.style.border = "none";
+      let qualityBadge = "";
+      let qualityScore = fileItem.precalcQuality;
 
-      if (draggedItemIndex === null || draggedItemIndex === index) return;
-
-      const draggedFile = filesToProcess.splice(draggedItemIndex, 1)[0];
-      filesToProcess.splice(index, 0, draggedFile);
-      renderThumbnails();
-    });
-
-    div.addEventListener("click", (e) => {
-      if (!e.target.classList.contains("thumb-delete")) {
-        openModal(file, index);
+      if (qualityScore !== null && qualityScore !== undefined) {
+        qualityBadge = `
+                <div class="thumb-quality" title="OpenCV Sharpness Score">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px; vertical-align: -2px;"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    ${qualityScore}%
+                </div>`;
       }
-    });
 
-    let qualityBadge = "";
-    if (file.precalcQuality !== null) {
-      qualityBadge = `<div class="thumb-quality" title="OpenCV Sharpness Score">👁️ ${file.precalcQuality}%</div>`;
+      // Clean, original layout structure with premium SVGs
+      div.innerHTML = `
+                <span class="thumb-number">#${index + 1}</span>
+                <img src="${imgSrc}" draggable="false" style="pointer-events: none;">
+                ${qualityBadge}
+                <div class="thumb-delete d-flex align-items-center justify-content-center" onclick="removeFile(${index}, event)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </div>
+            `;
+
+      grid.appendChild(div);
+    } catch (err) {
+      console.error("QuickTotal Error appending thumbnail:", err);
     }
-
-    div.innerHTML = `
-      <span class="thumb-number">#${index + 1}</span>
-      <img src="${file.previewUrl}" draggable="false" style="pointer-events: none;">
-      ${qualityBadge}
-      <div class="thumb-delete" onclick="removeFile(${index}, event)">×</div>
-    `;
-    thumbnailGrid.appendChild(div);
   });
 }
-
 function getAccuracyInfo(score) {
   const num = parseInt(score) || 0;
   if (num >= 90) return { color: "#fbbf24", text: "Excellent" };
@@ -554,16 +554,24 @@ calculateBtn.addEventListener("click", async () => {
           const isNeg = item.result < 0;
           const category = item.category || "Misc";
           itemsHtml += `
-            <div class="rc-item px-3">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <span class="editable-text item-name-field" contenteditable="true" spellcheck="false" title="Click to edit name">${item.expression}</span>
+            <div class="rc-item px-3 py-3 d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 border-bottom border-light">
+                <div class="d-flex align-items-center gap-2 flex-wrap flex-grow-1" style="max-width: 100%;">
+                    <span class="editable-text item-name-field text-wrap" contenteditable="true" spellcheck="false" title="Click to edit name" style="word-break: break-word; min-width: 100px;">${item.expression}</span>
                     <span class="cat-badge editable-text item-cat-field" contenteditable="true" spellcheck="false" title="Click to edit category">${category}</span>
                 </div>
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <span class="rc-item-val editable-text price-edit ${isNeg ? "val-neg" : ""}" contenteditable="true" spellcheck="false" title="Click to edit price">${isNeg ? "-" : "+"}₹${Math.abs(item.result).toFixed(2)}</span>
-                    <span class="inline-mic-btn" style="cursor:pointer; filter: grayscale(1); transition: 0.2s;" title="Speak item and price">🎙️</span>
-                    <span class="inline-insert-btn" style="cursor:pointer; filter: grayscale(1); transition: 0.2s;" title="Insert missing item below">➕</span>
-                    <span class="inline-delete-btn" style="cursor:pointer; filter: grayscale(1); transition: 0.2s;" title="Delete mistake">🗑️</span>
+                <div class="d-flex align-items-center justify-content-end gap-2 ms-auto ms-sm-0 utils-wrapper">
+                    <span class="rc-item-val editable-text price-edit ${isNeg ? "val-neg" : ""}" contenteditable="true" spellcheck="false" title="Click to edit price">${isNeg ? "-" : "+"}${getSym()}${Math.abs(item.result).toFixed(2)}</span>
+                    
+                    <button class="inline-mic-btn btn p-1 d-flex align-items-center justify-content-center" title="Speak item and price" style="width: 32px; height: 32px; border-radius: 8px; border: 1px solid #e2e8f0; background: #ffffff; color: #64748b; transition: all 0.2s;">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></button>
+                    
+                    <button class="inline-insert-btn btn p-1 d-flex align-items-center justify-content-center" title="Insert missing item below" style="width: 32px; height: 32px; border-radius: 8px; border: 1px solid #e2e8f0; background: #ffffff; color: #3b82f6; transition: all 0.2s;">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    </button>
+                    
+                    <button class="inline-delete-btn btn p-1 d-flex align-items-center justify-content-center" title="Delete mistake" style="width: 32px; height: 32px; border-radius: 8px; border: 1px solid #fee2e2; background: #ffffff; color: #ef4444; transition: all 0.2s;">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                    </button>
                 </div>
             </div>`;
         });
@@ -590,7 +598,7 @@ calculateBtn.addEventListener("click", async () => {
                 <div class="add-row-btn" title="Add Missing Item">+ Add Missing Item</div>
                 <div class="save-train-btn" title="Save to training dataset.">✅ Approve & Save</div>
             </div>
-            <div class="rc-subtotal px-3 py-2 border-top border-secondary border-opacity-25" style="position: relative; z-index: 2;"><span>Subtotal</span><span class="rc-subtotal-val">₹${result.subtotal.toFixed(2)}</span></div>
+            <div class="rc-subtotal px-3 py-2 border-top border-secondary border-opacity-25" style="position: relative; z-index: 2;"><span>Subtotal</span><span class="rc-subtotal-val">${getSym()}${result.subtotal.toFixed(2)}</span></div>
             <div class="p-3 border-top border-secondary border-opacity-25" style="position: relative; z-index: 2;">
                 <div class="accuracy-label"><span>Image Quality</span><span style="color: ${imgInfo.color};">${imgScoreNum}%</span></div>
                 <div class="accuracy-bar-bg"><div class="accuracy-bar-fill" style="width: ${imgScoreNum}%; background: ${imgInfo.color};"></div></div>
@@ -608,7 +616,7 @@ calculateBtn.addEventListener("click", async () => {
     loadingEl.style.display = "none";
     actionButtons.style.display = "flex";
     if (successfulDocs > 0) {
-      grandTotalValue.textContent = `₹${grandTotal.toFixed(2)}`;
+      grandTotalValue.textContent = `${getSym()}${grandTotal.toFixed(2)}`;
       grandTotalCard.style.display = "flex";
       recalculateLiveMath();
     }
@@ -618,7 +626,11 @@ calculateBtn.addEventListener("click", async () => {
 receiptsList.addEventListener("focusin", (e) => {
   if (e.target.classList.contains("editable-text")) {
     const text = e.target.textContent.trim();
-    if (["New Item", "+₹0.00", "-₹0.00", "Misc"].includes(text))
+    if (
+      ["New Item", "+${getSym()}0.00", "-${getSym()}0.00", "Misc"].includes(
+        text,
+      )
+    )
       e.target.textContent = "";
   }
 });
@@ -663,7 +675,7 @@ receiptsList.addEventListener("click", async (e) => {
       window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) return alert("Voice input not supported.");
     const recognition = new SpeechRecognition();
-    recognition.lang = "hi-IN";
+    recognition.lang = getLang();
     micBtn.style.filter = "none";
     micBtn.textContent = "🔴";
     recognition.onresult = (event) => {
@@ -676,7 +688,7 @@ receiptsList.addEventListener("click", async (e) => {
         itemName = transcript
           .replace(priceMatch[0], "")
           .replace(
-            /rupees|rupee|rs|rupaye|rupay|rupya|bucks|₹|रुपये|रुपया/gi,
+            /rupees|rupee|rs|rupaye|rupay|rupya|bucks|₹|\$|€|£|sar|रुपये|रुपया/gi,
             "",
           )
           .replace(/[।.,]/g, "")
@@ -702,7 +714,7 @@ receiptsList.addEventListener("click", async (e) => {
         itemName = itemName.replace(new RegExp(hiWord, "gi"), enWord);
       }
       nameField.textContent = itemName;
-      priceField.textContent = `+₹${priceVal.toFixed(2)}`;
+      priceField.textContent = `+${getSym()}${priceVal.toFixed(2)}`;
       if (catField) {
         catField.textContent = guessCategory(itemName);
       }
@@ -725,7 +737,7 @@ receiptsList.addEventListener("click", async (e) => {
     const currentRow = e.target.closest(".rc-item");
     const newRow = document.createElement("div");
     newRow.className = "rc-item animate-pop px-3";
-    newRow.innerHTML = `<div style="display: flex; align-items: center; gap: 8px;"><span class="editable-text item-name-field" contenteditable="true" spellcheck="false">New Item</span><span class="cat-badge editable-text item-cat-field" contenteditable="true" spellcheck="false">Misc</span></div><div style="display: flex; align-items: center; gap: 12px;"><span class="rc-item-val editable-text price-edit" contenteditable="true" spellcheck="false">+₹0.00</span><span class="inline-mic-btn" style="cursor:pointer; filter: grayscale(1); transition: 0.2s;">🎙️</span><span class="inline-insert-btn" style="cursor:pointer; filter: grayscale(1); transition: 0.2s;">➕</span><span class="inline-delete-btn" style="cursor:pointer; filter: grayscale(1); transition: 0.2s;">🗑️</span></div>`;
+    newRow.innerHTML = `<div style="display: flex; align-items: center; gap: 8px;"><span class="editable-text item-name-field" contenteditable="true" spellcheck="false">New Item</span><span class="cat-badge editable-text item-cat-field" contenteditable="true" spellcheck="false">Misc</span></div><div style="display: flex; align-items: center; gap: 12px;"><span class="rc-item-val editable-text price-edit" contenteditable="true" spellcheck="false">+${getSym()}0.00</span><span class="inline-mic-btn" style="cursor:pointer; filter: grayscale(1); transition: 0.2s;">🎙️</span><span class="inline-insert-btn" style="cursor:pointer; filter: grayscale(1); transition: 0.2s;">➕</span><span class="inline-delete-btn" style="cursor:pointer; filter: grayscale(1); transition: 0.2s;">🗑️</span></div>`;
     currentRow.parentNode.insertBefore(newRow, currentRow.nextSibling);
     newRow.querySelector(".item-name-field").focus();
     const card = e.target.closest(".receipt-card");
@@ -750,7 +762,7 @@ receiptsList.addEventListener("click", async (e) => {
     const itemsList = card.querySelector(".rc-items-list");
     const newRow = document.createElement("div");
     newRow.className = "rc-item animate-pop px-3";
-    newRow.innerHTML = `<div style="display: flex; align-items: center; gap: 8px;"><span class="editable-text item-name-field" contenteditable="true" spellcheck="false">New Item</span><span class="cat-badge editable-text item-cat-field" contenteditable="true" spellcheck="false">Misc</span></div><div style="display: flex; align-items: center; gap: 12px;"><span class="rc-item-val editable-text price-edit" contenteditable="true" spellcheck="false">+₹0.00</span><span class="inline-mic-btn" style="cursor:pointer; filter: grayscale(1); transition: 0.2s;">🎙️</span><span class="inline-insert-btn" style="cursor:pointer; filter: grayscale(1); transition: 0.2s;">➕</span><span class="inline-delete-btn" style="cursor:pointer; filter: grayscale(1); transition: 0.2s;">🗑️</span></div>`;
+    newRow.innerHTML = `<div style="display: flex; align-items: center; gap: 8px;"><span class="editable-text item-name-field" contenteditable="true" spellcheck="false">New Item</span><span class="cat-badge editable-text item-cat-field" contenteditable="true" spellcheck="false">Misc</span></div><div style="display: flex; align-items: center; gap: 12px;"><span class="rc-item-val editable-text price-edit" contenteditable="true" spellcheck="false">+${getSym()}0.00</span><span class="inline-mic-btn" style="cursor:pointer; filter: grayscale(1); transition: 0.2s;">🎙️</span><span class="inline-insert-btn" style="cursor:pointer; filter: grayscale(1); transition: 0.2s;">➕</span><span class="inline-delete-btn" style="cursor:pointer; filter: grayscale(1); transition: 0.2s;">🗑️</span></div>`;
     itemsList.appendChild(newRow);
     newRow.querySelector(".item-name-field").focus();
     const countSpan = card.querySelector(".entry-count");
@@ -821,7 +833,7 @@ function recalculateLiveMath() {
 
       // ✅ This strictly prevents the cursor jump by checking if the user is typing in it!
       if (document.activeElement !== priceElement) {
-        priceElement.textContent = `${isNeg ? "-" : "+"}₹${Math.abs(value).toFixed(2)}`;
+        priceElement.textContent = `${isNeg ? "-" : "+"}${getSym()}${Math.abs(value).toFixed(2)}`;
       }
 
       if (isNeg) priceElement.classList.add("val-neg");
@@ -840,11 +852,11 @@ function recalculateLiveMath() {
       categoryTotals[catName] = (categoryTotals[catName] || 0) + value;
     });
     const subVal = card.querySelector(".rc-subtotal-val");
-    if (subVal) subVal.textContent = `₹${cardSubtotal.toFixed(2)}`;
+    if (subVal) subVal.textContent = `${getSym()}${cardSubtotal.toFixed(2)}`;
     newGrandTotal += cardSubtotal;
   });
   if (grandTotalValue)
-    grandTotalValue.textContent = `₹${newGrandTotal.toFixed(2)}`;
+    grandTotalValue.textContent = `${getSym()}${newGrandTotal.toFixed(2)}`;
 
   let breakdownContainer = document.getElementById("categoryBreakdown");
   if (newGrandTotal === 0 && Object.keys(categoryTotals).length === 0) {
@@ -861,7 +873,7 @@ function recalculateLiveMath() {
         newGrandTotal !== 0
           ? Math.abs((val / newGrandTotal) * 100).toFixed(1)
           : 0;
-      breakdownHtml += `<div class="cat-row"><span style="font-weight: 500; color: #c4b5fd;">${cat}</span><div style="flex-grow: 1; border-bottom: 1px dotted rgba(255,255,255,0.2); margin: 0 15px; position: relative; top: -4px;"></div><span>₹${val.toFixed(2)} <span style="font-size:0.8em; color:var(--text-muted); margin-left:5px;">(${percentage}%)</span></span></div>`;
+      breakdownHtml += `<div class="cat-row"><span style="font-weight: 500; color: #c4b5fd;">${cat}</span><div style="flex-grow: 1; border-bottom: 1px dotted rgba(255,255,255,0.2); margin: 0 15px; position: relative; top: -4px;"></div><span>${getSym()}${val.toFixed(2)} <span style="font-size:0.8em; color:var(--text-muted); margin-left:5px;">(${percentage}%)</span></span></div>`;
     });
     breakdownHtml += `<div class="chart-wrapper"><canvas id="spendChart"></canvas></div>`;
     breakdownContainer.innerHTML = breakdownHtml;
@@ -919,9 +931,18 @@ function downloadCSV() {
     // Notice: The 'Document' column is completely removed here!
     document.querySelectorAll(".receipt-card").forEach((card) => {
       card.querySelectorAll(".rc-item").forEach((item) => {
-        let name = item.querySelector(".item-name-field").textContent.replace(/,/g, "").trim();
-        let cat = item.querySelector(".item-cat-field").textContent.replace(/,/g, "").trim();
-        let price = item.querySelector(".price-edit").textContent.replace(/[^\d.-]/g, "").trim();
+        let name = item
+          .querySelector(".item-name-field")
+          .textContent.replace(/,/g, "")
+          .trim();
+        let cat = item
+          .querySelector(".item-cat-field")
+          .textContent.replace(/,/g, "")
+          .trim();
+        let price = item
+          .querySelector(".price-edit")
+          .textContent.replace(/[^\d.-]/g, "")
+          .trim();
 
         csvContent += `${sno},"${name}","${cat}",${price}\n`;
         sno++;
@@ -932,7 +953,10 @@ function downloadCSV() {
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
     link.setAttribute("href", url);
-    link.setAttribute("download", `QuickTotal_Export_${new Date().getTime()}.csv`);
+    link.setAttribute(
+      "download",
+      `QuickTotal_Export_${new Date().getTime()}.csv`,
+    );
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -957,10 +981,16 @@ async function downloadPDF() {
 
     // A. Dynamically load a Hindi-supporting font to stop the jibberish
     try {
-      const fontUrl = "https://cdn.jsdelivr.net/gh/googlefonts/noto-fonts/hinted/ttf/NotoSansDevanagari/NotoSansDevanagari-Regular.ttf";
+      const fontUrl =
+        "https://cdn.jsdelivr.net/gh/googlefonts/noto-fonts/hinted/ttf/NotoSansDevanagari/NotoSansDevanagari-Regular.ttf";
       const response = await fetch(fontUrl);
       const buffer = await response.arrayBuffer();
-      const base64String = btoa(new Uint8Array(buffer).reduce((data, byte) => data + String.fromCharCode(byte), ''));
+      const base64String = btoa(
+        new Uint8Array(buffer).reduce(
+          (data, byte) => data + String.fromCharCode(byte),
+          "",
+        ),
+      );
       doc.addFileToVFS("NotoSansDevanagari.ttf", base64String);
       doc.addFont("NotoSansDevanagari.ttf", "NotoSansDevanagari", "normal");
       doc.setFont("NotoSansDevanagari");
@@ -974,21 +1004,21 @@ async function downloadPDF() {
     doc.setTextColor(139, 92, 246);
     doc.text("QuickTotal Financial Report", 40, docCursor);
     docCursor += 20;
-    
+
     doc.setFontSize(10);
     doc.setTextColor(100, 116, 139);
     doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 40, docCursor);
     docCursor += 40;
 
-    // C. Inject the Pie Chart!
-    const chartCanvas = document.getElementById("spendChart"); 
+    // C. Inject the Pie Chart
+    const chartCanvas = document.getElementById("spendChart");
     if (chartCanvas) {
       const imgData = chartCanvas.toDataURL("image/png");
-      doc.addImage(imgData, "PNG", 180, docCursor, 200, 200); // Centered roughly
+      doc.addImage(imgData, "PNG", 180, docCursor, 200, 200);
       docCursor += 230;
     }
 
-    // D. Build the Table Data
+    // D. Build the Table Data (Using Global Currency)
     let sno = 1;
     let tableRows = [];
     document.querySelectorAll(".receipt-card").forEach((card) => {
@@ -997,19 +1027,22 @@ async function downloadPDF() {
           sno++,
           itemEl.querySelector(".item-name-field").textContent.trim(),
           itemEl.querySelector(".item-cat-field").textContent.trim(),
-          `Rs. ${itemEl.querySelector(".price-edit").textContent.replace(/₹/g, "").trim()}`
+          `${getSym()} ${itemEl
+            .querySelector(".price-edit")
+            .textContent.replace(/[^\d.-]/g, "")
+            .trim()}`,
         ]);
       });
     });
 
-    // E. Print Table with Hindi Font
+    // E. Print Table
     doc.autoTable({
       head: [["S.No.", "Item Name", "Category", "Price"]],
       body: tableRows,
       startY: docCursor,
       theme: "striped",
       headStyles: { fillColor: [139, 92, 246] },
-      styles: { font: "NotoSansDevanagari", fontSize: 11 }, // Apply Hindi font
+      styles: { font: "NotoSansDevanagari", fontSize: 11 },
       margin: { left: 40, right: 40 },
     });
 
@@ -1021,21 +1054,28 @@ async function downloadPDF() {
       docCursor = 50;
     }
 
-    // G. Add Grand Total Safely
+    // G. Add Grand Total Safely (Using Global Currency)
     const grandTotalEl = document.getElementById("grandTotalValue");
-    const grandTotalText = grandTotalEl ? grandTotalEl.textContent.replace(/₹/g, "").trim() : "0";
-    
+    const grandTotalText = grandTotalEl
+      ? grandTotalEl.textContent.replace(/[^\d.-]/g, "").trim()
+      : "0";
+
     doc.setFontSize(16);
     doc.setTextColor(139, 92, 246);
-    doc.text(`Overall Grand Total: Rs. ${grandTotalText}`, 40, docCursor);
+    doc.text(
+      `Overall Grand Total: ${getSym()} ${grandTotalText}`,
+      40,
+      docCursor,
+    );
 
     doc.save(`QuickTotal_Financial_Report_${new Date().getTime()}.pdf`);
   } catch (error) {
     console.error("PDF Export Error:", error);
-    alert("Something went wrong downloading the PDF. Please check the console.");
+    alert(
+      "Something went wrong downloading the PDF. Please check the console.",
+    );
   }
 }
-
 resetBtn.addEventListener("click", resetApp);
 function resetApp() {
   filesToProcess = [];
@@ -1049,3 +1089,103 @@ function resetApp() {
   grandTotalCard.style.display = "none";
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
+
+// ==========================================
+// CUSTOM UI CONTROLS & LOCAL STORAGE ENGINE
+// ==========================================
+
+// Maps to remember what text goes with what value
+const langMap = {
+  "hi-IN": "HINDI / English (Default)",
+  "en-IN": "Pure English Only",
+};
+
+// Expanded Global Currencies
+const currencyMap = {
+  INR: "Indian Rupee (₹)",
+  USD: "US Dollar ($)",
+  EUR: "Euro (€)",
+  GBP: "British Pound (£)",
+  AUD: "Australian Dollar (A$)",
+  SAR: "Saudi Riyal (SAR)",
+};
+
+function selectOption(event, buttonId, inputId, text, value) {
+  if (event) event.preventDefault();
+
+  const buttonSpan = document.querySelector(`#${buttonId} span`);
+  // ✨ MICRO-INTERACTION: Premium SVG "Saved!" flash
+  if (event) {
+    // Inject a crisp SVG checkmark instead of a cartoony emoji
+    buttonSpan.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                <span style="font-weight: 700; letter-spacing: 0.3px;">Saved</span>
+            </div>
+        `;
+    buttonSpan.style.color = "#10b981"; // Premium success green
+
+    // Revert back to the selected text after 1.2 seconds
+    setTimeout(() => {
+      buttonSpan.innerText = text;
+      buttonSpan.style.color = ""; // Reset to default color
+    }, 1200);
+  } else {
+    // If the app is just loading from memory, update text instantly without flashing
+    buttonSpan.innerText = text;
+  }
+  document.getElementById(inputId).value = value;
+  localStorage.setItem(inputId, value);
+
+  if (event) {
+    const menu = event.target.closest(".dropdown-menu");
+    const items = menu.querySelectorAll(".dropdown-item");
+    items.forEach((item) => item.classList.remove("active"));
+    event.target.classList.add("active");
+  }
+  // Instantly update the UI if receipts are on the screen
+  if (typeof recalculateLiveMath === "function") recalculateLiveMath();
+}
+
+// Initialize the app and load saved settings on startup
+document.addEventListener("DOMContentLoaded", () => {
+  const savedLang = localStorage.getItem("settingsLanguage");
+  if (savedLang && langMap[savedLang]) {
+    selectOption(
+      null,
+      "langBtn",
+      "settingsLanguage",
+      langMap[savedLang],
+      savedLang,
+    );
+    const links = document.querySelectorAll(
+      "#langBtn + .dropdown-menu .dropdown-item",
+    );
+    links.forEach((link) => {
+      link.classList.remove("active");
+      if (link.getAttribute("onclick").includes(savedLang))
+        link.classList.add("active");
+    });
+  }
+
+  const savedCurrency = localStorage.getItem("settingsCurrency");
+  if (savedCurrency && currencyMap[savedCurrency]) {
+    selectOption(
+      null,
+      "currencyBtn",
+      "settingsCurrency",
+      currencyMap[savedCurrency],
+      savedCurrency,
+    );
+    const links = document.querySelectorAll(
+      "#currencyBtn + .dropdown-menu .dropdown-item",
+    );
+    links.forEach((link) => {
+      link.classList.remove("active");
+      if (link.getAttribute("onclick").includes(savedCurrency))
+        link.classList.add("active");
+    });
+  }
+});

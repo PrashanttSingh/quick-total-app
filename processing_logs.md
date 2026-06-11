@@ -227,3 +227,129 @@
 | **Batch 95** | 23:34:40 | `26.jpeg` | 1/1 | ✅ Success | ❌ Cloud Custom AI: Failed (HTTPSConnectionPool(host='barn)<br>✅ Gemini: Success | 13.93s | <b>88%</b> | <b>97%</b> |
 | **Batch 96** | 16:25:12 | `26.jpeg` | 1/1 | ✅ Success | ⚡ Cloud Custom AI (Kaggle): Success | 62.97s | <b>0%</b> | <b>0%</b> |
 | **Batch 97** | 16:28:10 | `26.jpeg` | 1/1 | ✅ Success | ❌ Cloud Custom AI: Failed (HTTPSConnectionPool(host='barn)<br>✅ Gemini: Success | 17.42s | <b>85%</b> | <b>95%</b> |
+| **Batch 98** | 13:44:46 | `WhatsApp Image 2026-03-18 at 11.02.41 PM.jpeg` | 1/5 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 27.1s | <b>90%</b> | <b>98%</b> |
+| **Batch 98** | 13:45:07 | `WhatsApp Image 2026-03-18 at 11.03.05 PM.jpeg` | 2/5 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 21.09s | <b>90%</b> | <b>92%</b> |
+| **Batch 98** | 13:45:33 | `WhatsApp Image 2026-03-18 at 11.03.18 PM.jpeg` | 3/5 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 25.74s | <b>95%</b> | <b>98%</b> |
+| **Batch 98** | 13:45:56 | `WhatsApp Image 2026-03-18 at 11.04.00 PM.jpeg` | 4/5 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 23.2s | <b>85%</b> | <b>95%</b> |
+| **Batch 98** | 13:46:18 | `WhatsApp Image 2026-03-18 at 11.04.10 PM.jpeg` | 5/5 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 21.9s | <b>85%</b> | <b>95%</b> |
+| **Batch 99** | 14:33:52 | `cropped_part_1773910682491.jpg` | 1/1 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 24.26s | <b>90%</b> | <b>98%</b> |
+| **Batch 100** | 15:38:47 | `WhatsApp Image 2026-03-18 at 11.04.26 PM.jpeg` | 1/5 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 21.84s | <b>88%</b> | <b>92%</b> |
+| **Batch 100** | 15:39:11 | `WhatsApp Image 2026-03-18 at 11.04.42 PM.jpeg` | 2/5 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 22.87s | <b>85%</b> | <b>95%</b> |
+| **Batch 100** | 15:39:24 | `WhatsApp Image 2026-03-18 at 11.05.57 PM.jpeg` | 3/5 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 12.72s | <b>90%</b> | <b>98%</b> |
+| **Batch 100** | 15:39:39 | `WhatsApp Image 2026-03-18 at 11.06.12 PM.jpeg` | 4/5 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 14.56s | <b>85%</b> | <b>95%</b> |
+| **Batch 100** | 15:39:52 | `WhatsApp Image 2026-03-18 at 11.06.29 PM.jpeg` | 5/5 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 13.23s | <b>90%</b> | <b>98%</b> |
+| **Batch 101** | 15:11:47 | `WhatsApp Image 2026-03-18 at 11.04.26 PM.jpeg` | 1/5 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 25.3s | <b>85%</b> | <b>95%</b> |
+| **Batch 101** | 15:12:10 | `WhatsApp Image 2026-03-18 at 11.04.42 PM.jpeg` | 2/5 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 23.01s | <b>88%</b> | <b>96%</b> |
+| **Batch 101** | 15:12:30 | `WhatsApp Image 2026-03-18 at 11.05.57 PM.jpeg` | 3/5 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 19.63s | <b>90%</b> | <b>98%</b> |
+| **Batch 101** | 15:12:43 | `WhatsApp Image 2026-03-18 at 11.06.12 PM.jpeg` | 4/5 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 12.6s | <b>85%</b> | <b>95%</b> |
+| **Batch 101** | 15:12:58 | `WhatsApp Image 2026-03-18 at 11.06.29 PM.jpeg` | 5/5 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 14.27s | <b>90%</b> | <b>98%</b> |
+| **Batch 101** | 15:35:08 | `WhatsApp Image 2026-03-18 at 11.10.19 PM.jpeg` | 2/5 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 30.67s | <b>85%</b> | <b>95%</b> |
+| **Batch 101** | 15:35:27 | `WhatsApp Image 2026-03-18 at 11.11.36 PM.jpeg` | 3/5 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 18.98s | <b>90%</b> | <b>95%</b> |
+| **Batch 101** | 15:36:00 | `WhatsApp Image 2026-03-18 at 11.12.07 PM.jpeg` | 4/5 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 32.9s | <b>90%</b> | <b>98%</b> |
+| **Batch 101** | 15:36:22 | `WhatsApp Image 2026-03-18 at 11.12.29 PM.jpeg` | 5/5 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 21.67s | <b>90%</b> | <b>98%</b> |
+| **Batch 102** | 15:59:58 | `WhatsApp Image 2026-03-18 at 11.12.47 PM.jpeg` | 1/6 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 41.81s | <b>85%</b> | <b>95%</b> |
+| **Batch 102** | 16:00:34 | `WhatsApp Image 2026-03-18 at 11.13.26 PM.jpeg` | 2/6 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 35.9s | <b>85%</b> | <b>95%</b> |
+| **Batch 102** | 16:00:57 | `WhatsApp Image 2026-03-18 at 11.13.41 PM.jpeg` | 3/6 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 22.42s | <b>90%</b> | <b>95%</b> |
+| **Batch 102** | 16:01:27 | `WhatsApp Image 2026-03-18 at 11.14.11 PM.jpeg` | 4/6 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 30.25s | <b>88%</b> | <b>97%</b> |
+| **Batch 102** | 16:02:06 | `WhatsApp Image 2026-03-18 at 11.14.34 PM.jpeg` | 5/6 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 38.55s | <b>88%</b> | <b>96%</b> |
+| **Batch 102** | 16:02:41 | `WhatsApp Image 2026-03-18 at 11.16.03 PM.jpeg` | 6/6 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 34.56s | <b>80%</b> | <b>90%</b> |
+| **Batch 103** | 16:04:17 | `WhatsApp Image 2026-03-18 at 11.12.47 PM.jpeg` | 1/6 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 42.05s | <b>85%</b> | <b>95%</b> |
+| **Batch 103** | 16:05:08 | `WhatsApp Image 2026-03-18 at 11.13.26 PM.jpeg` | 2/6 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 50.54s | <b>85%</b> | <b>95%</b> |
+| **Batch 103** | 16:05:49 | `WhatsApp Image 2026-03-18 at 11.13.41 PM.jpeg` | 3/6 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 41.0s | <b>88%</b> | <b>96%</b> |
+| **Batch 103** | 16:06:16 | `WhatsApp Image 2026-03-18 at 11.14.11 PM.jpeg` | 4/6 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 26.63s | <b>85%</b> | <b>95%</b> |
+| **Batch 103** | 16:08:11 | `WhatsApp Image 2026-03-18 at 11.14.34 PM.jpeg` | 5/6 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 114.49s | <b>88%</b> | <b>95%</b> |
+| **Batch 103** | 16:10:41 | `WhatsApp Image 2026-03-18 at 11.16.03 PM.jpeg` | 6/6 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 149.26s | <b>85%</b> | <b>90%</b> |
+| **Batch 104** | 17:06:21 | `WhatsApp Image 2026-03-18 at 11.16.03 PM.jpeg` | 1/1 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 72.5s | <b>85%</b> | <b>95%</b> |
+| **Batch 105** | 17:18:01 | `cropped_part_1774007254258.jpg` | 1/1 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 22.37s | <b>85%</b> | <b>95%</b> |
+| **Batch 106** | 17:23:21 | `WhatsApp Image 2026-03-18 at 11.17.30 PM.jpeg` | 1/6 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 40.26s | <b>85%</b> | <b>95%</b> |
+| **Batch 106** | 17:23:44 | `WhatsApp Image 2026-03-18 at 11.17.48 PM.jpeg` | 2/6 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 22.82s | <b>90%</b> | <b>98%</b> |
+| **Batch 106** | 17:24:07 | `WhatsApp Image 2026-03-18 at 11.17.57 PM.jpeg` | 3/6 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 23.22s | <b>90%</b> | <b>98%</b> |
+| **Batch 106** | 17:24:30 | `WhatsApp Image 2026-03-18 at 11.18.10 PM.jpeg` | 4/6 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 22.4s | <b>85%</b> | <b>95%</b> |
+| **Batch 106** | 17:25:18 | `WhatsApp Image 2026-03-18 at 11.18.18 PM.jpeg` | 5/6 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 47.55s | <b>90%</b> | <b>92%</b> |
+| **Batch 106** | 17:26:34 | `WhatsApp Image 2026-03-18 at 11.18.29 PM.jpeg` | 6/6 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 76.02s | <b>85%</b> | <b>95%</b> |
+| **Batch 107** | 22:04:05 | `WhatsApp Image 2026-03-18 at 11.20.22 PM.jpeg` | 1/5 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 30.37s | <b>85%</b> | <b>90%</b> |
+| **Batch 107** | 22:04:26 | `WhatsApp Image 2026-03-18 at 11.19.08 PM (1).jpeg` | 2/5 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 20.79s | <b>85%</b> | <b>95%</b> |
+| **Batch 108** | 22:16:43 | `WhatsApp Image 2026-03-18 at 11.19.08 PM (1).jpeg` | 1/5 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 95.85s | <b>90%</b> | <b>98%</b> |
+| **Batch 108** | 22:17:22 | `WhatsApp Image 2026-03-18 at 11.20.22 PM.jpeg` | 5/5 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 38.82s | <b>85%</b> | <b>92%</b> |
+| **Batch 109** | 23:06:54 | `WhatsApp Image 2026-03-18 at 11.20.39 PM.jpeg` | 1/5 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 28.51s | <b>85%</b> | <b>92%</b> |
+| **Batch 109** | 23:07:24 | `WhatsApp Image 2026-03-18 at 11.20.58 PM.jpeg` | 2/5 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 29.56s | <b>85%</b> | <b>95%</b> |
+| **Batch 109** | 23:07:59 | `WhatsApp Image 2026-03-18 at 11.21.08 PM.jpeg` | 3/5 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 34.68s | <b>85%</b> | <b>95%</b> |
+| **Batch 109** | 23:08:30 | `WhatsApp Image 2026-03-18 at 11.21.38 PM.jpeg` | 5/5 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 29.95s | <b>90%</b> | <b>98%</b> |
+| **Batch 110** | 23:47:11 | `WhatsApp Image 2026-03-18 at 11.22.13 PM.jpeg` | 1/5 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 21.99s | <b>90%</b> | <b>98%</b> |
+| **Batch 110** | 23:47:28 | `WhatsApp Image 2026-03-18 at 11.22.36 PM.jpeg` | 2/5 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 16.76s | <b>90%</b> | <b>98%</b> |
+| **Batch 110** | 23:47:49 | `WhatsApp Image 2026-03-18 at 11.22.48 PM.jpeg` | 3/5 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 20.54s | <b>85%</b> | <b>95%</b> |
+| **Batch 110** | 23:48:15 | `WhatsApp Image 2026-03-18 at 11.23.10 PM.jpeg` | 4/5 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 26.16s | <b>85%</b> | <b>95%</b> |
+| **Batch 110** | 23:48:40 | `WhatsApp Image 2026-03-18 at 11.23.32 PM.jpeg` | 5/5 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 24.7s | <b>90%</b> | <b>98%</b> |
+| **Batch 111** | 12:15:33 | `WhatsApp Image 2026-03-18 at 11.23.43 PM.jpeg` | 1/9 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 11.25s | <b>90%</b> | <b>98%</b> |
+| **Batch 111** | 12:15:47 | `WhatsApp Image 2026-03-18 at 11.23.56 PM.jpeg` | 2/9 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 13.65s | <b>90%</b> | <b>98%</b> |
+| **Batch 111** | 12:16:07 | `WhatsApp Image 2026-03-18 at 11.24.13 PM.jpeg` | 3/9 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 20.15s | <b>90%</b> | <b>98%</b> |
+| **Batch 111** | 12:16:32 | `WhatsApp Image 2026-03-18 at 11.24.22 PM.jpeg` | 4/9 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 24.66s | <b>85%</b> | <b>95%</b> |
+| **Batch 111** | 12:16:47 | `WhatsApp Image 2026-03-18 at 11.25.17 PM.jpeg` | 5/9 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 14.29s | <b>85%</b> | <b>95%</b> |
+| **Batch 111** | 12:17:11 | `WhatsApp Image 2026-03-18 at 11.25.41 PM.jpeg` | 6/9 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 23.82s | <b>85%</b> | <b>95%</b> |
+| **Batch 111** | 12:17:27 | `WhatsApp Image 2026-03-18 at 11.26.06 PM.jpeg` | 7/9 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 15.34s | <b>90%</b> | <b>98%</b> |
+| **Batch 111** | 12:17:46 | `WhatsApp Image 2026-03-18 at 11.26.26 PM.jpeg` | 8/9 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 18.76s | <b>95%</b> | <b>99%</b> |
+| **Batch 111** | 12:18:10 | `WhatsApp Image 2026-03-18 at 11.26.39 PM.jpeg` | 9/9 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 23.02s | <b>90%</b> | <b>98%</b> |
+| **Batch 112** | 12:30:10 | `WhatsApp Image 2026-03-18 at 11.27.07 PM.jpeg` | 1/3 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 25.24s | <b>85%</b> | <b>95%</b> |
+| **Batch 112** | 12:30:46 | `WhatsApp Image 2026-03-18 at 11.27.43 PM.jpeg` | 2/3 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 35.8s | <b>85%</b> | <b>95%</b> |
+| **Batch 112** | 12:31:00 | `WhatsApp Image 2026-03-18 at 11.28.59 PM.jpeg` | 3/3 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 13.63s | <b>88%</b> | <b>97%</b> |
+| **Batch 113** | 12:45:13 | `WhatsApp Image 2026-03-18 at 11.27.43 PM.jpeg` | 1/2 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 42.95s | <b>85%</b> | <b>95%</b> |
+| **Batch 113** | 12:45:35 | `WhatsApp Image 2026-03-18 at 11.28.59 PM.jpeg` | 2/2 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 22.16s | <b>85%</b> | <b>95%</b> |
+| **Batch 114** | 12:54:12 | `WhatsApp Image 2026-03-18 at 11.27.43 PM.jpeg` | 1/1 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 33.17s | <b>88%</b> | <b>96%</b> |
+| **Batch 115** | 13:22:24 | `WhatsApp Image 2026-03-18 at 11.29.18 PM.jpeg` | 1/6 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 12.59s | <b>90%</b> | <b>98%</b> |
+| **Batch 115** | 13:22:39 | `WhatsApp Image 2026-03-18 at 11.29.48 PM.jpeg` | 2/6 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 15.13s | <b>85%</b> | <b>95%</b> |
+| **Batch 115** | 13:22:54 | `WhatsApp Image 2026-03-18 at 11.30.14 PM.jpeg` | 3/6 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 14.96s | <b>88%</b> | <b>95%</b> |
+| **Batch 115** | 13:23:04 | `WhatsApp Image 2026-03-18 at 11.31.14 PM.jpeg` | 4/6 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 9.48s | <b>85%</b> | <b>95%</b> |
+| **Batch 115** | 13:23:19 | `WhatsApp Image 2026-03-18 at 11.31.37 PM.jpeg` | 5/6 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 14.78s | <b>85%</b> | <b>90%</b> |
+| **Batch 115** | 13:23:36 | `WhatsApp Image 2026-03-18 at 11.32.01 PM.jpeg` | 6/6 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 16.67s | <b>90%</b> | <b>95%</b> |
+| **Batch 116** | 13:41:38 | `WhatsApp Image 2026-03-18 at 11.35.02 PM.jpeg` | 1/8 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 13.34s | <b>88%</b> | <b>96%</b> |
+| **Batch 116** | 13:42:01 | `WhatsApp Image 2026-03-18 at 11.35.34 PM.jpeg` | 2/8 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 23.13s | <b>85%</b> | <b>95%</b> |
+| **Batch 116** | 13:42:26 | `WhatsApp Image 2026-03-18 at 11.36.06 PM.jpeg` | 3/8 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 24.69s | <b>85%</b> | <b>95%</b> |
+| **Batch 117** | 13:48:55 | `WhatsApp Image 2026-03-18 at 11.35.02 PM.jpeg` | 1/7 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 14.0s | <b>90%</b> | <b>98%</b> |
+| **Batch 117** | 13:49:17 | `WhatsApp Image 2026-03-18 at 11.35.34 PM.jpeg` | 2/7 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 21.4s | <b>88%</b> | <b>95%</b> |
+| **Batch 117** | 13:49:33 | `WhatsApp Image 2026-03-18 at 11.36.06 PM (1).jpeg` | 3/7 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 15.8s | <b>85%</b> | <b>95%</b> |
+| **Batch 117** | 13:49:46 | `WhatsApp Image 2026-03-18 at 11.36.06 PM.jpeg` | 4/7 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 12.76s | <b>88%</b> | <b>96%</b> |
+| **Batch 117** | 13:50:02 | `WhatsApp Image 2026-03-18 at 11.36.53 PM.jpeg` | 5/7 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 16.07s | <b>85%</b> | <b>95%</b> |
+| **Batch 117** | 13:50:20 | `WhatsApp Image 2026-03-18 at 11.38.18 PM.jpeg` | 6/7 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 17.85s | <b>85%</b> | <b>95%</b> |
+| **Batch 117** | 13:50:44 | `WhatsApp Image 2026-03-18 at 11.38.37 PM.jpeg` | 7/7 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 23.36s | <b>85%</b> | <b>90%</b> |
+| **Batch 118** | 14:52:04 | `WhatsApp Image 2026-03-18 at 11.38.55 PM.jpeg` | 1/4 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 29.45s | <b>90%</b> | <b>98%</b> |
+| **Batch 118** | 14:52:27 | `WhatsApp Image 2026-03-18 at 11.43.12 PM.jpeg` | 3/4 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 22.7s | <b>85%</b> | <b>95%</b> |
+| **Batch 118** | 14:52:48 | `WhatsApp Image 2026-03-18 at 11.43.55 PM.jpeg` | 4/4 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 21.52s | <b>90%</b> | <b>98%</b> |
+| **Batch 118** | 15:29:06 | `WhatsApp Image 2026-03-18 at 11.48.49 PM.jpeg` | 2/7 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 31.06s | <b>85%</b> | <b>92%</b> |
+| **Batch 118** | 15:29:37 | `WhatsApp Image 2026-03-18 at 11.49.42 PM.jpeg` | 3/7 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 31.35s | <b>85%</b> | <b>95%</b> |
+| **Batch 118** | 15:29:56 | `WhatsApp Image 2026-03-18 at 11.56.01 PM.jpeg` | 4/7 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 18.27s | <b>90%</b> | <b>98%</b> |
+| **Batch 118** | 15:30:38 | `WhatsApp Image 2026-03-18 at 11.57.27 PM.jpeg` | 6/7 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 41.37s | <b>85%</b> | <b>92%</b> |
+| **Batch 118** | 15:31:26 | `WhatsApp Image 2026-03-18 at 11.58.10 PM.jpeg` | 7/7 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 48.39s | <b>85%</b> | <b>95%</b> |
+| **Batch 119** | 15:52:04 | `WhatsApp Image 2026-03-18 at 11.57.27 PM.jpeg` | 1/1 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 35.58s | <b>85%</b> | <b>95%</b> |
+| **Batch 120** | 22:48:55 | `WhatsApp Image 2026-03-31 at 1.08.29 AM.jpeg` | 1/5 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 18.04s | <b>85%</b> | <b>95%</b> |
+| **Batch 120** | 22:49:13 | `WhatsApp Image 2026-03-31 at 1.08.33 AM.jpeg` | 2/5 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 18.48s | <b>80%</b> | <b>90%</b> |
+| **Batch 120** | 22:49:26 | `WhatsApp Image 2026-03-31 at 1.08.37 AM.jpeg` | 3/5 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 12.46s | <b>85%</b> | <b>95%</b> |
+| **Batch 120** | 22:49:39 | `WhatsApp Image 2026-03-31 at 1.09.35 AM.jpeg` | 4/5 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 12.47s | <b>85%</b> | <b>95%</b> |
+| **Batch 120** | 22:49:57 | `WhatsApp Image 2026-03-31 at 1.10.10 AM.jpeg` | 5/5 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 17.35s | <b>85%</b> | <b>95%</b> |
+| **Batch 121** | 23:03:21 | `WhatsApp Image 2026-03-31 at 1.10.38 AM.jpeg` | 1/12 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 20.83s | <b>85%</b> | <b>95%</b> |
+| **Batch 121** | 23:03:27 | `WhatsApp Image 2026-03-31 at 1.10.38 AM.jpeg` | 1/12 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 25.43s | <b>90%</b> | <b>95%</b> |
+| **Batch 121** | 23:03:47 | `WhatsApp Image 2026-03-31 at 1.12.03 AM.jpeg` | 2/12 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 25.09s | <b>85%</b> | <b>92%</b> |
+| **Batch 121** | 23:03:56 | `WhatsApp Image 2026-03-31 at 1.12.03 AM.jpeg` | 2/12 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 28.04s | <b>85%</b> | <b>90%</b> |
+| **Batch 121** | 23:04:19 | `WhatsApp Image 2026-03-31 at 1.13.15 AM.jpeg` | 3/12 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 31.67s | <b>85%</b> | <b>95%</b> |
+| **Batch 121** | 23:04:21 | `WhatsApp Image 2026-03-31 at 1.13.15 AM.jpeg` | 3/12 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 25.14s | <b>85%</b> | <b>95%</b> |
+| **Batch 121** | 23:04:32 | `WhatsApp Image 2026-03-31 at 1.13.55 AM.jpeg` | 4/12 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 12.81s | <b>88%</b> | <b>97%</b> |
+| **Batch 121** | 23:04:33 | `WhatsApp Image 2026-03-31 at 1.13.55 AM.jpeg` | 4/12 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 11.78s | <b>90%</b> | <b>95%</b> |
+| **Batch 121** | 23:04:57 | `WhatsApp Image 2026-03-31 at 1.15.40 AM.jpeg` | 5/12 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 24.04s | <b>85%</b> | <b>95%</b> |
+| **Batch 121** | 23:05:10 | `WhatsApp Image 2026-03-31 at 1.15.40 AM.jpeg` | 5/12 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 35.93s | <b>85%</b> | <b>95%</b> |
+| **Batch 121** | 23:05:33 | `WhatsApp Image 2026-03-31 at 1.16.37 AM.jpeg` | 6/12 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 35.8s | <b>85%</b> | <b>95%</b> |
+| **Batch 121** | 23:05:49 | `WhatsApp Image 2026-03-31 at 1.17.21 AM.jpeg` | 7/12 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 15.36s | <b>90%</b> | <b>95%</b> |
+| **Batch 121** | 23:05:55 | `WhatsApp Image 2026-03-31 at 1.16.37 AM.jpeg` | 6/12 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 44.14s | <b>85%</b> | <b>90%</b> |
+| **Batch 121** | 23:06:04 | `WhatsApp Image 2026-03-31 at 1.17.21 AM.jpeg` | 7/12 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 9.19s | <b>90%</b> | <b>98%</b> |
+| **Batch 121** | 23:06:05 | `WhatsApp Image 2026-03-31 at 1.17.46 AM.jpeg` | 8/12 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 15.51s | <b>85%</b> | <b>95%</b> |
+| **Batch 121** | 23:06:17 | `WhatsApp Image 2026-03-31 at 1.17.46 AM.jpeg` | 8/12 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 12.14s | <b>90%</b> | <b>98%</b> |
+| **Batch 121** | 23:06:26 | `WhatsApp Image 2026-03-31 at 1.18.15 AM.jpeg` | 9/12 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 20.14s | <b>85%</b> | <b>95%</b> |
+| **Batch 121** | 23:06:43 | `WhatsApp Image 2026-03-31 at 1.19.10 AM.jpeg` | 10/12 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 16.92s | <b>85%</b> | <b>95%</b> |
+| **Batch 121** | 23:06:44 | `WhatsApp Image 2026-03-31 at 1.18.15 AM.jpeg` | 9/12 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 26.69s | <b>85%</b> | <b>95%</b> |
+| **Batch 121** | 23:07:16 | `WhatsApp Image 2026-03-31 at 1.19.10 AM.jpeg` | 10/12 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 30.48s | <b>90%</b> | <b>98%</b> |
+| **Batch 121** | 23:07:27 | `WhatsApp Image 2026-03-31 at 1.20.04 AM.jpeg` | 11/12 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 43.14s | <b>85%</b> | <b>95%</b> |
+| **Batch 121** | 23:07:52 | `WhatsApp Image 2026-03-31 at 1.20.04 AM.jpeg` | 11/12 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 36.08s | <b>88%</b> | <b>96%</b> |
+| **Batch 121** | 23:08:06 | `WhatsApp Image 2026-03-31 at 1.33.25 AM.jpeg` | 12/12 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 38.4s | <b>85%</b> | <b>95%</b> |
+| **Batch 121** | 23:08:26 | `WhatsApp Image 2026-03-31 at 1.33.25 AM.jpeg` | 12/12 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 32.94s | <b>85%</b> | <b>90%</b> |
+| **Batch 122** | 21:38:11 | `Prashant-Photo-Upwork.jpg` | 1/1 | ❌ Failed | ⚠️ Cloud AI Link not set. Skipping to Gemini. | 144.2s | <b>0%</b> | - |
+| **Batch 123** | 19:53:16 | `26.jpeg` | 1/1 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 21.56s | <b>90%</b> | <b>98%</b> |
+| **Batch 124** | 18:53:08 | `17.jpeg` | 1/1 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 46.32s | <b>85%</b> | <b>92%</b> |
+| **Batch 125** | 18:59:34 | `3.jpeg` | 1/1 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 40.35s | <b>85%</b> | <b>95%</b> |
