@@ -353,3 +353,80 @@
 | **Batch 123** | 19:53:16 | `26.jpeg` | 1/1 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 21.56s | <b>90%</b> | <b>98%</b> |
 | **Batch 124** | 18:53:08 | `17.jpeg` | 1/1 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 46.32s | <b>85%</b> | <b>92%</b> |
 | **Batch 125** | 18:59:34 | `3.jpeg` | 1/1 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 40.35s | <b>85%</b> | <b>95%</b> |
+| **Batch 126** | 13:07:33 | `5image.jfif` | 1/1 | ❌ Failed | ⚠️ Cloud AI Link not set. Skipping to Gemini. | 253.7s | <b>0%</b> | - |
+| **Batch 127** | 12:03:30 | `Screenshot (3353).png` | 1/1 | ✅ Success | ⚠️ Cloud AI Link not set. Skipping to Gemini.<br>✅ Gemini: Success | 15.59s | <b>95%</b> | <b>98%</b> |
+| **Batch 128** | 12:49:45 | `2image.jfif` | 1/1 | ✅ Success | ✅ Nemotron V2: Success | 64.41s | <b>85%</b> | <b>95%</b> |
+| **Batch 129** | 13:04:50 | `4image.jfif` | 1/1 | ❌ Failed |  | 173.21s | <b>0%</b> | - |
+| **Batch 130** | 14:48:40 | `2.jpeg` | 1/1 | ✅ Success | ✅ Gemini: Success | 61.19s | <b>75%</b> | <b>85%</b> |
+| **Batch 131** | 18:16:35 | `3.jpeg` | 1/1 | ✅ Success | ✅ Gemini: Success | 168.13s | <b>75%</b> | <b>90%</b> |
+| **Batch 132** | 14:59:02 | `Screenshot (3353).png` | 1/1 | ✅ Success | ✅ Gemini: Success | 11.3s | <b>90%</b> | <b>98%</b> |
+| **Batch 133** | 15:04:08 | `Screenshot (3353).png` | 1/1 | ✅ Success | ✅ Gemini: Success | 8.82s | <b>90%</b> | <b>98%</b> |
+| **Batch 134** | 15:15:13 | `Screenshot (3353).png` | 1/1 | ✅ Success | ✅ Gemini: Success | 14.63s | <b>90%</b> | <b>98%</b> |
+| **Batch 135** | 15:17:12 | `Screenshot (3353).png` | 1/1 | ✅ Success | ✅ Gemini: Success | 11.82s | <b>90%</b> | <b>98%</b> |
+| **Batch 136** | 16:09:51 | `Screenshot (3353).png` | 1/1 | ✅ Success | ✅ Gemini: Success | 10.67s | <b>90%</b> | <b>98%</b> |
+| **Batch 137** | 14:59:53 | `Screenshot (3353).png` | 1/1 | ✅ Success | ✅ Gemini: Success | 8.67s | <b>90%</b> | <b>98%</b> |
+| **Batch 138** | 15:04:36 | `Screenshot (3353).png` | 1/1 | ✅ Success | ✅ Gemini: Success | 4.44s | <b>90%</b> | <b>98%</b> |
+| **Batch 139** | 15:16:53 | `Screenshot (3353).png` | 1/1 | ✅ Success | ✅ Gemini: Success | 5.4s | <b>90%</b> | <b>98%</b> |
+| **Batch 140** | 15:48:04 | `Screenshot (3353).png` | 1/1 | ✅ Success | ✅ Gemini: Success | 4.54s | <b>90%</b> | <b>98%</b> |
+| **Batch 141** | 16:07:46 | `cropped_1785494077342.jpg` | 1/1 | ❌ Failed |  | 156.83s | <b>0%</b> | - |
+| **Batch 142** | 16:57:03 | `Screenshot (3353).png` | 1/1 | ✅ Success | ✅ Gemini: Success<br>✅ Gemini: Success | 15.43s | <b>90%</b> | <b>98%</b> |
+| **Batch 143** | 19:39:31 | `cropped_1785506952887.jpg` | 1/1 | ✅ Success | ✅ Gemini: Success<br>✅ Gemini: Success | 14.51s | <b>90%</b> | <b>98%</b> |
+| **Batch 144** | 22:48:08 | `Screenshot (3353).png` | 1/1 | ✅ Success | ✅ Gemini: Success<br>✅ Gemini: Success | 10.32s | <b>95%</b> | <b>98%</b> |
+| **Batch 145** | 22:58:24 | `Screenshot (3353).png` | 1/1 | ✅ Success | ✅ Gemini: Success<br>✅ Gemini: Success | 15.14s | <b>90%</b> | <b>98%</b> |
+| **Batch 146** | 23:14:31 | `Screenshot (3353).png` | 1/1 | ✅ Success | ✅ Gemini: Success<br>✅ Gemini: Success | 12.74s | <b>95%</b> | <b>98%</b> |
+| **Batch 147** | 23:52:49 | `Screenshot (3353).png` | 1/1 | ✅ Success | ✅ Gemini: Success<br>✅ Gemini: Success | 13.91s | <b>90%</b> | <b>98%</b> |
+| **Batch 148** | 00:24:22 | `Screenshot (3353).png` | 1/1 | ✅ Success | ✅ Gemini: Success<br>✅ Gemini: Success | 11.0s | <b>90%</b> | <b>98%</b> |
+| **Batch 149** | 01:03:05 | `Screenshot (3580).png` | 1/1 | ✅ Success | ✅ Gemini: Success<br>✅ Gemini: Success | 37.75s | <b>95%</b> | <b>98%</b> |
+| **Batch 150** | 01:34:47 | `Screenshot (3580).png` | 1/1 | ✅ Success | ✅ Gemini: Success<br>✅ Gemini: Success | 50.26s | <b>90%</b> | <b>99%</b> |
+| **Batch 151** | 14:05:51 | `26.jpeg` | 1/1 | ✅ Success | ✅ Gemini: Success<br>✅ Gemini: Success | 27.27s | <b>85%</b> | <b>95%</b> |
+| **Batch 152** | 15:17:43 | `26.jpeg` | 1/1 | ✅ Success | ✅ Gemini: Success<br>✅ Gemini: Success | 23.06s | <b>85%</b> | <b>95%</b> |
+| **Batch 153** | 15:23:04 | `26.jpeg` | 1/1 | ✅ Success | ✅ Gemini: Success<br>✅ Gemini: Success | 33.56s | <b>85%</b> | <b>95%</b> |
+| **Batch 154** | 15:52:58 | `26.jpeg` | 1/1 | ✅ Success | ✅ Gemini: Success<br>✅ Gemini: Success | 22.46s | <b>88%</b> | <b>96%</b> |
+| **Batch 155** | 16:13:31 | `26.jpeg` | 1/1 | ✅ Success | ✅ Gemini: Success<br>✅ Gemini: Success | 28.47s | <b>88%</b> | <b>97%</b> |
+| **Batch 156** | 16:15:08 | `26.jpeg` | 1/3 | ✅ Success | ✅ Gemini: Success<br>✅ Gemini: Success | 29.24s | <b>85%</b> | <b>95%</b> |
+| **Batch 156** | 16:15:38 | `mutable and immutable.jpeg` | 2/3 | ✅ Success | ✅ Gemini: Success<br>✅ Gemini: Success | 30.49s | <b>95%</b> | <b>98%</b> |
+| **Batch 156** | 16:15:59 | `26.jpeg` | 3/3 | ✅ Success | ✅ Gemini: Success<br>✅ Gemini: Success | 20.19s | <b>85%</b> | <b>95%</b> |
+| **Batch 157** | 16:54:07 | `26.jpeg` | 1/1 | ✅ Success | ✅ Gemini: Success | 13.07s | <b>85%</b> | <b>95%</b> |
+| **Batch 158** | 17:15:53 | `26.jpeg` | 1/1 | ✅ Success | ✅ Gemini: Success | 17.61s | <b>85%</b> | <b>95%</b> |
+| **Batch 158** | 00:17:45 | `Gemini_Generated_Image_73mxaw73mxaw73mx.png` | 2/4 | ✅ Success | ✅ Gemini: Success | 28.46s | <b>95%</b> | <b>98%</b> |
+| **Batch 159** | 00:17:48 | `first classs function.jpeg` | 1/4 | ✅ Success | ✅ Gemini: Success | 22.45s | <b>95%</b> | <b>98%</b> |
+| **Batch 158** | 00:18:09 | `mutable and immutable.jpeg` | 3/4 | ✅ Success | ✅ Gemini: Success | 23.17s | <b>95%</b> | <b>98%</b> |
+| **Batch 159** | 00:18:28 | `Gemini_Generated_Image_73mxaw73mxaw73mx.png` | 2/4 | ✅ Success | ✅ Gemini: Success | 39.64s | <b>95%</b> | <b>98%</b> |
+| **Batch 159** | 00:18:49 | `Gemini_Generated_Image_73mxaw73mxaw73mx.png` | 4/4 | ✅ Success | ✅ Gemini: Success | 39.16s | <b>95%</b> | <b>98%</b> |
+| **Batch 159** | 00:18:51 | `mutable and immutable.jpeg` | 3/4 | ✅ Success | ✅ Gemini: Success | 22.37s | <b>95%</b> | <b>98%</b> |
+| **Batch 159** | 00:19:20 | `Gemini_Generated_Image_73mxaw73mxaw73mx.png` | 4/4 | ✅ Success | ✅ Gemini: Success | 28.43s | <b>95%</b> | <b>98%</b> |
+| **Batch 160** | 00:45:18 | `Batch (1 files)` | 1 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 1 images in 1 API Call | 9.86s | <b>95%</b> | <b>98%</b> |
+| **Batch 161** | 00:45:53 | `Batch (1 files)` | 1 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 1 images in 1 API Call | 34.5s | <b>95%</b> | <b>98%</b> |
+| **Batch 162** | 00:46:08 | `Batch (1 files)` | 1 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 1 images in 1 API Call | 15.02s | <b>90%</b> | <b>99%</b> |
+| **Batch 163** | 00:46:35 | `Batch (1 files)` | 1 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 1 images in 1 API Call | 26.98s | <b>90%</b> | <b>95%</b> |
+| **Batch 164** | 13:04:08 | `Batch (1 files)` | 1 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 1 images in 1 API Call | 8.94s | <b>85%</b> | <b>95%</b> |
+| **Batch 165** | 13:07:39 | `Batch (4 files)` | 4 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 4 images in 1 API Call | 63.64s | <b>75%</b> | <b>85%</b> |
+| **Batch 166** | 13:21:41 | `Batch (3 files)` | 3 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 3 images in 1 API Call | 61.55s | <b>85%</b> | <b>95%</b> |
+| **Batch 167** | 13:31:09 | `Batch (4 files)` | 4 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 4 images in 1 API Call | 262.02s | <b>90%</b> | <b>98%</b> |
+| **Batch 168** | 14:07:50 | `Batch (1 files)` | 1 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 1 images in 1 API Call | 10.74s | <b>90%</b> | <b>98%</b> |
+| **Batch 169** | 14:13:58 | `Batch (1 files)` | 1 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 1 images in 1 API Call | 7.73s | <b>90%</b> | <b>98%</b> |
+| **Batch 170** | 14:32:25 | `Batch (1 files)` | 1 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 1 images in 1 API Call | 11.05s | <b>90%</b> | <b>98%</b> |
+| **Batch 171** | 13:51:12 | `Batch (1 files)` | 1 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 1 images in 1 API Call | 12.45s | <b>90%</b> | <b>98%</b> |
+| **Batch 172** | 20:46:11 | `Batch (1 files)` | 1 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 1 images in 1 API Call | 8.32s | <b>90%</b> | <b>98%</b> |
+| **Batch 173** | 20:49:10 | `Batch (1 files)` | 1 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 1 images in 1 API Call | 8.4s | <b>90%</b> | <b>98%</b> |
+| **Batch 174** | 21:08:14 | `Batch (1 files)` | 1 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 1 images in 1 API Call | 7.32s | <b>90%</b> | <b>98%</b> |
+| **Batch 175** | 21:09:41 | `Batch (1 files)` | 1 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 1 images in 1 API Call | 9.99s | <b>85%</b> | <b>95%</b> |
+| **Batch 176** | 21:10:33 | `Batch (1 files)` | 1 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 1 images in 1 API Call | 6.88s | <b>90%</b> | <b>98%</b> |
+| **Batch 177** | 21:11:33 | `Batch (1 files)` | 1 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 1 images in 1 API Call | 10.01s | <b>90%</b> | <b>98%</b> |
+| **Batch 178** | 21:12:37 | `Batch (1 files)` | 1 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 1 images in 1 API Call | 14.6s | <b>90%</b> | <b>95%</b> |
+| **Batch 179** | 21:13:39 | `Batch (1 files)` | 1 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 1 images in 1 API Call | 16.34s | <b>90%</b> | <b>98%</b> |
+| **Batch 180** | 21:16:03 | `Batch (1 files)` | 1 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 1 images in 1 API Call | 11.0s | <b>90%</b> | <b>98%</b> |
+| **Batch 181** | 21:17:50 | `Batch (1 files)` | 1 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 1 images in 1 API Call | 14.86s | <b>90%</b> | <b>98%</b> |
+| **Batch 182** | 21:19:11 | `Batch (1 files)` | 1 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 1 images in 1 API Call | 14.36s | <b>90%</b> | <b>98%</b> |
+| **Batch 183** | 00:25:19 | `Batch (1 files)` | 1 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 1 images in 1 API Call | 7.75s | <b>90%</b> | <b>98%</b> |
+| **Batch 184** | 00:49:08 | `Batch (1 files)` | 1 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 1 images in 1 API Call | 16.0s | <b>90%</b> | <b>98%</b> |
+| **Batch 185** | 11:24:52 | `Batch (1 files)` | 1 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 1 images in 1 API Call | 8.62s | <b>90%</b> | <b>98%</b> |
+| **Batch 186** | 11:38:20 | `Batch (1 files)` | 1 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 1 images in 1 API Call | 55.37s | <b>90%</b> | <b>98%</b> |
+| **Batch 187** | 11:51:24 | `Batch (1 files)` | 1 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 1 images in 1 API Call | 8.82s | <b>90%</b> | <b>98%</b> |
+| **Batch 188** | 11:56:37 | `Batch (1 files)` | 1 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 1 images in 1 API Call | 11.92s | <b>90%</b> | <b>98%</b> |
+| **Batch 189** | 12:07:40 | `Batch (1 files)` | 1 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 1 images in 1 API Call | 6.58s | <b>90%</b> | <b>98%</b> |
+| **Batch 190** | 12:08:35 | `Batch (1 files)` | 1 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 1 images in 1 API Call | 7.45s | <b>85%</b> | <b>95%</b> |
+| **Batch 191** | 12:23:15 | `Batch (1 files)` | 1 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 1 images in 1 API Call | 6.09s | <b>85%</b> | <b>95%</b> |
+| **Batch 192** | 12:37:36 | `Batch (1 files)` | 1 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 1 images in 1 API Call | 8.18s | <b>90%</b> | <b>98%</b> |
+| **Batch 193** | 12:38:05 | `Batch (1 files)` | 1 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 1 images in 1 API Call | 4.13s | <b>90%</b> | <b>50%</b> |
+| **Batch 194** | 13:28:56 | `Batch (2 files)` | 2 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 2 images in 1 API Call | 17.39s | <b>90%</b> | <b>98%</b> |

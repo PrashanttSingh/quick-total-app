@@ -2,6 +2,10 @@
 <html lang="en">
 
 <head>
+    <!-- Standard PWA/Add-to-HomeScreen App Icon Configuration -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/images/qt_monogram.svg">
+    <link rel="icon" type="image/svg+xml" sizes="192x192" href="/static/images/qt_monogram.svg">
+    <link rel="icon" type="image/svg+xml" sizes="32x32" href="/static/images/qt_monogram.svg">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QuickTotal</title>
@@ -25,33 +29,92 @@
         <div class="floating-receipt receipt-4"></div>
     </div>
 
-    <div id="cameraModal" class="modal-custom">
-        <span class="close-modal" id="closeCameraBtn">&times;</span>
-        <div class="modal-scroll-area d-flex flex-column gap-3 align-items-center">
+    <div id="cameraModal" class="modal-custom"
+        style="display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(15, 23, 42, 0.96); backdrop-filter: blur(16px); flex-direction: column; align-items: center; justify-content: center;">
+
+        <!-- Uniform Glassmorphism Close Button -->
+        <button id="closeCameraBtn" title="Close"
+            class="btn p-0 d-flex align-items-center justify-content-center position-absolute top-0 end-0 m-4"
+            style="width: 38px; height: 38px; border-radius: 50%; background: rgba(255, 255, 255, 0.1); color: white; border: 1px solid rgba(255, 255, 255, 0.15); z-index: 30;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+
+        <div
+            class="modal-scroll-area d-flex flex-column gap-3 align-items-center w-100 h-100 justify-content-center p-3">
             <video id="cameraStream" autoplay playsinline
-                style="max-width: 90%; border-radius: 12px; box-shadow: 0 0 30px rgba(0,0,0,0.8);"></video>
-            <button class="btn btn-primary animate-hover" id="captureBtn">📸 Capture Photo</button>
+                style="max-width: 90%; max-height: 75vh; border-radius: 12px; box-shadow: 0 20px 50px rgba(0,0,0,0.6); transform: scaleX(-1);"></video>
+
+            <button
+                class="btn btn-primary animate-hover d-flex align-items-center justify-content-center px-4 py-3 mt-2"
+                id="captureBtn" style="border-radius: 50px; font-weight: 700;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                    <circle cx="12" cy="13" r="4"></circle>
+                </svg>
+                Capture Photo
+            </button>
         </div>
     </div>
 
-    <div id="imageModal" class="modal-custom">
-        <span class="close-modal" id="closeImageModal">&times;</span>
-        <div class="modal-scroll-area">
-            <div id="modalTransformWrapper" style="position: relative;">
-                <img class="modal-content-custom" id="modalImage"
-                    style="display: block; box-shadow: none; border-radius: 0; max-height: 85vh; max-width: 90vw;">
+    <!-- ==========================================
+     ✨ FLOATING DARK GLASS IMAGE INSPECTOR
+========================================== -->
+    <div id="imageModal"
+        style="display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(15, 23, 42, 0.96); backdrop-filter: blur(16px); flex-direction: column;">
+
+        <!-- Top Bar -->
+        <div class="d-flex justify-content-end align-items-center p-3 px-md-4" style="z-index: 20;">
+            <button id="closeImageModal" title="Close" class="btn p-0 d-flex align-items-center justify-content-center"
+                style="width: 38px; height: 38px; border-radius: 50%; background: rgba(255, 255, 255, 0.1); color: white; border: 1px solid rgba(255, 255, 255, 0.15);">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Center Stage (Canvas & Image) -->
+        <div id="modalBackground"
+            class="flex-grow-1 position-relative d-flex align-items-center justify-content-center p-2 p-md-4"
+            style="overflow: auto; touch-action: none;">
+            <div id="imageZoomWrapper"
+                style="position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; transform-origin: center; transition: transform 0.1s ease-out;">
+                <img id="modalImage" src="" alt="Receipt Preview" draggable="false"
+                    style="max-width: 85vw; max-height: 68vh; object-fit: contain; border-radius: 8px; box-shadow: 0 20px 50px rgba(0,0,0,0.6); user-select: none;">
                 <canvas id="modalCropCanvas"
-                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; cursor: crosshair; display: none;"></canvas>
+                    style="position: absolute; z-index: 10; cursor: crosshair; display: none;"></canvas>
             </div>
         </div>
-        <div class="floating-zoom-controls">
-            <button class="btn-zoom" id="toggleCropBtn" title="Crop this image">✂️ Crop Tool</button>
-            <button class="btn-zoom" id="applyCropBtn" style="display:none; background: #10b981; color: white;">✅ Save
-                Crop</button>
-            <div style="width: 2px; background: rgba(255,255,255,0.2); margin: 0 5px;"></div>
-            <button class="btn-zoom" id="zoomOutBtn">−</button>
-            <button class="btn-zoom" id="zoomResetBtn">Reset</button>
-            <button class="btn-zoom" id="zoomInBtn">+</button>
+
+        <!-- Floating Control Dock -->
+        <div class="p-3 d-flex justify-content-center" style="z-index: 20;">
+            <div class="d-flex align-items-center gap-2 p-2 px-3 rounded-pill"
+                style="background: rgba(30, 41, 59, 0.9); border: 1px solid rgba(255, 255, 255, 0.15); backdrop-filter: blur(16px); box-shadow: 0 15px 35px rgba(0,0,0,0.5);">
+                <button id="toggleCropBtn" class="btn btn-sm d-flex align-items-center gap-2 rounded-pill px-3 py-2"
+                    style="background: rgba(255, 255, 255, 0.1); color: #e2e8f0; font-weight: 600; font-size: 13px; border: 1px solid rgba(255, 255, 255, 0.1);">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M6 2v14a2 2 0 0 0 2 2h14"></path>
+                        <path d="M18 22V8a2 2 0 0 0-2-2H2"></path>
+                    </svg>
+                    <span>Crop Region</span>
+                </button>
+
+                <button id="saveCropBtn" class="btn btn-sm d-flex align-items-center gap-2 rounded-pill px-4 py-2"
+                    style="background: #10b981; color: white; font-weight: 700; font-size: 13px; border: none; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    <span>Apply & Save</span>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -60,9 +123,9 @@
         <header class="mb-4 pt-3">
             <div class="d-flex justify-content-between align-items-center pb-3">
                 <div class="logo d-flex align-items-center gap-3">
-                    <h1 class="m-0 fs-3 fw-bold" style="color: #1e293b; letter-spacing: -0.5px;">QuickTotal</h1>
-                    <span class="badge rounded-pill"
-                        style="background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); font-weight: 600; padding: 6px 12px;">Verified
+                    <h1 class="m-0 fs-3 fw-bold" style="color: #1c6ae7 !important; letter-spacing: -0.5px;">QuickTotal
+                    </h1> <span class="badge rounded-pill"
+                        style="background: rgba(16, 185, 129, 0.1); color: #3b82f6; border: 1px solid rgba(16, 185, 129, 0.2); font-weight: 600; padding: 6px 12px;">Verified
                         AI</span>
                 </div>
 
@@ -80,10 +143,10 @@
 
             <div class="pill-container d-flex justify-content-md-center gap-3 mt-3 mb-4">
                 <div class="tag-pill d-flex align-items-center">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2.5"
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5"
                         stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
-                            fill="rgba(59, 130, 246, 0.15)"></path>
+                            fill="rgba(245, 158, 11, 0.15)"></path>
                         <polyline points="14 2 14 8 20 8"></polyline>
                         <line x1="16" y1="13" x2="8" y2="13"></line>
                         <line x1="16" y1="17" x2="8" y2="17"></line>
@@ -114,95 +177,216 @@
                             fill="rgba(245, 158, 11, 0.15)"></path>
                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                     </svg>
-                    Handwritten Notes
+                    Handwritten Bills
                 </div>
             </div>
         </header>
 
         <div class="mx-auto" style="max-width: 800px;">
-
             <div class="main-card glass-panel mb-4">
 
-                <div class="upload-zone" id="dropZone"
-                    style="border: 2px dashed #cbd5e1; border-radius: 20px; background: #f8fafc; padding: 60px 20px;">
-                    <div class="upload-icon mb-3">
-                        <svg width="54" height="54" viewBox="0 0 24 24" fill="none">
-                            <path
-                                d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15"
-                                stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                            <path d="M17 8L12 3L7 8" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round" />
-                            <path d="M12 3V15" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round" />
-                        </svg>
+                <!-- 📱 MOBILE UPLOAD SCENE WITH CONTENT-MATCHED PREVIEWS -->
+                <div class="mobile-upload-scene mx-auto mt-4">
+                    <!-- 1. Retail Bill Preview -->
+                    <div class="bg-doc doc-retail d-block d-md-none">
+                        <div class="mini-line header"></div>
+                        <div class="mini-line"></div>
+                        <div class="mini-line"></div>
+                        <div class="mini-line total"></div>
                     </div>
-                    <h3 style="color: #1e293b; font-weight: 800; font-size: 26px; margin-bottom: 8px;">Upload Documents
-                    </h3>
-                    <p style="color: #64748b; font-size: 15px; margin-bottom: 35px;">Drag & drop files, browse your
-                        device, or take a picture of a handwritten bill.</p>
+                    <!-- 2. Math Sheet Preview -->
+                    <div class="bg-doc doc-math d-block d-md-none">
+                        <div class="mini-grid-line"></div>
+                        <div class="mini-grid-line"></div>
+                        <div class="mini-grid-line"></div>
+                    </div>
+                    <!-- 3. Handwritten Bill Preview -->
+                    <div class="bg-doc doc-handwritten d-block d-md-none">
+                        <div class="mini-script-line"></div>
+                        <div class="mini-script-line"></div>
+                        <div class="mini-script-line"></div>
+                        <div class="mini-script-line"></div>
+                    </div>
 
-                    <input type="file" id="fileInput" accept="image/*" multiple style="display: none;">
-
-                    <div class="d-flex flex-column flex-md-row justify-content-center align-items-center gap-3">
-                        <button class="btn px-5 py-3 d-flex align-items-center justify-content-center"
-                            onclick="document.getElementById('fileInput').click()"
-                            style="background: #ffffff; color: #334155; font-weight: 700; border-radius: 50px; border: 2px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02); transition: all 0.2s;">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3b82f6"
-                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
-                                style="margin-right: 8px;">
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
-                                    fill="rgba(59, 130, 246, 0.15)"></path>
-                                <polyline points="14 2 14 8 20 8"></polyline>
-                                <line x1="12" y1="18" x2="12" y2="12"></line>
-                                <polyline points="9 15 12 12 15 15"></polyline>
-                            </svg>
-                            Browse Files
-                        </button>
-
-                        <button class="btn px-5 py-3 d-flex align-items-center justify-content-center"
-                            id="openCameraBtn"
-                            style="background: #10b981; color: #ffffff; font-weight: 700; border-radius: 50px; border: none; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); transition: all 0.2s;">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
-                                style="margin-right: 8px;">
+                    <!-- UPLOAD CARD -->
+                    <div class="upload-zone" id="dropZone"
+                        style="border: 2px dashed #cbd5e1; border-radius: 20px; background: #f8fafc; padding: 60px 20px;">
+                        <div class="upload-icon mb-3">
+                            <svg width="54" height="54" viewBox="0 0 24 24" fill="none">
                                 <path
-                                    d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"
-                                    fill="rgba(255, 255, 255, 0.2)"></path>
-                                <circle cx="12" cy="13" r="4"></circle>
+                                    d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15"
+                                    stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                <path d="M17 8L12 3L7 8" stroke="#f59e0b" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                                <path d="M12 3V15" stroke="#f59e0b" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
                             </svg>
-                            Open Camera
-                        </button>
-                    </div>
-                </div>
+                        </div>
+                        <h3 style="color: #1e293b; font-weight: 800; font-size: 26px; margin-bottom: 8px;">Upload
+                            Documents</h3>
+                        <p class="text-muted upload-text d-none d-md-block">Drag & drop files, browse your device, or
+                            take a picture of any type of bill.</p>
+                        <p class="text-muted upload-text d-block d-md-none px-2" style="font-size: 0.9rem;">Browse your
+                            files or snap a picture of your bill.</p>
 
+                        <input type="file" id="fileInput" accept="image/*" multiple style="display: none;">
+
+                        <div class="d-flex flex-column flex-md-row justify-content-center align-items-center gap-3">
+                            <button id="browseBtn"
+                                class="btn px-5 py-3 d-flex align-items-center justify-content-center"
+                                onclick="document.getElementById('fileInput').click()"
+                                style="background: #ffffff; color: #334155; font-weight: 700; border-radius: 50px; border: 2px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02); transition: all 0.2s;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b"
+                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                                    style="margin-right: 8px;">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                                        fill="rgba(245, 158, 11, 0.15)"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="12" y1="18" x2="12" y2="12"></line>
+                                    <polyline points="9 15 12 12 15 15"></polyline>
+                                </svg>
+                                Browse Files
+                            </button>
+
+                            <button class="btn px-5 py-3 d-flex align-items-center justify-content-center"
+                                id="openCameraBtn"
+                                style="background: #10b981; color: #ffffff; font-weight: 700; border-radius: 50px; border: none; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); transition: all 0.2s;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                                    style="margin-right: 8px;">
+                                    <path
+                                        d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"
+                                        fill="rgba(255, 255, 255, 0.2)"></path>
+                                    <circle cx="12" cy="13" r="4"></circle>
+                                </svg>
+                                Open Camera
+                            </button>
+                        </div>
+                    </div>
+                </div> <!-- /mobile-upload-scene -->
+
+                <!-- SINGLE, CLEAN PREVIEW AREA WRAPPER -->
                 <div class="preview-area mt-3" id="previewArea" style="display:none;">
-                    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom border-light pb-3">
-                        <h3 id="fileCountLabel" class="m-0 fs-5 fw-bold" style="color: #1e293b;">0 Images Selected</h3>
-                        <button class="btn btn-sm" onclick="document.getElementById('fileInput').click()"
-                            style="background: #f1f5f9; color: #3b82f6; font-weight: 600; border-radius: 8px;">+ Add
-                            More</button>
+
+                    <!-- 💻 LAPTOP/DESKTOP VIEW (100% Protected) -->
+                    <div class="d-none d-md-block">
+                        <div
+                            class="d-flex justify-content-between align-items-center mb-4 border-bottom border-light pb-3">
+                            <h3 id="fileCountLabel" class="m-0 fs-5 fw-bold" style="color: #1e293b;">0 Images Selected
+                            </h3>
+                            <div class="dropdown d-inline-block">
+                                <button class="btn btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                                    aria-expanded="false" id="addMoreDropdownBtn"
+                                    style="background: #ecfdf5; color: #059669; font-weight: 600; border-radius: 8px; border: 1px solid #a7f3d0;">
+                                    + Add More
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow-sm"
+                                    style="border-radius: 12px; border-color: #e2e8f0; z-index: 1050; min-width: 170px;">
+                                    <li><a class="dropdown-item d-flex align-items-center gap-2 py-2 rounded-2 fw-semibold"
+                                            href="javascript:void(0)"
+                                            onclick="document.getElementById('fileInput').click()"
+                                            style="color: #475569; font-size: 14px;">Browse Files</a></li>
+                                    <li><a class="dropdown-item d-flex align-items-center gap-2 py-2 rounded-2 fw-semibold mt-1"
+                                            href="javascript:void(0)"
+                                            onclick="document.getElementById('openCameraBtn').click()"
+                                            style="color: #059669; font-size: 14px;">Open Camera</a></li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div id="thumbnailGrid" class="d-flex flex-wrap gap-3 mb-4"></div>
+
+                        <div class="d-flex justify-content-end gap-3 pt-4 border-top border-light" id="actionButtons">
+                            <button class="btn-text" id="resetBtn"
+                                style="color: #ef4444; font-weight: 600; border: none; background: transparent;">Clear
+                                All</button>
+                            <button class="btn btn-magic animate-hover px-4" id="calculateBtn"
+                                style="border-radius: 12px; background: #059669; color: white; border: none;">
+                                Process Documents
+                            </button>
+                        </div>
                     </div>
 
-                    <div id="thumbnailGrid" class="d-flex flex-wrap gap-3 mb-4"></div>
+                    <!-- 📱 MOBILE VIEW ONLY (Option 2 Filmstrip) -->
+                    <div class="d-block d-md-none">
 
-                    <div class="d-flex justify-content-end gap-3 pt-4 border-top border-light" id="actionButtons">
-                        <button class="btn-text" id="resetBtn" style="color: #ef4444; font-weight: 600;">Clear
-                            All</button>
-                        <button class="btn btn-magic animate-hover px-4" id="calculateBtn"
-                            style="border-radius: 12px; background: #3b82f6; color: white;"><svg width="18" height="18"
-                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                                stroke-linecap="round" stroke-linejoin="round"
-                                style="margin-right: 6px; vertical-align: -3px;">
-                                <path
-                                    d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z">
-                                </path>
-                            </svg> Process Documents</button>
+                        <!-- 🚨 MOBILE HEADER WITH ADD MORE BUTTON 🚨 -->
+                        <div
+                            class="d-flex justify-content-between align-items-center mb-3 border-bottom border-light pb-2">
+                            <h3 id="fileCountLabelMobile" class="m-0 fs-6 fw-bold" style="color: #1e293b;">0 Images</h3>
+                            <div class="dropdown d-inline-block">
+                                <button class="btn btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                                    aria-expanded="false" id="addMoreDropdownBtnMobile"
+                                    style="background: #ecfdf5; color: #059669; font-weight: 600; border-radius: 8px; border: 1px solid #a7f3d0; font-size: 12px; padding: 4px 10px;">
+                                    + Add More
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow-sm"
+                                    style="border-radius: 12px; border-color: #e2e8f0; z-index: 1050; min-width: 170px;">
+                                    <li><a class="dropdown-item d-flex align-items-center gap-2 py-2 rounded-2 fw-semibold"
+                                            href="javascript:void(0)"
+                                            onclick="document.getElementById('fileInput').click()"
+                                            style="color: #475569; font-size: 14px;">Browse Files</a></li>
+                                    <li><a class="dropdown-item d-flex align-items-center gap-2 py-2 rounded-2 fw-semibold mt-1"
+                                            href="javascript:void(0)"
+                                            onclick="document.getElementById('openCameraBtn').click()"
+                                            style="color: #059669; font-size: 14px;">Open Camera</a></li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="w-100 d-flex flex-column align-items-center">
+
+                            <!-- 1. The Large Active Preview (Hides during results) -->
+                            <div id="mobileLargeImageWrapper"
+                                class="position-relative w-100 mb-3 rounded-4 overflow-hidden shadow-sm"
+                                style="height: 280px; background: #e2e8f0;">
+                                <img id="mobileActiveImg" src="" alt="Active Preview" class="w-100 h-100"
+                                    style="object-fit: cover;">
+
+                                <button id="mobileRemoveActiveBtn"
+                                    class="position-absolute top-0 end-0 m-2 border-0 text-white rounded-circle d-flex align-items-center justify-content-center preview-action-btn"
+                                    style="width: 32px; height: 32px; background: rgba(0,0,0,0.55); backdrop-filter: blur(4px);">
+                                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                        <path
+                                            d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z" />
+                                    </svg>
+                                </button>
+                                <button id="mobileExpandBtn"
+                                    class="position-absolute bottom-0 end-0 m-2 border-0 text-white rounded-2 d-flex align-items-center justify-content-center preview-action-btn"
+                                    style="width: 36px; height: 36px; background: rgba(0,0,0,0.55); backdrop-filter: blur(4px);">
+                                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                        <path fill-rule="evenodd"
+                                            d="M5.828 10.172a.5.5 0 0 0-.707 0l-4.096 4.096V11.5a.5.5 0 0 0-1 0v3.975a.5.5 0 0 0 .5.5H4.5a.5.5 0 0 0 0-1H1.732l4.096-4.096a.5.5 0 0 0 0-.707zm4.344-4.344a.5.5 0 0 0 .707 0l4.096-4.096V4.5a.5.5 0 1 0 1 0V.525a.5.5 0 0 0-.5-.5H11.5a.5.5 0 0 0 0 1h2.768l-4.096 4.096a.5.5 0 0 0 0 .707z" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <!-- 2. The Horizontal Filmstrip (Always stays visible) -->
+                            <div id="mobileFilmstripGrid"
+                                class="d-flex gap-2 w-100 overflow-auto pb-2 filmstrip-wrapper"
+                                style="white-space: nowrap;"></div>
+
+                            <!-- 3. Bottom Action Buttons (Hides during results) -->
+                            <div id="mobileActionButtons"
+                                class="w-100 mt-2 d-flex flex-column align-items-center gap-2">
+                                <button id="calculateBtnMobile"
+                                    class="btn btn-success w-100 rounded-pill fw-bold shadow-sm"
+                                    style="padding: 12px; font-size: 16px; background-color: #059669; border: none;">
+                                    Process Documents
+                                </button>
+                                <button id="resetBtnMobile" class="btn text-muted bg-transparent border-0"
+                                    style="font-size: 14px;">
+                                    Clear all
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
+                <!-- SINGLE LOADER CARD -->
                 <div class="loader-card py-5" id="loading" style="display:none; text-align: center;">
                     <div class="scanner-container mx-auto">
-                        <div class="scan-line" style="background: #3b82f6; box-shadow: 0 0 15px #3b82f6;"></div>
+                        <div class="scan-line" style="background: #f59e0b; box-shadow: 0 0 15px #f59e0b;"></div>
                         <svg class="scan-icon" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#64748b"
                             stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -216,78 +400,105 @@
                     <p style="color: #64748b;">Processing files one by one for maximum quality</p>
                 </div>
 
-            </div>
+            </div> <!-- /main-card -->
+        </div> <!-- /mx-auto -->
 
-            <div
-                class="text-center mb-5 mt-4 d-flex flex-column flex-md-row justify-content-center align-items-center gap-2 gap-md-3">
+        <!-- RESTORED MISSING RESULTS CONTAINER -->
+        <div id="resultsContainer" class="mx-auto" style="max-width: 1050px; display:none;">
+            <div class="row" id="receiptsList"></div>
 
-                <span
-                    style="color: #059669; font-size: 13px; font-weight: 600; padding: 6px 14px; background: rgba(16, 185, 129, 0.1); border-radius: 20px; display: inline-flex; align-items: center; gap: 4px;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                    Bank-grade privacy
-                </span>
+            <!-- 💰 UPGRADED GRAND TOTAL BAR -->
+            <!-- 💰 PREMIUM DARK SLATE GRAND TOTAL BAR -->
+            <div id="grandTotalCard"
+                class="d-flex justify-content-between align-items-center mb-4 p-3 position-relative shadow-lg"
+                style="display: none; border-radius: 20px; background: linear-gradient(135deg, #1e293b, #0f172a); border: 1px solid #334155;">
 
-                <span class="d-none d-md-block" style="color: #cbd5e1;">|</span>
+                <!-- 1. Invisible Left Spacer -->
+                <div style="width: 140px;" class="d-none d-md-block"></div>
 
-                <span style="color: #94a3b8; font-size: 12px; font-weight: 500; letter-spacing: 0.2px;">
-                    QuickTotal AI can make mistakes. Verify critical accounting.
-                </span>
+                <!-- 2. The Centered Total -->
+                <div class="text-center flex-grow-1">
+                    <span
+                        style="font-size: 13px; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px;">Grand
+                        Total</span><br>
+                    <span id="grandTotalValue"
+                        style="font-size: 44px; font-weight: 800; color: #34d399; line-height: 1.2; text-shadow: 0 0 20px rgba(52, 211, 153, 0.4);">₹0.00</span>
+                </div>
 
-            </div>
-
-        </div>
-
-        <div id="resultsContainer" style="display:none;">
-            <div class="row justify-content-center">
-                <div class="col-12">
-
-                    <div class="grand-total-card glass-panel animate-pop mb-4" id="grandTotalCard"
-                        style="display:none; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none;">
-                        <div class="gt-text">
-                            <span class="gt-label" style="font-weight: 700;">Total Amount Payable</span>
-                            <span class="gt-sub d-block mt-1" style="color: rgba(255,255,255,0.8);">Combined across all
-                                documents</span>
-                        </div>
-                        <span class="gt-value" id="grandTotalValue" style="font-weight: 800;">₹0.00</span>
-                    </div>
-
-                    <div class="sticky-top d-flex justify-content-between align-items-center mb-4 py-3 px-4"
-                        style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); z-index: 1000; border: 1px solid #e2e8f0; border-radius: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.03);">
-                        <h3 class="m-0 fs-5 text-dark text-uppercase fw-bold tracking-wide">Extracted Bills</h3>
-
-                        <div class="dropdown">
-                            <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown"
-                                aria-expanded="false"
-                                style="background: #f8fafc; border: 1px solid #cbd5e1; color: #1e293b; font-weight: 600; border-radius: 10px;">
-                                📥 Export
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end"
-                                style="background-color: #ffffff; border-color: #e2e8f0; box-shadow: 0 10px 15px rgba(0,0,0,0.1); border-radius: 12px;">
-                                <li><a class="dropdown-item py-2 fw-semibold" href="#" onclick="downloadCSV()"
-                                        style="color: #1e293b;">📊 Excel (CSV)</a></li>
-                                <li><a class="dropdown-item py-2 fw-semibold" href="#" onclick="downloadPDF()"
-                                        style="color: #1e293b;">📄 PDF Report</a></li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <div id="receiptsList" class="row justify-content-center mb-5"></div>
-
-                    <div class="trust-disclaimer animate-pop justify-content-center mb-5"
-                        style="background: rgba(59, 130, 246, 0.05); border: 1px dashed #3b82f6; border-radius: 12px; padding: 15px;">
-                        <p class="m-0 text-center" style="color: #1e293b;"><strong>Smart AI Extraction.</strong> Please
-                            double-check for mission-critical accounting.</p>
-                    </div>
-
+                <!-- 3. The Right-Aligned Export Dropdown -->
+                <div class="dropdown text-end" style="width: 140px;">
+                    <button
+                        class="btn btn-sm dropdown-toggle d-flex align-items-center justify-content-center gap-2 w-100"
+                        type="button" data-bs-toggle="dropdown" aria-expanded="false"
+                        style="background: rgba(255, 255, 255, 0.05); color: #f8fafc; font-weight: 600; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); padding: 10px 12px; font-size: 14px; backdrop-filter: blur(10px); transition: all 0.2s;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Export
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-lg mt-2 p-2"
+                        style="border-radius: 16px; background: #1e293b; border: 1px solid #334155; z-index: 1050; min-width: 200px;">
+                        <!-- Calls your existing downloadCSV() function -->
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center gap-3 py-2 px-3 rounded-3 fw-semibold text-white dropdown-hover"
+                                href="javascript:void(0)" onclick="downloadCSV()"
+                                style="font-size: 14px; transition: all 0.2s;">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981"
+                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                    <line x1="3" y1="9" x2="21" y2="9"></line>
+                                    <line x1="9" y1="21" x2="9" y2="9"></line>
+                                </svg>
+                                Export to Excel
+                            </a>
+                        </li>
+                        <!-- Calls your existing downloadPDF() function -->
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center gap-3 py-2 px-3 rounded-3 fw-semibold text-white dropdown-hover mt-1"
+                                href="javascript:void(0)" onclick="downloadPDF()"
+                                style="font-size: 14px; transition: all 0.2s;">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444"
+                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                                    <polyline points="10 9 9 9 8 9"></polyline>
+                                </svg>
+                                Export to PDF
+                            </a>
+                        </li>
+                    </ul>
                 </div>
             </div>
+
+            <!-- Add this tiny style block right below it to make the dark dropdown hover perfectly -->
+            <style>
+                .dropdown-hover:hover {
+                    background: rgba(255, 255, 255, 0.1) !important;
+                    color: #34d399 !important;
+                }
+            </style>
         </div>
-
-    </div>
-
+        <div
+            class="text-center mb-5 mt-4 d-flex flex-column flex-md-row justify-content-center align-items-center gap-2 gap-md-3">
+            <span
+                style="color: #059669; font-size: 13px; font-weight: 600; padding: 6px 14px; background: rgba(16, 185, 129, 0.1); border-radius: 20px; display: inline-flex; align-items: center; gap: 4px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                Bank-grade privacy
+            </span>
+            <span class="d-none d-md-block" style="color: #cbd5e1;">|</span>
+            <span style="color: #94a3b8; font-size: 12px; font-weight: 500; letter-spacing: 0.2px;">
+                QuickTotal AI can make mistakes. Verify critical accounting.
+            </span>
+        </div>
+    </div> <!-- /container -->
     <div class="offcanvas offcanvas-end" tabindex="-1" id="appMenu"
         style="background-color: #ffffff; border-left: 1px solid #e2e8f0;">
         <div class="offcanvas-header border-bottom" style="border-color: #e2e8f0 !important;">
@@ -297,10 +508,10 @@
         <div class="offcanvas-body p-4 text-dark">
 
             <div class="w-100 p-3 d-flex align-items-center"
-                style="background: #ffffff; color: #4f46e5; font-weight: 700; border-radius: 12px; border: 1.5px solid #e0e7ff; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.05);">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2.5"
+                style="background: #ecfdf5; color: #059669; font-weight: 700; border-radius: 12px; border: 1.5px solid #a7f3d0; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.1);">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5"
                     stroke-linecap="round" stroke-linejoin="round" style="margin-right: 10px;">
-                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="rgba(79, 70, 229, 0.12)"></path>
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="rgba(5, 150, 105, 0.15)"></path>
                     <polyline points="9 22 9 12 15 12 15 22"></polyline>
                 </svg>
                 Home / Scanner
@@ -310,28 +521,26 @@
 
             <h6 class="fw-bold mb-3 text-uppercase tracking-wider text-muted small">Application Settings</h6>
 
-            <div class="mb-4">
-                <label class="form-label small fw-semibold" style="color: #64748b;">Voice Mic Language</label>
-                <div class="dropdown">
-                    <button
-                        class="btn w-100 text-start d-flex justify-content-between align-items-center premium-dropdown"
-                        type="button" data-bs-toggle="dropdown" aria-expanded="false" id="langBtn">
-                        <span>Hindi / English (Default)</span>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"
-                            stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="6 9 12 15 18 9"></polyline>
-                        </svg>
-                    </button>
-                    <ul class="dropdown-menu w-100 premium-dropdown-menu">
-                        <li><a class="dropdown-item active" href="#"
-                                onclick="selectOption(event, 'langBtn', 'settingsLanguage', 'Hindi / English (Default)', 'hi-IN')">Hindi
-                                / English (Default)</a></li>
-                        <li><a class="dropdown-item" href="#"
-                                onclick="selectOption(event, 'langBtn', 'settingsLanguage', 'Pure English Only', 'en-IN')">
-                                English Only</a></li>
-                    </ul>
-                </div>
-                <input type="hidden" id="settingsLanguage" value="hi-IN">
+            <div class="dropdown">
+                <button class="btn w-100 text-start d-flex justify-content-between align-items-center premium-dropdown"
+                    type="button" data-bs-toggle="dropdown" aria-expanded="false" id="langBtn">
+                    <span>Hindi / English (Default)</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </button>
+                <ul class="dropdown-menu w-100 premium-dropdown-menu">
+                    <li><a class="dropdown-item active" href="#"
+                            onclick="selectOption(event, 'langBtn', 'settingsLanguage', 'Hindi / English (Default)', 'hi-IN')">Hindi
+                            / English (Default)</a></li>
+                    <li><a class="dropdown-item" href="#"
+                            onclick="selectOption(event, 'langBtn', 'settingsLanguage', 'Hindi (हिंदी)', 'hi-only')">Hindi</a>
+                    </li>
+                    <li><a class="dropdown-item" href="#"
+                            onclick="selectOption(event, 'langBtn', 'settingsLanguage', 'English', 'en-IN')">English</a>
+                    </li>
+                </ul>
             </div>
 
             <div class="mb-4">
@@ -376,6 +585,204 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='script.js') }}?v=999"></script>
+    <!-- 🚀 FIRST TIME ONBOARDING MODAL (Streamlined & Minimalist) -->
+    <style>
+        .skip-btn-premium {
+            background: transparent;
+            color: #94a3b8;
+            font-weight: 600;
+            border: 2px solid transparent;
+            font-size: 14px;
+            padding: 12px;
+            border-radius: 12px;
+            transition: all 0.2s ease;
+            width: 100%;
+            cursor: pointer;
+        }
+
+        .skip-btn-premium:hover,
+        .skip-btn-premium:active {
+            border-color: #e2e8f0;
+            background: #f8fafc;
+            color: #475569;
+        }
+
+        .custom-select-wrapper {
+            position: relative;
+            user-select: none;
+            margin-bottom: 25px;
+            text-align: left;
+        }
+
+        .custom-select-trigger {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            background-color: #f8fafc;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            color: #334155;
+            transition: all 0.2s;
+        }
+
+        .custom-select-trigger:hover {
+            border-color: #cbd5e1;
+        }
+
+        .custom-options {
+            position: absolute;
+            display: none;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            margin-top: 8px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            max-height: 130px;
+            overflow-y: auto;
+        }
+
+        .custom-options::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .custom-options::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        .custom-option {
+            padding: 10px 16px;
+            font-weight: 600;
+            font-size: 14px;
+            color: #475569;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .custom-option:hover {
+            background: #f1f5f9;
+            color: #10b981;
+        }
+
+
+
+        /* 🎨 Hide ugly scrollbars in the Document Inspector while keeping zoom/scroll active */
+        #modalBackground::-webkit-scrollbar {
+            display: none;
+            /* For Chrome, Safari, and Opera */
+        }
+
+        #modalBackground {
+            -ms-overflow-style: none;
+            /* For Internet Explorer and Edge */
+            scrollbar-width: none;
+            /* For Firefox */
+        }
+    </style>
+
+    <div id="onboardingModal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(8px); z-index: 10000; align-items: center; justify-content: center;">
+
+        <div class="glass-panel p-4 rounded-4 shadow-lg text-center animate-pop"
+            style="max-width: 420px; width: 90%; position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.4); background: #ffffff;">
+
+            <!-- Perfectly flush top gradient line -->
+            <div
+                style="position: absolute; top: 0; left: 0; right: 0; height: 5px; background: linear-gradient(90deg, #10b981, #3b82f6, #8b5cf6);">
+            </div>
+
+            <!-- Logo & Brand Name -->
+            <div style="margin-top: 15px; margin-bottom: 20px; text-align: center;">
+                <img src="/static/images/qt_monogram.svg" alt="QuickTotal Logo"
+                    style="width: 72px; height: 72px; border-radius: 16px; margin: 0 auto 12px auto; display: block; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                <h2
+                    style="font-weight: 800; font-size: 28px; color: #1e293b; margin: 0; letter-spacing: -0.5px; text-align: center;">
+                    Quick<span style="color: #10b981;">Total</span>
+                </h2>
+            </div>
+
+            <!-- Clean descriptive text without redundant heading -->
+            <p style="color: #64748b; font-size: 14px; margin-bottom: 25px; line-height: 1.6;">To ensure precise
+                financial extraction, please set your default currency for receipts. You can adjust this anytime.</p>
+
+            <div class="custom-select-wrapper text-center">
+                <label
+                    style="font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: block;">Primary
+                    Currency</label>
+
+                <div id="customSelectTrigger" class="custom-select-trigger text-start">
+                    <span id="customSelectText">Indian Rupee (₹)</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#64748b" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd"
+                            d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z" />
+                    </svg>
+                </div>
+
+                <div id="customSelectOptions" class="custom-options text-start">
+                    <div class="custom-option" data-value="INR">Indian Rupee (₹)</div>
+                    <div class="custom-option" data-value="USD">US Dollar ($)</div>
+                    <div class="custom-option" data-value="EUR">Euro (€)</div>
+                    <div class="custom-option" data-value="GBP">British Pound (£)</div>
+                    <div class="custom-option" data-value="AUD">Australian Dollar (A$)</div>
+                    <div class="custom-option" data-value="SAR">Saudi Riyal (SAR)</div>
+                </div>
+
+                <select id="onboardCurrency" style="display: none;">
+                    <option value="INR" selected>Indian Rupee (₹)</option>
+                    <option value="USD">US Dollar ($)</option>
+                    <option value="EUR">Euro (€)</option>
+                    <option value="GBP">British Pound (£)</option>
+                    <option value="AUD">Australian Dollar (A$)</option>
+                    <option value="SAR">Saudi Riyal (SAR)</option>
+                </select>
+            </div>
+
+            <button id="finishOnboardingBtn" class="btn w-100 mb-2 shadow-sm"
+                style="background: linear-gradient(135deg, #10b981, #14b8a6); color: white; font-weight: 700; border-radius: 12px; padding: 14px; font-size: 16px; border: none;">Set
+                Preference</button>
+            <button id="skipOnboardingBtn" class="skip-btn-premium">Skip for now</button>
+        </div>
+    </div>
+
+    <!-- Logic for the Custom Dropdown -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const trigger = document.getElementById('customSelectTrigger');
+            const options = document.getElementById('customSelectOptions');
+            const text = document.getElementById('customSelectText');
+            const hiddenSelect = document.getElementById('onboardCurrency');
+            const customOptionEls = document.querySelectorAll('.custom-option');
+
+            trigger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                options.style.display = options.style.display === 'block' ? 'none' : 'block';
+            });
+
+            customOptionEls.forEach(opt => {
+                opt.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const val = opt.getAttribute('data-value');
+                    const txt = opt.textContent;
+
+                    text.textContent = txt;
+                    options.style.display = 'none';
+                    hiddenSelect.value = val;
+                });
+            });
+
+            document.addEventListener('click', () => {
+                options.style.display = 'none';
+            });
+        });
+    </script>
 </body>
 
 </html>

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Dark Slate Background with Apple-style rounded corners -->
+  <rect width="512" height="512" rx="115" fill="#1e293b"/>
+  
+  <!-- White 'Q' -->
+  <circle cx="220" cy="240" r="90" fill="none" stroke="#ffffff" stroke-width="45"/>
+  <line x1="270" y1="290" x2="330" y2="350" stroke="#ffffff" stroke-width="45" stroke-linecap="round"/>
+  
+  <!-- Green 'T' -->
+  <path d="M 280 150 L 440 150 M 360 150 L 360 360" stroke="#10b981" stroke-width="45" stroke-linecap="square"/>
+</svg>
