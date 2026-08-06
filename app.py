@@ -148,7 +148,8 @@ You are provided {num_images} image(s) in exact sequential order (Image 1 to Ima
 Extract the financial data from EACH image independently.
 
 CRITICAL RULE FOR EXTRACTION ORDER (COLUMNS):
-If a document has multiple columns, read Column 1 completely top-to-bottom first, then Column 2 top-to-bottom. DO NOT read left-to-right across columns.
+⚠️If a document has multiple columns, read Column 1 completely(it is not neccessory that price will be always on the right side of item name ,
+it can be on left side also of the item name,so pelse be carefull ) top-to-bottom first, then Column 2 top-to-bottom. DO NOT read left-to-right across columns.
 
 DOCUMENT TYPE RULES:
 - IF RECEIPT, INVOICE, OR HANDWRITTEN LEDGER: Extract item name as "item", price as "amount".
@@ -159,6 +160,9 @@ DOCUMENT TYPE RULES:
 - ⚖️ THE ADJUSTMENTS RULE: You MUST extract previous balances, old dues, arrears, or deposits (e.g., "Old Due", "Bakaya" (बकाया), "Purana", "Jama" (जमा), "Advance"). Set their category to "Adjustment". If the item is a deposit or payment (like "Jama" or "Advance"), make the amount a NEGATIVE number (e.g., -500.0). If it is a pending due, keep it positive.
 - If an item name is completely unreadable but the price is clear, extract the "amount" and put "Unknown" for the item name.
 - IF MATH WORKSHEET: Extract equation (e.g. "2+3=") as "item", numerical answer as "amount", and set "category" to "Math Problem".
+- 🚨 THE ILLEGIBLE HANDWRITING (PLAN B) RULE: If you encounter a line where the item name is a complete scribble or completely unreadable due to terrible handwriting, DO NOT SKIP IT. You must execute Plan B: extract the clear price/amount, and set the item name exactly as "Unreadable Item". Your absolute highest priority is capturing 100% of the prices on the page so the math is perfect. No price gets left behind, even if the text is just messy ink.
+-⚠️ Most important rule: try to extract all possible item names with there prices  and dont leave any item from calculation and if the total of the recipt is 
+  in negative then ,re examine the recipt  and give total(extract all  items present in the whole photo)
 
 Output ONLY a valid JSON object containing a "receipts" array for all {num_images} images in exact order:
 {{
@@ -193,7 +197,7 @@ def gemini_batch_extraction(img_list, timeline):
             data = parse_response(res.text)
             if data and isinstance(data, dict) and 'receipts' in data:
                 timeline.append(f"✅ Gemini 2.5 Flash: Processed {len(img_list)} images in 1 API Call")
-                return data['receipts'], "Gemini 2.5 Flash (Batch)"
+                return data['receipts'], "Gemini 2.5 Flash "
         except Exception as e:
             print(f"⚠️ [EXTRACTION BATCH] Key #{attempt + 1} failed: {e}. Trying next key...")
             continue
@@ -257,28 +261,24 @@ def batch_gatekeeper():
     if not GEMINI_KEYS:
         return jsonify({'results': [True] * len(files)})
 
-    GATEKEEPER_PROMPT = f"""
-You are an AI Document Classifier for QuickTotal.
-You are provided {len(files)} image(s) in exact order (Image 1 to Image {len(files)}).
-Analyze EACH image in order and determine if it contains EITHER financial data (receipts, bills, invoices, price lists) OR mathematical problems/worksheets.
-
-ACCEPT (return true) if the image is a receipt, bill, handwritten ledger, OR a math worksheet.
-REJECT (return false) ONLY if the image is completely unrelated (e.g., a meme, wallpaper, selfie, YouTube thumbnail, or nature photo).
-
-Respond ONLY with a valid JSON array of booleans corresponding to each image in order, e.g.:
-[true, false, true, true]
-"""
+    # 🚀 SPEED FIX 1: Ultra-short prompt. Less text = faster processing.
+    GATEKEEPER_PROMPT = """Analyze these images in order. Output ONLY a valid JSON array of booleans. 
+true = Receipt, bill, invoice, handwritten ledger, or math sheet.
+false = Selfie, meme, nature, wallpaper, or completely unrelated.
+Example: [true, false, true]"""
 
     prompt_content = [GATEKEEPER_PROMPT]
 
     for file in files:
         raw_img = Image.open(file.stream).convert('RGB')
-        raw_img.thumbnail((800, 800))
+        # 🚀 SPEED FIX 2: Massive downscale. The AI doesn't need to read tiny text to recognize the shape of a bill!
+        raw_img.thumbnail((300, 300))
         prompt_content.append(raw_img)
 
     for attempt, key in enumerate(GEMINI_KEYS):
         try:
             genai.configure(api_key=key)
+            # You can also change this to 'gemini-1.5-flash-8b' later if you want Google's dedicated high-speed router model
             model = genai.GenerativeModel('gemini-2.5-flash')
             res = model.generate_content(
                 prompt_content, 
@@ -294,7 +294,6 @@ Respond ONLY with a valid JSON array of booleans corresponding to each image in 
             else:
                 results_array = [True] * len(files)
 
-            # Ensure length matches files count
             if len(results_array) < len(files):
                 results_array.extend([True] * (len(files) - len(results_array)))
             results_array = results_array[:len(files)]

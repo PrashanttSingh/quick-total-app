@@ -430,3 +430,13 @@
 | **Batch 192** | 12:37:36 | `Batch (1 files)` | 1 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 1 images in 1 API Call | 8.18s | <b>90%</b> | <b>98%</b> |
 | **Batch 193** | 12:38:05 | `Batch (1 files)` | 1 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 1 images in 1 API Call | 4.13s | <b>90%</b> | <b>50%</b> |
 | **Batch 194** | 13:28:56 | `Batch (2 files)` | 2 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 2 images in 1 API Call | 17.39s | <b>90%</b> | <b>98%</b> |
+| **Batch 195** | 14:42:44 | `Batch (4 files)` | 4 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 4 images in 1 API Call | 120.89s | <b>85%</b> | <b>90%</b> |
+| **Batch 196** | 15:11:49 | `Batch (2 files)` | 2 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 2 images in 1 API Call | 75.0s | <b>85%</b> | <b>95%</b> |
+| **Batch 197** | 15:47:09 | `Batch (2 files)` | 2 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 2 images in 1 API Call | 80.52s | <b>85%</b> | <b>95%</b> |
+| **Batch 198** | 16:07:43 | `Batch (2 files)` | 2 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 2 images in 1 API Call | 40.21s | <b>80%</b> | <b>90%</b> |
+| **Batch 199** | 17:08:02 | `Batch (1 files)` | 1 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 1 images in 1 API Call | 10.47s | <b>90%</b> | <b>95%</b> |
+| **Batch 200** | 17:10:05 | `Batch (1 files)` | 1 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 1 images in 1 API Call | 9.18s | <b>90%</b> | <b>90%</b> |
+| **Batch 201** | 18:13:37 | `Batch (1 files)` | 1 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 1 images in 1 API Call | 15.62s | <b>85%</b> | <b>95%</b> |
+| **Batch 202** | 13:22:40 | `Batch (1 files)` | 1 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 1 images in 1 API Call | 22.48s | <b>90%</b> | <b>98%</b> |
+| **Batch 203** | 14:19:59 | `Batch (1 files)` | 1 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 1 images in 1 API Call | 37.07s | <b>90%</b> | <b>98%</b> |
+| **Batch 204** | 14:29:23 | `Batch (1 files)` | 1 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 1 images in 1 API Call | 55.82s | <b>90%</b> | <b>98%</b> |

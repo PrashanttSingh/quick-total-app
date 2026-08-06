@@ -25,6 +25,7 @@ const fileInput = document.getElementById("fileInput");
 const previewArea = document.getElementById("previewArea");
 const thumbnailGrid = document.getElementById("thumbnailGrid"); // FIXED CAPITAL 'G'
 const fileCountLabel = document.getElementById("fileCountLabel");
+const fileCountLabelMobile = document.getElementById("fileCountLabelMobile");
 const calculateBtn = document.getElementById("calculateBtn");
 const resetBtn = document.getElementById("resetBtn");
 const actionButtons = document.getElementById("actionButtons");
@@ -37,8 +38,7 @@ const browseBtn = document.getElementById("browseBtn");
 
 // IMAGE MODAL ELEMENTS
 const imageModal = document.getElementById("imageModal");
-const modalTransformWrapper = document.getElementById("modalTransformWrapper");
-const modalImage = document.getElementById("modalImage");
+const modalTransformWrapper = document.getElementById("imageZoomWrapper");
 const modalCropCanvas = document.getElementById("modalCropCanvas");
 const closeImageModal = document.getElementById("closeImageModal");
 const zoomInBtn = document.getElementById("zoomInBtn");
@@ -203,8 +203,10 @@ function exitCropMode() {
 
 function getModalPos(e) {
   const rect = modalCropCanvas.getBoundingClientRect();
-  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  const clientX =
+    e.touches && e.touches.length > 0 ? e.touches[0].clientX : e.clientX;
+  const clientY =
+    e.touches && e.touches.length > 0 ? e.touches[0].clientY : e.clientY;
   return {
     x: (clientX - rect.left) / currentZoom,
     y: (clientY - rect.top) / currentZoom,
@@ -212,7 +214,7 @@ function getModalPos(e) {
 }
 
 if (modalCropCanvas) {
-  modalCropCanvas.addEventListener("mousedown", (e) => {
+  const startDraw = (e) => {
     if (!isCropMode) return;
     isModalDrawing = true;
     const p = getModalPos(e);
@@ -220,19 +222,47 @@ if (modalCropCanvas) {
     mStartY = p.y;
     mEndX = p.x;
     mEndY = p.y;
-  });
-  modalCropCanvas.addEventListener("mousemove", (e) => {
+  };
+
+  const moveDraw = (e) => {
     if (!isModalDrawing) return;
-    e.preventDefault();
+    e.preventDefault(); // Stops mobile screen from scrolling while you draw
     const p = getModalPos(e);
     mEndX = p.x;
     mEndY = p.y;
+
+    // Use Math.min to allow drawing the box backwards (bottom-right to top-left)
+    const drawX = Math.min(mStartX, mEndX);
+    const drawY = Math.min(mStartY, mEndY);
+    const drawW = Math.abs(mEndX - mStartX);
+    const drawH = Math.abs(mEndY - mStartY);
+
+    // Punch a clear hole through the dark overlay to see the text
     mCtx.clearRect(0, 0, modalCropCanvas.width, modalCropCanvas.height);
-    mCtx.fillRect(mStartX, mStartY, mEndX - mStartX, mEndY - mStartY);
-    mCtx.strokeRect(mStartX, mStartY, mEndX - mStartX, mEndY - mStartY);
-  });
+    mCtx.fillStyle = "rgba(15, 23, 42, 0.6)";
+    mCtx.fillRect(0, 0, modalCropCanvas.width, modalCropCanvas.height);
+    mCtx.clearRect(drawX, drawY, drawW, drawH);
+
+    // Draw the blue dashed border
+    mCtx.strokeStyle = "#3b82f6";
+    mCtx.lineWidth = 2.5;
+    mCtx.setLineDash([6, 4]);
+    mCtx.strokeRect(drawX, drawY, drawW, drawH);
+  };
+
+  // Desktop Mouse Support
+  modalCropCanvas.addEventListener("mousedown", startDraw);
+  modalCropCanvas.addEventListener("mousemove", moveDraw);
+
+  // Mobile Touch Support
+  modalCropCanvas.addEventListener("touchstart", startDraw, { passive: false });
+  modalCropCanvas.addEventListener("touchmove", moveDraw, { passive: false });
 }
+
 window.addEventListener("mouseup", () => {
+  isModalDrawing = false;
+});
+window.addEventListener("touchend", () => {
   isModalDrawing = false;
 });
 
@@ -295,17 +325,27 @@ if (zoomResetBtn)
   };
 
 if (modalTransformWrapper) {
-  modalTransformWrapper.addEventListener("wheel", (e) => {
-    if (isCropMode) return;
-    e.preventDefault();
-    currentZoom = Math.min(
-      Math.max(0.5, currentZoom + (e.deltaY > 0 ? -0.1 : 0.1)),
-      4,
-    );
-    updateZoom();
-  });
+  modalTransformWrapper.addEventListener(
+    "wheel",
+    (e) => {
+      if (isCropMode) return;
+      e.preventDefault();
+      currentZoom = Math.min(
+        Math.max(0.5, currentZoom + (e.deltaY > 0 ? -0.1 : 0.1)),
+        4,
+      );
+      updateZoom();
+    },
+    { passive: false },
+  );
 }
+
+// Mobile Pinch-to-Zoom Variables
+let initialPinchDistance = null;
+let initialZoomBeforePinch = 1;
+
 if (modalImage) {
+  // Desktop Click & Drag
   modalImage.addEventListener("mousedown", (e) => {
     if (isCropMode) return;
     isDraggingImage = true;
@@ -313,11 +353,44 @@ if (modalImage) {
     startDragY = e.clientY - panY;
     modalImage.style.cursor = "grabbing";
   });
+
+  // Mobile Touch & Pinch Start
+  modalImage.addEventListener(
+    "touchstart",
+    (e) => {
+      if (isCropMode) return;
+
+      if (e.touches.length === 1) {
+        // One finger: Panning
+        isDraggingImage = true;
+        startDragX = e.touches[0].clientX - panX;
+        startDragY = e.touches[0].clientY - panY;
+      } else if (e.touches.length === 2) {
+        // Two fingers: Pinch to Zoom
+        isDraggingImage = false; // Disable panning while zooming
+        initialPinchDistance = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY,
+        );
+        initialZoomBeforePinch = currentZoom;
+      }
+    },
+    { passive: false },
+  );
 }
+
+// End Drag/Pinch Events
 window.addEventListener("mouseup", () => {
   isDraggingImage = false;
   if (modalImage) modalImage.style.cursor = "crosshair";
 });
+
+window.addEventListener("touchend", () => {
+  isDraggingImage = false;
+  initialPinchDistance = null;
+});
+
+// Execute Drag/Pinch Movements
 window.addEventListener("mousemove", (e) => {
   if (!isDraggingImage || isCropMode) return;
   e.preventDefault();
@@ -325,6 +398,37 @@ window.addEventListener("mousemove", (e) => {
   panY = e.clientY - startDragY;
   updateZoom();
 });
+
+window.addEventListener(
+  "touchmove",
+  (e) => {
+    if (isCropMode) return;
+
+    if (isDraggingImage && e.touches.length === 1) {
+      // One finger: Execute Panning
+      e.preventDefault();
+      panX = e.touches[0].clientX - startDragX;
+      panY = e.touches[0].clientY - startDragY;
+      updateZoom();
+    } else if (e.touches.length === 2 && initialPinchDistance) {
+      // Two fingers: Execute Pinch-to-Zoom
+      e.preventDefault();
+      const currentDistance = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY,
+      );
+      const zoomFactor = currentDistance / initialPinchDistance;
+
+      // Limits zoom between 0.5x and 4x
+      currentZoom = Math.min(
+        Math.max(0.5, initialZoomBeforePinch * zoomFactor),
+        4,
+      );
+      updateZoom();
+    }
+  },
+  { passive: false },
+);
 if (closeImageModal)
   closeImageModal.onclick = () => (imageModal.style.display = "none");
 
@@ -420,6 +524,9 @@ function removeFile(index, event) {
 function updateUIState() {
   const count = filesToProcess.length;
   fileCountLabel.textContent = `${count} Document${count !== 1 ? "s" : ""} Ready`;
+  if (fileCountLabelMobile) {
+    fileCountLabelMobile.textContent = `${count} Document${count !== 1 ? "s" : ""} Ready`;
+  }
   resultsContainer.style.display = "none";
   if (count === 0) {
     resetApp();
@@ -514,10 +621,10 @@ function renderThumbnails() {
         renderThumbnails();
       };
 
-      let checkmark = isActive
-        ? `<span class="position-absolute top-0 end-0 bg-success text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 16px; height: 16px; margin: 4px; font-size: 10px;">✓</span>`
-        : "";
-      mDiv.innerHTML = `<img src="${imgSrc}" class="w-100 h-100" style="object-fit: cover; pointer-events:none;">${checkmark}`;
+      // 🚨 Ultra-compact #1, #2 badge (Moved to Top-Left, Checkmark Removed)
+      let numberBadge = `<span style="position: absolute; top: 3px; left: 3px; background: rgba(59, 130, 246, 0.9); color: white; font-size: 10px; font-weight: 800; padding: 1px 4px; border-radius: 4px; z-index: 3; line-height: 1.2;">#${index + 1}</span>`;
+
+      mDiv.innerHTML = `<img src="${imgSrc}" class="w-100 h-100" style="object-fit: cover; pointer-events:none;">${numberBadge}`;
       mGrid.appendChild(mDiv);
     }
   });
@@ -957,10 +1064,14 @@ calculateBtn.addEventListener("click", async () => {
       }
 
       // 🚨 LAPTOP VS MOBILE SPLIT 🚨
+      // FIX: Lock the white box (mainCard) so it strictly disappears on mobile!
+      if (mainCard) {
+        mainCard.style.display = "";
+        mainCard.classList.add("d-none", "d-md-block");
+      }
+
       if (window.innerWidth <= 768) {
         // --- 📱 MOBILE VIEW (Elite Animation & Delete White Box) ---
-        if (mainCard) mainCard.style.display = "none";
-
         if (loadingEl) {
           loadingEl.style.transition = "opacity 0.4s ease, transform 0.4s ease";
           loadingEl.style.opacity = "0";
@@ -1000,9 +1111,7 @@ calculateBtn.addEventListener("click", async () => {
         }, 400);
       } else {
         // --- 💻 DESKTOP VIEW (100% Restored & Protected) ---
-        if (mainCard) mainCard.style.display = "block";
         if (previewAreaContainer) previewAreaContainer.style.display = "block";
-
         if (loadingEl) loadingEl.style.display = "none";
         if (actionButtons) actionButtons.style.display = "flex";
 
@@ -1010,7 +1119,6 @@ calculateBtn.addEventListener("click", async () => {
           resultsContainer.style.display = "block";
 
           // 🚨 AUTO-SCROLL TO RESULTS ON LAPTOP
-          // A tiny 100ms delay ensures the browser has rendered the block before scrolling
           setTimeout(() => {
             resultsContainer.scrollIntoView({
               behavior: "smooth",
@@ -1023,7 +1131,12 @@ calculateBtn.addEventListener("click", async () => {
       // IF AI FAILS: Put everything back to normal
       if (loadingEl) loadingEl.style.display = "none";
       if (actionButtons) actionButtons.style.display = "flex";
-      if (mainCard) mainCard.style.display = "block";
+
+      // Ensure the box comes back if it fails
+      if (mainCard) {
+        mainCard.style.display = "block";
+        mainCard.classList.remove("d-none", "d-md-block");
+      }
 
       if (mobilePreviewWrapper) {
         mobilePreviewWrapper.style.display = "block";
@@ -1031,8 +1144,8 @@ calculateBtn.addEventListener("click", async () => {
         mobilePreviewWrapper.style.transform = "translateY(0)";
       }
     }
-  }
-});
+  } // <--- Closes finally block
+}); // <--- Closes calculateBtn.addEventListener
 
 receiptsList.addEventListener("focusin", (e) => {
   if (e.target.classList.contains("editable-text")) {
@@ -1652,6 +1765,14 @@ function resetApp() {
   loadingEl.style.display = "none";
   browseBtn.textContent = "Browse Files";
   grandTotalCard.style.display = "none";
+
+  // ADD THIS: Restore the upload card for mobile devices
+  const mainCard = document.querySelector(".main-card");
+  if (mainCard) {
+    mainCard.classList.remove("d-none", "d-md-block");
+    mainCard.style.display = "block";
+  }
+
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
@@ -1968,18 +2089,31 @@ if (cropBtn && cropCanvas && modalImgEl) {
 
 // THIS IS WHAT WAS MISSING: The drawing mechanics
 if (cropCanvas) {
-  cropCanvas.addEventListener("mousedown", function (e) {
+  // Start Drawing (Mouse & Touch)
+  const startDraw = function (e) {
     isDrawing = true;
     const rect = cropCanvas.getBoundingClientRect();
-    startX = e.clientX - rect.left;
-    startY = e.clientY - rect.top;
-  });
 
-  cropCanvas.addEventListener("mousemove", function (e) {
+    // Support both Mouse and Mobile Touch
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+    // 🚨 FIX: Divide by currentZoom so the crop box stays under your cursor when zoomed!
+    startX = (clientX - rect.left) / currentZoom;
+    startY = (clientY - rect.top) / currentZoom;
+  };
+
+  // Draw Box (Mouse & Touch)
+  const moveDraw = function (e) {
     if (!isDrawing) return;
+    e.preventDefault(); // Stops mobile screen from scrolling while you draw
+
     const rect = cropCanvas.getBoundingClientRect();
-    const currentX = e.clientX - rect.left;
-    const currentY = e.clientY - rect.top;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+    const currentX = (clientX - rect.left) / currentZoom;
+    const currentY = (clientY - rect.top) / currentZoom;
 
     cropX = Math.min(startX, currentX);
     cropY = Math.min(startY, currentY);
@@ -1995,12 +2129,25 @@ if (cropCanvas) {
     cropCtx.lineWidth = 2.5;
     cropCtx.setLineDash([6, 4]);
     cropCtx.strokeRect(cropX, cropY, cropW, cropH);
-  });
+  };
 
-  window.addEventListener("mouseup", function () {
+  const stopDraw = function () {
     isDrawing = false;
-  });
+  };
+
+  // Desktop Mouse Events
+  cropCanvas.addEventListener("mousedown", startDraw);
+  cropCanvas.addEventListener("mousemove", moveDraw);
+  window.addEventListener("mouseup", stopDraw);
+
+  // 📱 Mobile Touch Events Added!
+  cropCanvas.addEventListener("touchstart", startDraw, { passive: false });
+  cropCanvas.addEventListener("touchmove", moveDraw, { passive: false });
+  window.addEventListener("touchend", stopDraw);
 }
+window.addEventListener("mouseup", function () {
+  isDrawing = false;
+});
 
 if (saveBtn) {
   saveBtn.addEventListener("click", function () {
@@ -2226,32 +2373,70 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // ==========================================
-// 🔍 UNIFORM STAGE ZOOM CONTROLLER
+// 🔍 UNIFORM STAGE ZOOM CONTROLLER (Cleaned)
 // ==========================================
-let currentScale = 1;
-const zoomWrapper = document.getElementById("imageZoomWrapper");
-
-if (zoomWrapper) {
-  // Allow desktop mouse-wheel zooming inside the inspector
-  zoomWrapper.addEventListener(
-    "wheel",
-    (e) => {
-      e.preventDefault();
-      if (e.deltaY < 0) {
-        currentScale = Math.min(currentScale + 0.15, 3); // Max zoom level: 3x
-      } else {
-        currentScale = Math.max(currentScale - 0.15, 1); // Min zoom level: 1x (original size)
-      }
-      zoomWrapper.style.transform = `scale(${currentScale})`;
-    },
-    { passive: false },
-  );
-}
 
 // Reset zoom whenever a new image is opened in the inspector
 function resetInspectorZoom() {
-  currentScale = 1;
-  if (zoomWrapper) {
-    zoomWrapper.style.transform = `scale(1)`;
+  currentZoom = 1;
+  panX = 0;
+  panY = 0;
+  if (modalTransformWrapper) {
+    modalTransformWrapper.style.transform = `translate(0px, 0px) scale(1)`;
   }
 }
+
+// ==========================================
+// 📱 MOBILE-SPECIFIC BUTTON LISTENERS
+// ==========================================
+document.addEventListener("DOMContentLoaded", () => {
+  // 1. Mobile "Process Documents" Button
+  const calcBtnMobile = document.getElementById("calculateBtnMobile");
+  if (calcBtnMobile) {
+    calcBtnMobile.addEventListener("click", () => {
+      // Secretly clicks the hidden desktop button to run your main AI logic
+      const mainCalcBtn = document.getElementById("calculateBtn");
+      if (mainCalcBtn) mainCalcBtn.click();
+    });
+  }
+
+  // 2. Mobile "Clear All" Button
+  const rstBtnMobile = document.getElementById("resetBtnMobile");
+  if (rstBtnMobile) {
+    rstBtnMobile.addEventListener("click", () => {
+      // Secretly clicks the hidden desktop reset button
+      const mainResetBtn = document.getElementById("resetBtn");
+      if (mainResetBtn) mainResetBtn.click();
+    });
+  }
+
+  // 3. Mobile "Remove Image" (Cross) Button
+  const mobRemoveBtn = document.getElementById("mobileRemoveActiveBtn");
+  if (mobRemoveBtn) {
+    mobRemoveBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      // activeMobileIndex tracks which image is currently showing on the phone
+      if (
+        typeof activeMobileIndex !== "undefined" &&
+        filesToProcess.length > 0
+      ) {
+        removeFile(activeMobileIndex, e);
+      }
+    });
+  }
+
+  // 4. Mobile "Full Screen" (Expand) Button
+  const mobExpandBtn = document.getElementById("mobileExpandBtn");
+  if (mobExpandBtn) {
+    mobExpandBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      // Opens your premium Image Viewer / Crop modal for the active image
+      if (
+        typeof activeMobileIndex !== "undefined" &&
+        filesToProcess.length > 0
+      ) {
+        openModal(filesToProcess[activeMobileIndex], activeMobileIndex);
+      }
+    });
+  }
+});
