@@ -102,6 +102,146 @@
                 width: 100%;
                 z-index: 50 !important;
             }
+
+            /* 🚀 FROSTED GLASS LOADER (Full Screen minus Disclaimer) */
+            #loading {
+                position: absolute !important;
+                top: 0;
+                left: -16px;
+                right: -16px;
+                bottom: 140px !important;
+                /* 🚨 Bumped up to clear the badge entirely */
+                border-bottom-left-radius: 24px;
+                border-bottom-right-radius: 24px;
+                background: rgba(255, 255, 255, 0.45) !important;
+                backdrop-filter: blur(16px) !important;
+                -webkit-backdrop-filter: blur(16px) !important;
+                z-index: 99999 !important;
+                display: none;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                text-align: center;
+            }
+
+            /* .qt-loader-content wrapper removed completely */
+
+            .qt-spinner {
+                width: 64px;
+                height: 64px;
+                border: 4px solid rgba(16, 185, 129, 0.15);
+                border-top: 4px solid #10b981;
+                border-radius: 50%;
+                animation: spin 1s cubic-bezier(0.55, 0.15, 0.45, 0.85) infinite;
+                margin: 0 auto;
+            }
+
+            @keyframes spin {
+                0% {
+                    transform: rotate(0deg);
+                }
+
+                100% {
+                    transform: rotate(360deg);
+                }
+            }
+
+            .qt-typewriter {
+                display: inline-block;
+                overflow: hidden;
+                white-space: nowrap;
+                border-right: 3px solid #10b981;
+                font-size: 22px;
+                font-weight: 800;
+                color: #0f172a;
+                margin-top: 24px;
+                margin-bottom: 4px;
+                width: 13ch;
+                animation: typing 4s steps(13, end) infinite, blink 0.75s step-end infinite;
+            }
+
+            @keyframes typing {
+
+                0%,
+                10% {
+                    width: 0;
+                }
+
+                40%,
+                60% {
+                    width: 13ch;
+                }
+
+                90%,
+                100% {
+                    width: 0;
+                }
+            }
+
+            @keyframes blink {
+
+                from,
+                to {
+                    border-color: transparent;
+                }
+
+                50% {
+                    border-color: #10b981;
+                }
+            }
+
+            .qt-tips-container {
+                position: relative;
+                height: 24px;
+                margin-top: 8px;
+                overflow: hidden;
+                width: 100%;
+            }
+
+            .qt-tip {
+                position: absolute;
+                width: 100%;
+                left: 0;
+                color: #334155;
+                font-size: 15px;
+                font-weight: 600;
+                opacity: 0;
+                transform: translateY(10px);
+                animation: tipFade 9s infinite;
+            }
+
+            .qt-tip:nth-child(1) {
+                animation-delay: 0s;
+            }
+
+            .qt-tip:nth-child(2) {
+                animation-delay: 3s;
+            }
+
+            .qt-tip:nth-child(3) {
+                animation-delay: 6s;
+            }
+
+            @keyframes tipFade {
+
+                0%,
+                5% {
+                    opacity: 0;
+                    transform: translateY(10px);
+                }
+
+                10%,
+                25% {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+
+                30%,
+                100% {
+                    opacity: 0;
+                    transform: translateY(-10px);
+                }
+            }
         }
     </style>
     <div id="imageModal"
@@ -455,28 +595,25 @@
             <!-- 💰 UPGRADED GRAND TOTAL BAR -->
             <!-- 💰 PREMIUM DARK SLATE GRAND TOTAL BAR -->
             <div id="grandTotalCard"
-                class="d-flex justify-content-between align-items-center mb-4 p-3 position-relative shadow-lg"
+                class="d-flex justify-content-between align-items-center mb-4 p-3 px-3 px-md-4 position-relative shadow-lg"
                 style="display: none; border-radius: 20px; background: linear-gradient(135deg, #1e293b, #0f172a); border: 1px solid #334155;">
 
-                <!-- 1. Invisible Left Spacer -->
-                <div style="width: 140px;" class="d-none d-md-block"></div>
-
-                <!-- 2. The Centered Total -->
-                <div class="text-center flex-grow-1">
+                <!-- 1. The Total Container (Flexible with min-width: 0 to allow smart scaling) -->
+                <div class="text-center flex-grow-1 px-2" style="min-width: 0;">
                     <span
-                        style="font-size: 13px; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px;">Grand
+                        style="font-size: 11px; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Grand
                         Total</span><br>
                     <span id="grandTotalValue"
-                        style="font-size: 44px; font-weight: 800; color: #34d399; line-height: 1.2; text-shadow: 0 0 20px rgba(52, 211, 153, 0.4);">₹0.00</span>
+                        style="font-size: clamp(22px, 5.5vw, 44px); font-weight: 800; color: #34d399; line-height: 1.2; text-shadow: 0 0 20px rgba(52, 211, 153, 0.4); white-space: nowrap; display: inline-block;">₹0.00</span>
                 </div>
 
-                <!-- 3. The Right-Aligned Export Dropdown -->
-                <div class="dropdown text-end" style="width: 140px;">
+                <!-- 2. The Export Dropdown (Clean auto-sizing so it never gets crushed) -->
+                <div class="dropdown text-end flex-shrink-0">
                     <button
-                        class="btn btn-sm dropdown-toggle d-flex align-items-center justify-content-center gap-2 w-100"
+                        class="btn btn-sm dropdown-toggle d-flex align-items-center justify-content-center gap-1 gap-md-2"
                         type="button" data-bs-toggle="dropdown" aria-expanded="false"
-                        style="background: rgba(255, 255, 255, 0.05); color: #f8fafc; font-weight: 600; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); padding: 10px 12px; font-size: 14px; backdrop-filter: blur(10px); transition: all 0.2s;">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        style="background: rgba(255, 255, 255, 0.08); color: #f8fafc; font-weight: 600; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.15); padding: 8px 12px; font-size: 13px; backdrop-filter: blur(10px); transition: all 0.2s;">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                             <polyline points="7 10 12 15 17 10"></polyline>
@@ -485,8 +622,7 @@
                         Export
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end shadow-lg mt-2 p-2"
-                        style="border-radius: 16px; background: #1e293b; border: 1px solid #334155; z-index: 1050; min-width: 200px;">
-                        <!-- Calls your existing downloadCSV() function -->
+                        style="border-radius: 16px; background: #1e293b; border: 1px solid #334155; z-index: 1050; min-width: 180px;">
                         <li>
                             <a class="dropdown-item d-flex align-items-center gap-3 py-2 px-3 rounded-3 fw-semibold text-white dropdown-hover"
                                 href="javascript:void(0)" onclick="downloadCSV()"
@@ -500,7 +636,6 @@
                                 Export to Excel
                             </a>
                         </li>
-                        <!-- Calls your existing downloadPDF() function -->
                         <li>
                             <a class="dropdown-item d-flex align-items-center gap-3 py-2 px-3 rounded-3 fw-semibold text-white dropdown-hover mt-1"
                                 href="javascript:void(0)" onclick="downloadPDF()"

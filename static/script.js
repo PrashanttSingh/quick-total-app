@@ -155,10 +155,9 @@ function updateZoom() {
     modalTransformWrapper.style.transform = `translate(${panX}px, ${panY}px) scale(${currentZoom})`;
 }
 
-function openModal(file, index) {
+function openModal(file, index, isViewOnly = false) {
   activeFileIndex = index;
 
-  // ⚡ ADD THIS LINE HERE:
   resetInspectorZoom();
 
   const reader = new FileReader();
@@ -170,6 +169,24 @@ function openModal(file, index) {
     panY = 0;
     updateZoom();
     exitCropMode();
+
+    // 🚨 BULLETPROOF FIX: Erase the buttons & disable drawing in view-only mode
+    const toggleBtn = document.getElementById("toggleCropBtn");
+    const cropCanvas = document.getElementById("modalCropCanvas");
+
+    if (toggleBtn) {
+      const buttonPill = toggleBtn.parentElement; // Targets the dark background box
+
+      if (isViewOnly) {
+        // Results Screen: Kill buttons and block mouse drawing entirely
+        buttonPill.style.setProperty("display", "none", "important");
+        if (cropCanvas) cropCanvas.style.pointerEvents = "none";
+      } else {
+        // Upload Screen: 100% restored and safe for normal cropping
+        buttonPill.style.setProperty("display", "flex", "important");
+        if (cropCanvas) cropCanvas.style.pointerEvents = "auto";
+      }
+    }
   };
   reader.readAsDataURL(file);
 }
@@ -578,6 +595,28 @@ function renderThumbnails() {
   // Set Large Mobile Image
   if (mImg && filesToProcess[activeMobileIndex]) {
     mImg.src = filesToProcess[activeMobileIndex].previewUrl || "";
+
+    // 🚨 NEW LOGIC: Add the desktop-style Quality Badge to the bottom-left of the big mobile image
+    const imgWrapper = mImg.parentElement;
+
+    // 1. Remove the old badge if it exists so they don't stack up when changing images
+    const oldBadge = imgWrapper.querySelector(".mobile-big-badge");
+    if (oldBadge) oldBadge.remove();
+
+    // 2. Fetch the score for the currently selected active image
+    const activeScore = filesToProcess[activeMobileIndex].precalcQuality;
+
+    // 3. Inject the exact same desktop badge, anchored to the bottom-left!
+    if (activeScore !== null && activeScore !== undefined) {
+      imgWrapper.insertAdjacentHTML(
+        "beforeend",
+        `
+          <div class="mobile-big-badge" style="position: absolute; bottom: 8px; left: 8px; background: rgba(0, 0, 0, 0.85); color: #34d399; font-size: 12px; font-weight: 800; padding: 4px 10px; border-radius: 8px; border: 1px solid rgba(52, 211, 153, 0.3); z-index: 3;">
+              ${activeScore}%
+          </div>
+        `,
+      );
+    }
   }
 
   filesToProcess.forEach((fileItem, index) => {
@@ -838,7 +877,57 @@ calculateBtn.addEventListener("click", async () => {
   const grandTotalCard = document.getElementById("grandTotalCard");
   const breakdownContainer = document.getElementById("categoryBreakdown");
 
-  if (loadingEl) loadingEl.style.display = "block";
+  if (loadingEl) {
+    if (window.innerWidth <= 768) {
+      // 🚨 DYNAMIC FIX: Break the loader out of the card so it can cover the whole screen!
+      const appContainer = document.querySelector(".container");
+      if (appContainer) {
+        appContainer.classList.add("position-relative");
+        appContainer.appendChild(loadingEl);
+      }
+
+      // 📱 MOBILE ONLY: Floating elements directly on frosted glass (No outer box)
+      loadingEl.style.display = "flex";
+      loadingEl.innerHTML = `
+          <style>
+              /* Automatically upgrades the animation to handle 4 items smoothly */
+              .qt-tips-container .qt-tip { animation: tipFade4 12s infinite !important; }
+              .qt-tips-container .qt-tip:nth-child(1) { animation-delay: 0s !important; }
+              .qt-tips-container .qt-tip:nth-child(2) { animation-delay: 3s !important; }
+              .qt-tips-container .qt-tip:nth-child(3) { animation-delay: 6s !important; }
+              .qt-tips-container .qt-tip:nth-child(4) { animation-delay: 9s !important; }
+              @keyframes tipFade4 {
+                  0%, 5% { opacity: 0; transform: translateY(10px); }
+                  10%, 20% { opacity: 1; transform: translateY(0); }
+                  25%, 100% { opacity: 0; transform: translateY(-10px); }
+              }
+          </style>
+          <div class="qt-spinner"></div>
+          <div class="qt-typewriter">Processing...</div>
+          <div class="qt-tips-container">
+              <div class="qt-tip d-flex align-items-center justify-content-center gap-2">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2v14a2 2 0 0 0 2 2h14"></path><path d="M18 22V8a2 2 0 0 0-2-2H2"></path></svg>
+                  <span>Crop the image before calculating</span>
+              </div>
+              <div class="qt-tip d-flex align-items-center justify-content-center gap-2">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                  <span>Keep paper flat and well-lit</span>
+              </div>
+              <div class="qt-tip d-flex align-items-center justify-content-center gap-2">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+                  <span>Write clearly in a single column</span>
+              </div>
+              <div class="qt-tip d-flex align-items-center justify-content-center gap-2">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                  <span>Capture all items and their prices</span>
+              </div>
+          </div>
+      `;
+    } else {
+      // 💻 LAPTOP/DESKTOP: Keep original behavior 100% safe
+      loadingEl.style.display = "block";
+    }
+  }
   if (actionButtons) actionButtons.style.display = "none";
   if (resultsContainer) resultsContainer.style.display = "none";
   if (receiptsList) receiptsList.innerHTML = "";
@@ -882,7 +971,7 @@ calculateBtn.addEventListener("click", async () => {
       colWrap.innerHTML = `
         <div class="receipt-card glass-panel h-100 animate-pop rounded-4 shadow-sm" data-image-index="${i}">
             <div class="rc-header p-3 border-bottom border-secondary" style="display: flex; justify-content: space-between; align-items: center;">
-                <span style="font-weight: 600; color: #1e293b;">Document #${i + 1}</span>
+                <span style="font-weight: 600; color: #1e293b;"><span class="d-none d-md-inline">Document </span>#${i + 1}</span>
                 <div class="d-flex align-items-center gap-2">
                     <button class="btn p-1 d-flex align-items-center justify-content-center border-0 d-md-none" onclick="openModal(filesToProcess[${i}], ${i}, true)" title="View Original Image" style="width: 28px; height: 28px; background: #f1f5f9; color: #3b82f6; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"></path><path d="M9 21H3v-6"></path><path d="M21 3l-7 7"></path><path d="M3 21l7-7"></path></svg>
@@ -937,7 +1026,7 @@ calculateBtn.addEventListener("click", async () => {
       if (file.precalcQuality !== null && parseInt(file.precalcQuality) < 2) {
         tempCard.innerHTML = `
           <div class="rc-header p-3 border-bottom border-secondary" style="display: flex; justify-content: space-between; align-items: center;">
-              <span style="font-weight: 600; color: #1e293b;">Document #${originalIndex + 1}</span>
+              <span style="font-weight: 600; color: #1e293b;"><span class="d-none d-md-inline">Document </span>#${originalIndex + 1}</span>
               <div class="d-flex align-items-center gap-2">
                   <button class="btn p-1 d-flex align-items-center justify-content-center border-0 d-md-none" onclick="openModal(filesToProcess[${originalIndex}], ${originalIndex}, true)" title="View Original Image" style="width: 28px; height: 28px; background: #f1f5f9; color: #3b82f6; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"></path><path d="M9 21H3v-6"></path><path d="M21 3l-7 7"></path><path d="M3 21l7-7"></path></svg>
@@ -960,7 +1049,7 @@ calculateBtn.addEventListener("click", async () => {
       ) {
         tempCard.innerHTML = `
           <div class="rc-header p-3 border-bottom border-secondary" style="display: flex; justify-content: space-between; align-items: center;">
-              <span style="font-weight: 600; color: #1e293b;">Document #${originalIndex + 1}</span>
+              <span style="font-weight: 600; color: #1e293b;"><span class="d-none d-md-inline">Document </span>#${originalIndex + 1}</span>
               <div class="d-flex align-items-center gap-2">
                   <button class="btn p-1 d-flex align-items-center justify-content-center border-0 d-md-none" onclick="openModal(filesToProcess[${originalIndex}], ${originalIndex}, true)" title="View Original Image" style="width: 28px; height: 28px; background: #f1f5f9; color: #3b82f6; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"></path><path d="M9 21H3v-6"></path><path d="M21 3l-7 7"></path><path d="M3 21l7-7"></path></svg>
@@ -976,16 +1065,21 @@ calculateBtn.addEventListener("click", async () => {
           const isNeg = item.result < 0;
           const category = item.category || "Misc";
           itemsHtml += `
-            <div class="rc-item px-3 py-3 d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 border-bottom border-light">
-                <div class="d-flex align-items-center gap-2 flex-wrap flex-grow-1" style="max-width: 100%;">
-                    <span class="editable-text item-name-field text-wrap" contenteditable="true" spellcheck="false" title="Click to edit name" style="word-break: break-word; min-width: 100px;">${item.expression}</span>
-                    <span class="cat-badge editable-text item-cat-field" contenteditable="true" spellcheck="false" title="Click to edit category">${category}</span>
+            <div class="rc-item px-3 py-3 border-bottom border-light bg-transparent d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+                <!-- Name and Category -->
+                <div class="d-flex flex-grow-1 align-items-start align-items-md-center gap-2" style="min-width: 0;">
+                    <span class="editable-text item-name-field text-wrap fw-bold" contenteditable="true" spellcheck="false" title="Click to edit name" style="word-break: break-word; color: #1e293b; font-size: 15px;">${item.expression}</span>
+                    <div class="flex-grow-1 d-md-none"></div> <!-- Invisible spacer pushes category right ONLY on phones -->
+                    <span class="cat-badge editable-text item-cat-field flex-shrink-0 mt-1 mt-md-0" contenteditable="true" spellcheck="false" title="Click to edit category">${category}</span>
                 </div>
-                <div class="d-flex align-items-center justify-content-end gap-2 ms-auto ms-sm-0 utils-wrapper">
-                    <span class="rc-item-val editable-text price-edit ${isNeg ? "val-neg" : ""}" data-raw-amount="${item.result}" contenteditable="true" spellcheck="false" title="Click to edit price">${isNeg ? "-" : "+"}${getSym()}${Math.abs(item.result).toFixed(2)}</span>
-                    <button class="inline-mic-btn btn p-1 d-flex align-items-center justify-content-center" title="Speak item and price" style="width: 32px; height: 32px; border-radius: 8px; border: 1px solid #e2e8f0; background: #ffffff; color: #64748b; transition: all 0.2s;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg></button>
-                    <button class="inline-insert-btn btn p-1 d-flex align-items-center justify-content-center" title="Insert missing item below" style="width: 32px; height: 32px; border-radius: 8px; border: 1px solid #e2e8f0; background: #ffffff; color: #3b82f6; transition: all 0.2s;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></button>
-                    <button class="inline-delete-btn btn p-1 d-flex align-items-center justify-content-center" title="Delete mistake" style="width: 32px; height: 32px; border-radius: 8px; border: 1px solid #fee2e2; background: #ffffff; color: #ef4444; transition: all 0.2s;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg></button>
+                <!-- Price and Action Buttons -->
+                <div class="d-flex align-items-center justify-content-between justify-content-md-end gap-2 utils-wrapper mt-1 mt-md-0 flex-shrink-0">
+                    <span class="rc-item-val editable-text price-edit fw-bold ${isNeg ? "val-neg" : ""}" data-raw-amount="${item.result}" contenteditable="true" spellcheck="false" title="Click to edit price" style="color: #0f172a; font-size: 16px;">${isNeg ? "-" : "+"}${getSym()}${Math.abs(item.result).toFixed(2)}</span>
+                    <div class="d-flex align-items-center gap-2 ms-md-3">
+                        <button class="inline-mic-btn btn p-1 d-flex align-items-center justify-content-center" title="Speak item and price" style="width: 32px; height: 32px; border-radius: 8px; border: 1px solid #e2e8f0; background: #ffffff; color: #64748b; transition: all 0.2s;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg></button>
+                        <button class="inline-insert-btn btn p-1 d-flex align-items-center justify-content-center" title="Insert missing item below" style="width: 32px; height: 32px; border-radius: 8px; border: 1px solid #e2e8f0; background: #ffffff; color: #3b82f6; transition: all 0.2s;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></button>
+                        <button class="inline-delete-btn btn p-1 d-flex align-items-center justify-content-center" title="Delete mistake" style="width: 32px; height: 32px; border-radius: 8px; border: 1px solid #fee2e2; background: #ffffff; color: #ef4444; transition: all 0.2s;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg></button>
+                    </div>
                 </div>
             </div>`;
         });
@@ -1005,8 +1099,7 @@ calculateBtn.addEventListener("click", async () => {
 
         tempCard.innerHTML = `
             <div class="rc-header p-3 border-bottom border-secondary" style="position: relative; z-index: 2; display: flex; justify-content: space-between; align-items: center;">
-                <span>Document #${originalIndex + 1} <span class="entry-count" style="font-size:0.85em; font-weight:500; color:var(--text-muted);">(${itemCount} entries)</span></span>
-                <div class="d-flex align-items-center gap-2">
+                <span><span class="d-none d-md-inline">Document </span>#${originalIndex + 1} <span class="entry-count" style="font-size:0.85em; font-weight:600; color:#475569; margin-left:6px;">(${itemCount} items)</span></span><div class="d-flex align-items-center gap-2">
                     <button class="btn p-1 d-flex align-items-center justify-content-center border-0 d-md-none" onclick="openModal(filesToProcess[${originalIndex}], ${originalIndex}, true)" title="View Original Image" style="width: 28px; height: 28px; background: #f1f5f9; color: #3b82f6; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"></path><path d="M9 21H3v-6"></path><path d="M21 3l-7 7"></path><path d="M3 21l7-7"></path></svg>
                     </button>
@@ -1015,11 +1108,14 @@ calculateBtn.addEventListener("click", async () => {
             </div>
             <div class="rc-items-list" style="position: relative; z-index: 2;">${itemsHtml}</div>
             <div style="position: relative; z-index: 2; text-align: center; display: flex; justify-content: center; gap: 10px;" class="my-3 flex-wrap px-2">
-                <div class="add-row-btn" title="Add Missing Item">+ Add Missing Item</div>
-                <div class="save-train-btn" title="Save to training dataset.">✅ Approve & Save</div>
+                <!-- 🚨 Hides on mobile (d-none) but shows on laptops (d-md-block) -->
+                <div class="add-row-btn d-none d-md-block" title="Add Missing Item">+ Add Missing Item</div>
+               <div class="save-train-btn" title="Help us improve QuickTotal's accuracy." style="display: flex; align-items: center; justify-content: center; font-weight: 600; color: #059669; letter-spacing: 0.3px; cursor: pointer;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> 
+                    Help improve QuickTotal
+                </div>
             </div>
-            <div class="rc-subtotal px-3 py-2 border-top border-secondary border-opacity-25" style="position: relative; z-index: 2;"><span>Subtotal</span><span class="rc-subtotal-val">${getSym()}${result.subtotal.toFixed(2)}</span></div>
-            <div class="p-3 border-top border-secondary border-opacity-25" style="position: relative; z-index: 2;">
+            <div class="rc-subtotal px-3 py-2 border-top border-secondary border-opacity-25" style="position: relative; z-index: 2;"><span>Subtotal</span><span class="rc-subtotal-val">${getSym()}${result.subtotal.toFixed(2)}</span></div>            <div class="p-3 border-top border-secondary border-opacity-25" style="position: relative; z-index: 2;">
                 <div class="accuracy-label"><span>Image Quality</span><span style="color: ${imgInfo.color};">${imgScoreNum}%</span></div>
                 <div class="accuracy-bar-bg"><div class="accuracy-bar-fill" style="width: ${imgScoreNum}%; background: ${imgInfo.color};"></div></div>
                 <div class="accuracy-label mt-2"><span>AI Accuracy</span><span style="color: ${accInfo.color};">${accScoreNum}%</span></div>
@@ -1049,29 +1145,34 @@ calculateBtn.addEventListener("click", async () => {
       if (grandTotalCard) grandTotalCard.style.display = "flex";
       recalculateLiveMath();
 
-      // 🚨 FIX: MOVE GRAND TOTAL EXACTLY BETWEEN WHITE BOX AND RECEIPTS
+      // 🚨 FIX: INSERT GRAND TOTAL AT THE VERY TOP OF RESULTS (Safe for both)
       if (resultsContainer && grandTotalCard && receiptsList) {
         resultsContainer.insertBefore(grandTotalCard, receiptsList);
         grandTotalCard.classList.remove("mt-4");
-        grandTotalCard.classList.add("mb-4");
+        grandTotalCard.classList.add("mt-2", "mb-4");
       }
 
-      if (!document.getElementById("resultsResetBtn")) {
-        const resetDiv = document.createElement("div");
-        resetDiv.className = "w-100 text-center mt-4 mb-3 d-md-none";
-        resetDiv.innerHTML = `<button id="resultsResetBtn" class="btn text-muted bg-transparent fw-bold" onclick="document.getElementById('resetBtn').click()" style="text-decoration: underline;">Start New Batch</button>`;
-        if (resultsContainer) resultsContainer.appendChild(resetDiv);
-      }
+      // 🚨 FIX: Forcibly remove old link to ensure the premium button generates
+      const oldResetBtn = document.getElementById("resultsResetBtn");
+      if (oldResetBtn) oldResetBtn.parentElement.remove();
+
+      // Create the premium touch-friendly button with the updated "New Scan" text
+      const resetDiv = document.createElement("div");
+      resetDiv.className = "w-100 text-center mt-4 mb-4 d-md-none px-2";
+      resetDiv.innerHTML = `
+        <button id="resultsResetBtn" class="btn w-100 fw-bold d-flex align-items-center justify-content-center gap-2" onclick="document.getElementById('resetBtn').click()" style="background: #ffffff; color: #1e293b; border-radius: 14px; padding: 14px; border: 2px solid #cbd5e1; box-shadow: 0 4px 10px rgba(0,0,0,0.04); font-size: 15px; transition: all 0.2s;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+            New Scan
+        </button>`;
+      if (resultsContainer) resultsContainer.appendChild(resetDiv);
 
       // 🚨 LAPTOP VS MOBILE SPLIT 🚨
-      // FIX: Lock the white box (mainCard) so it strictly disappears on mobile!
-      if (mainCard) {
-        mainCard.style.display = "";
-        mainCard.classList.add("d-none", "d-md-block");
-      }
-
       if (window.innerWidth <= 768) {
-        // --- 📱 MOBILE VIEW (Elite Animation & Delete White Box) ---
+        // --- 📱 MOBILE VIEW (Fixed Scroll & Delete White Box) ---
+        if (mainCard) {
+          mainCard.style.setProperty("display", "none", "important"); // Completely kills the empty white padded box
+        }
+        // --- 📱 MOBILE VIEW (Fixed Scroll to Top) ---
         if (loadingEl) {
           loadingEl.style.transition = "opacity 0.4s ease, transform 0.4s ease";
           loadingEl.style.opacity = "0";
@@ -1101,24 +1202,26 @@ calculateBtn.addEventListener("click", async () => {
               resultsContainer.style.opacity = "1";
               resultsContainer.style.transform = "translateY(0)";
 
-              // 🚨 AUTO-SCROLL TO RESULTS ON MOBILE
-              resultsContainer.scrollIntoView({
+              // 🚨 PERFECT MOBILE SCROLL: Lands precisely at the very top without chopping
+              window.scrollTo({
+                top: 0,
                 behavior: "smooth",
-                block: "start",
               });
             }, 50);
           }
         }, 400);
       } else {
         // --- 💻 DESKTOP VIEW (100% Restored & Protected) ---
-        if (previewAreaContainer) previewAreaContainer.style.display = "block";
+        if (mainCard) {
+          mainCard.style.removeProperty("display"); // Guarantees desktop stays 100% safe
+        }
         if (loadingEl) loadingEl.style.display = "none";
         if (actionButtons) actionButtons.style.display = "flex";
 
         if (resultsContainer) {
           resultsContainer.style.display = "block";
 
-          // 🚨 AUTO-SCROLL TO RESULTS ON LAPTOP
+          // 🚨 DESKTOP SCROLL: Uses original safe logic so big screens aren't disrupted
           setTimeout(() => {
             resultsContainer.scrollIntoView({
               behavior: "smooth",
@@ -1174,7 +1277,6 @@ receiptsList.addEventListener("input", (e) => {
       catField.textContent = guessCategory(e.target.textContent);
     }
   }
-
   // 3. Keep live math updated
   if (
     e.target.classList.contains("price-edit") ||
@@ -1187,6 +1289,31 @@ receiptsList.addEventListener("input", (e) => {
       e.target.dataset.rawAmount = cleanNumber;
     }
     recalculateLiveMath();
+
+    const card = e.target.closest(".receipt-card");
+    if (card && card.dataset.isSaved === "true") {
+      const saveBtn = card.querySelector(".save-train-btn");
+      if (saveBtn && card.dataset.isUpdate !== "true") {
+        // Start the flip away
+        saveBtn.style.transition =
+          "transform 0.2s ease-in-out, background 0.2s, color 0.2s";
+        saveBtn.style.transform = "rotateX(90deg)";
+
+        // Change content halfway through the flip
+        setTimeout(() => {
+          saveBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><path d="M21.5 2v6h-6M2.13 15.57a9 9 0 1 0 3.87-11.1l-4.8 1.53"></path></svg> Update saved data`;
+          saveBtn.style.background = "#fffbeb";
+          saveBtn.style.color = "#d97706";
+          saveBtn.style.pointerEvents = "auto";
+
+          // Flip it back down
+          saveBtn.style.transform = "rotateX(0deg)";
+        }, 200);
+
+        card.dataset.isSaved = "false";
+        card.dataset.isUpdate = "true";
+      }
+    }
   }
 });
 
@@ -1383,24 +1510,29 @@ receiptsList.addEventListener("click", async (e) => {
     const currentRow = e.target.closest(".rc-item");
     const newRow = document.createElement("div");
     newRow.className =
-      "rc-item px-3 py-3 d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 border-bottom border-light animate-pop";
+      "rc-item px-3 py-3 border-bottom border-light bg-transparent animate-pop d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2";
+    newRow.style = "";
     newRow.innerHTML = `
-        <div class="d-flex align-items-center gap-2 flex-wrap flex-grow-1" style="max-width: 100%;">
-            <span class="editable-text item-name-field text-wrap" contenteditable="true" spellcheck="false" style="word-break: break-word; min-width: 100px;">New Item</span>
-            <span class="cat-badge editable-text item-cat-field" contenteditable="true" spellcheck="false">Misc</span>
+        <div class="d-flex flex-grow-1 align-items-start align-items-md-center gap-2" style="min-width: 0;">
+            <span class="editable-text item-name-field text-wrap fw-bold" contenteditable="true" spellcheck="false" style="word-break: break-word; color: #1e293b; font-size: 15px;">New Item</span>
+            <div class="flex-grow-1 d-md-none"></div>
+            <span class="cat-badge editable-text item-cat-field flex-shrink-0 mt-1 mt-md-0" contenteditable="true" spellcheck="false">Misc</span>
         </div>
-        <div class="d-flex align-items-center justify-content-end gap-2 ms-auto ms-sm-0 utils-wrapper">
-            <span class="rc-item-val editable-text price-edit" contenteditable="true" spellcheck="false">+${getSym()}0.00</span>
-            <button class="inline-mic-btn btn p-1 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; border-radius: 8px; border: 1px solid #e2e8f0; background: #ffffff; color: #64748b;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg></button>
-            <button class="inline-insert-btn btn p-1 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; border-radius: 8px; border: 1px solid #e2e8f0; background: #ffffff; color: #3b82f6;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></button>
-            <button class="inline-delete-btn btn p-1 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; border-radius: 8px; border: 1px solid #fee2e2; background: #ffffff; color: #ef4444;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg></button>
+        <div class="d-flex align-items-center justify-content-between justify-content-md-end gap-2 utils-wrapper mt-1 mt-md-0 flex-shrink-0">
+            <span class="rc-item-val editable-text price-edit fw-bold" contenteditable="true" spellcheck="false" style="color: #0f172a; font-size: 16px;">+${getSym()}0.00</span>
+            <div class="d-flex align-items-center gap-2 ms-md-3">
+                <button class="inline-mic-btn btn p-1 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; border-radius: 8px; border: 1px solid #e2e8f0; background: #ffffff; color: #64748b; transition: all 0.2s;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg></button>
+                <button class="inline-insert-btn btn p-1 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; border-radius: 8px; border: 1px solid #e2e8f0; background: #ffffff; color: #3b82f6; transition: all 0.2s;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></button>
+                <button class="inline-delete-btn btn p-1 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; border-radius: 8px; border: 1px solid #fee2e2; background: #ffffff; color: #ef4444; transition: all 0.2s;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg></button>
+            </div>
         </div>`;
     currentRow.parentNode.insertBefore(newRow, currentRow.nextSibling);
     newRow.querySelector(".item-name-field").focus();
     const card = e.target.closest(".receipt-card");
     const countSpan = card.querySelector(".entry-count");
-    if (countSpan)
-      countSpan.textContent = `(${card.querySelectorAll(".rc-item").length} entries)`;
+    if (countSpan) {
+      countSpan.innerHTML = `<span style="font-size:0.85em; font-weight:600; color:#475569; margin-left:6px;">(${card.querySelectorAll(".rc-item").length} items)</span>`;
+    }
     recalculateLiveMath();
   }
 
@@ -1413,7 +1545,7 @@ receiptsList.addEventListener("click", async (e) => {
     row.remove();
     const countSpan = card.querySelector(".entry-count");
     if (countSpan)
-      countSpan.textContent = `(${card.querySelectorAll(".rc-item").length} entries)`;
+      countSpan.textContent = `(${card.querySelectorAll(".rc-item").length} items)`;
     recalculateLiveMath();
   }
 
@@ -1422,37 +1554,53 @@ receiptsList.addEventListener("click", async (e) => {
     const itemsList = card.querySelector(".rc-items-list");
     const newRow = document.createElement("div");
     newRow.className =
-      "rc-item px-3 py-3 d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 border-bottom border-light animate-pop";
+      "rc-item px-3 py-3 border-bottom border-light bg-transparent animate-pop d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2";
+    newRow.style = "";
     newRow.innerHTML = `
-        <div class="d-flex align-items-center gap-2 flex-wrap flex-grow-1" style="max-width: 100%;">
-            <span class="editable-text item-name-field text-wrap" contenteditable="true" spellcheck="false" style="word-break: break-word; min-width: 100px;">New Item</span>
-            <span class="cat-badge editable-text item-cat-field" contenteditable="true" spellcheck="false">Misc</span>
+        <div class="d-flex flex-grow-1 align-items-start align-items-md-center gap-2" style="min-width: 0;">
+            <span class="editable-text item-name-field text-wrap fw-bold" contenteditable="true" spellcheck="false" style="word-break: break-word; color: #1e293b; font-size: 15px;">New Item</span>
+            <div class="flex-grow-1 d-md-none"></div>
+            <span class="cat-badge editable-text item-cat-field flex-shrink-0 mt-1 mt-md-0" contenteditable="true" spellcheck="false">Misc</span>
         </div>
-        <div class="d-flex align-items-center justify-content-end gap-2 ms-auto ms-sm-0 utils-wrapper">
-            <span class="rc-item-val editable-text price-edit" contenteditable="true" spellcheck="false">+${getSym()}0.00</span>
-            <button class="inline-mic-btn btn p-1 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; border-radius: 8px; border: 1px solid #e2e8f0; background: #ffffff; color: #64748b;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg></button>
-            <button class="inline-insert-btn btn p-1 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; border-radius: 8px; border: 1px solid #e2e8f0; background: #ffffff; color: #3b82f6;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></button>
-            <button class="inline-delete-btn btn p-1 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; border-radius: 8px; border: 1px solid #fee2e2; background: #ffffff; color: #ef4444;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg></button>
+        <div class="d-flex align-items-center justify-content-between justify-content-md-end gap-2 utils-wrapper mt-1 mt-md-0 flex-shrink-0">
+            <span class="rc-item-val editable-text price-edit fw-bold" contenteditable="true" spellcheck="false" style="color: #0f172a; font-size: 16px;">+${getSym()}0.00</span>
+            <div class="d-flex align-items-center gap-2 ms-md-3">
+                <button class="inline-mic-btn btn p-1 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; border-radius: 8px; border: 1px solid #e2e8f0; background: #ffffff; color: #64748b; transition: all 0.2s;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg></button>
+                <button class="inline-insert-btn btn p-1 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; border-radius: 8px; border: 1px solid #e2e8f0; background: #ffffff; color: #3b82f6; transition: all 0.2s;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></button>
+                <button class="inline-delete-btn btn p-1 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; border-radius: 8px; border: 1px solid #fee2e2; background: #ffffff; color: #ef4444; transition: all 0.2s;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg></button>
+            </div>
         </div>`;
     itemsList.appendChild(newRow);
     newRow.querySelector(".item-name-field").focus();
     const countSpan = card.querySelector(".entry-count");
     if (countSpan)
-      countSpan.textContent = `(${itemsList.querySelectorAll(".rc-item").length} entries)`;
+      countSpan.textContent = `(${itemsList.querySelectorAll(".rc-item").length} items)`;
     recalculateLiveMath();
   }
 
-  if (e.target.classList.contains("save-train-btn")) {
-    const btn = e.target;
+  if (
+    e.target.classList.contains("save-train-btn") ||
+    e.target.closest(".save-train-btn")
+  ) {
+    const btn = e.target.classList.contains("save-train-btn")
+      ? e.target
+      : e.target.closest(".save-train-btn");
     const card = btn.closest(".receipt-card");
+
+    // ERROR-PROOF UNIQUE ID
+    if (!card.dataset.receiptId) {
+      const timestamp = Date.now();
+      const randomStr = Math.random().toString(36).substring(2, 8);
+      card.dataset.receiptId = "receipt_" + timestamp + "_" + randomStr;
+    }
+
+    const isUpdate = card.dataset.isUpdate === "true";
     const imageIndex = parseInt(card.dataset.imageIndex);
     const fileToSave = filesToProcess[imageIndex];
     let correctedItems = [];
 
     card.querySelectorAll(".rc-item").forEach((itemEl) => {
       const priceEl = itemEl.querySelector(".price-edit");
-
-      // 🛡️ READ RAW AMOUNT FIRST
       let rawVal = priceEl.dataset.rawAmount
         ? parseFloat(priceEl.dataset.rawAmount)
         : parseFloat(priceEl.textContent.replace(/[^\d.-]/g, "")) || 0;
@@ -1464,27 +1612,64 @@ receiptsList.addEventListener("click", async (e) => {
       });
     });
 
-    btn.textContent = "Saving... ⏳";
+    const originalContent = btn.innerHTML;
+    const existingReceiptId = card.dataset.receiptId || "";
+
+    // 1. LOCK BUTTON & SHOW LOADING (No flip yet!)
     btn.style.pointerEvents = "none";
+    btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Saving...`;
+
     try {
       const formData = new FormData();
       formData.append("image", fileToSave);
-      formData.append("original_filename", fileToSave.name);
+      formData.append("original_filename", card.dataset.receiptId); // Works perfectly with your current Python code
+      formData.append("receipt_id", card.dataset.receiptId);
+      formData.append("is_update", isUpdate ? "true" : "false");
       formData.append("json_data", JSON.stringify({ items: correctedItems }));
-      fetch("/save_training_data", { method: "POST", body: formData }).then(
-        (res) => {
-          if (res.ok) {
-            btn.textContent = "Update Dataset 🔄";
-            btn.style.background = "rgba(59, 130, 246, 0.4)";
-            btn.style.color = "white";
+
+      fetch("/save_training_data", { method: "POST", body: formData })
+        .then((res) => {
+          if (!res.ok) throw new Error("Backend failed");
+          return res.json();
+        })
+        .then((data) => {
+          // 2. THE REAL SUCCESS: Flip the button ONLY AFTER the server says it saved!
+          card.dataset.isSaved = "true";
+
+          if (data.receipt_id) {
+            card.dataset.receiptId = data.receipt_id;
+          }
+
+          // Start the 3D flip
+          btn.style.transition =
+            "transform 0.2s ease-in-out, background 0.2s, color 0.2s";
+          btn.style.transform = "rotateX(90deg)";
+
+          // Change content halfway through flip
+          setTimeout(() => {
+            btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg> Thank You`;
+            btn.style.background = "#eff6ff";
+            btn.style.color = "#2563eb";
+            btn.style.fontWeight = "600";
             btn.style.border = "none";
-            btn.style.pointerEvents = "auto";
-          } else throw new Error("Failed");
-        },
-      );
+            btn.style.display = "flex";
+            btn.style.alignItems = "center";
+            btn.style.justifyContent = "center";
+
+            // Finish the flip
+            btn.style.transform = "rotateX(0deg)";
+          }, 200);
+        })
+        .catch((err) => {
+          // 3. THE FAIL STATE: If the folder/database fails, revert back so they can try again
+          alert("Network error. Could not save feedback.");
+          btn.innerHTML = originalContent;
+          btn.style.pointerEvents = "auto";
+          card.dataset.isSaved = "false";
+        });
     } catch (err) {
-      alert("Error saving training data.");
-      btn.textContent = "✅ Approve & Save";
+      alert("Error preparing training data.");
+      btn.innerHTML = originalContent;
       btn.style.pointerEvents = "auto";
     }
   }
@@ -1592,11 +1777,15 @@ function recalculateLiveMath() {
           plugins: {
             legend: {
               position: "right",
-              // 🚨 FIX 3: Changed the chart legend text to a readable dark slate
               labels: {
-                color: "#475569",
-                font: { size: 12, family: "'Inter', sans-serif" },
-                boxWidth: 12,
+                color: "#0f172a", // Deep, high-contrast almost-black
+                font: {
+                  size: 14,
+                  family: "'Inter', sans-serif",
+                  weight: "bold",
+                }, // Larger and bolder for the PDF
+                boxWidth: 14,
+                padding: 16, // Gives the text room to breathe
               },
             },
           },
@@ -1654,126 +1843,245 @@ async function downloadPDF() {
     showPremiumError(
       "No valid data to export. Please process a clear receipt first.",
     );
-    return; // Stops the function from downloading a blank file
+    return;
   }
   const e = window.event;
   if (e) e.preventDefault();
+
   try {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF("p", "pt", "a4");
-    let docCursor = 50;
 
-    try {
-      const fontUrl =
-        "https://cdn.jsdelivr.net/gh/googlefonts/noto-fonts/hinted/ttf/NotoSansDevanagari/NotoSansDevanagari-Regular.ttf";
-      const response = await fetch(fontUrl);
-      const buffer = await response.arrayBuffer();
-      const base64String = btoa(
-        new Uint8Array(buffer).reduce(
-          (data, byte) => data + String.fromCharCode(byte),
-          "",
-        ),
-      );
-      doc.addFileToVFS("NotoSansDevanagari.ttf", base64String);
-      doc.addFont("NotoSansDevanagari.ttf", "NotoSansDevanagari", "normal");
-      doc.setFont("NotoSansDevanagari");
-    } catch (err) {
-      doc.setFont("helvetica");
-    }
+    const pageWidth = doc.internal.pageSize.width;
+    const pageHeight = doc.internal.pageSize.height;
+    const margin = 40;
+    const currencyCode = localStorage.getItem("settingsCurrency") || "INR";
 
-    doc.setFontSize(22);
-    doc.setTextColor(139, 92, 246);
-    doc.text("QuickTotal Financial Report", 40, docCursor);
-    docCursor += 20;
+    // 🎨 1. MASSIVE VIBRANT HEADER (Edge-to-Edge)
+    doc.setFillColor(76, 29, 149); // Deep Vibrant Purple
+    doc.rect(0, 0, pageWidth, 130, "F");
 
-    doc.setFontSize(10);
-    doc.setTextColor(100, 116, 139);
-    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 40, docCursor);
-    docCursor += 40;
+    // Left Header Text
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(28);
+    doc.setTextColor(255, 255, 255);
+    doc.text("QuickTotal", margin, 60);
 
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(12);
+    doc.setTextColor(216, 180, 254);
+    doc.text("FINANCIAL EXPORT", margin, 85);
+
+    // Right Header Text (Meta Data)
+    doc.setFontSize(9);
+    doc.setTextColor(216, 180, 254);
+    doc.text("DATE OF ISSUE:", pageWidth - margin, 50, { align: "right" });
+    doc.setTextColor(255, 255, 255);
+    doc.text(
+      new Date().toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      }),
+      pageWidth - margin,
+      65,
+      { align: "right" },
+    );
+
+    doc.setTextColor(216, 180, 254);
+    doc.text("REFERENCE:", pageWidth - margin, 85, { align: "right" });
+    doc.setTextColor(255, 255, 255);
+    doc.text(
+      `QT-EXP-${Math.floor(1000 + Math.random() * 9000)}`,
+      pageWidth - margin,
+      100,
+      { align: "right" },
+    );
+
+    let docCursor = 160;
+
+    // 📊 2. THE CHART
     const chartCanvas = document.getElementById("spendChart");
     if (chartCanvas) {
+      const canvasRatio = chartCanvas.width / chartCanvas.height;
+      const pdfChartWidth = 280;
+      const pdfChartHeight = pdfChartWidth / canvasRatio;
+      const xOffset = (pageWidth - pdfChartWidth) / 2;
+
       doc.addImage(
-        chartCanvas.toDataURL("image/png"),
+        chartCanvas.toDataURL("image/png", 1.0),
         "PNG",
-        180,
+        xOffset,
         docCursor,
-        200,
-        200,
+        pdfChartWidth,
+        pdfChartHeight,
       );
-      docCursor += 230;
+      docCursor += pdfChartHeight + 30;
     }
 
-    let sno = 1,
-      tableRows = [];
-    document.querySelectorAll(".receipt-card").forEach((card) => {
-      card.querySelectorAll(".rc-item").forEach((itemEl) => {
-        tableRows.push([
-          sno++,
-          itemEl.querySelector(".item-name-field").textContent.trim(),
-          itemEl.querySelector(".item-cat-field").textContent.trim(),
-          `${getSym()} ${itemEl
-            .querySelector(".price-edit")
-            .textContent.replace(/[^\d.-]/g, "")
-            .trim()}`,
-        ]);
-      });
-    });
-
-    doc.autoTable({
-      head: [["S.No.", "Item Name", "Category", "Price"]],
-      body: tableRows,
-      startY: docCursor,
-      theme: "striped",
-      headStyles: { fillColor: [139, 92, 246] },
-      styles: { font: "NotoSansDevanagari", fontSize: 11 },
-      margin: { left: 40, right: 40 },
-    });
-
-    docCursor = doc.lastAutoTable.finalY + 40;
-    if (docCursor > 700) {
-      doc.addPage();
-      docCursor = 50;
-    }
-
+    // 💰 3. OVERALL GRAND TOTAL BOX
     const grandTotalEl = document.getElementById("grandTotalValue");
-    const grandTotalText = grandTotalEl
-      ? grandTotalEl.textContent.replace(/[^\d.-]/g, "").trim()
-      : "0";
-    doc.setFontSize(16);
-    doc.setTextColor(139, 92, 246);
-    doc.text(
-      `Overall Grand Total: ${getSym()} ${grandTotalText}`,
-      40,
-      docCursor,
+    let rawTotal = parseFloat(
+      grandTotalEl ? grandTotalEl.textContent.replace(/[^\d.-]/g, "") : 0,
     );
+    const totalString = `${currencyCode} ${rawTotal.toFixed(2)}`;
+
+    doc.setFillColor(226, 232, 240);
+    doc.roundedRect(margin, docCursor, pageWidth - margin * 2, 45, 8, 8, "F");
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(14);
+    doc.setTextColor(15, 23, 42);
+    const totalLabel = "Overall Grand Total: ";
+    const labelWidth = doc.getTextWidth(totalLabel);
+
+    const boxCenter = pageWidth / 2;
+    const totalTextWidth = labelWidth + doc.getTextWidth(totalString) + 5;
+    const startX = boxCenter - totalTextWidth / 2;
+
+    doc.text(totalLabel, startX, docCursor + 28);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(16, 185, 129); // Emerald Green
+    doc.text(totalString, startX + labelWidth, docCursor + 28);
+
+    docCursor += 80;
+
+    // 📝 4. MULTI-RECEIPT LOOP
+    document.querySelectorAll(".receipt-card").forEach((card, index) => {
+      let tableRows = [];
+      let sno = 1;
+
+      card.querySelectorAll(".rc-item").forEach((itemEl) => {
+        let rawName =
+          itemEl.querySelector(".item-name-field").innerText ||
+          itemEl.querySelector(".item-name-field").textContent;
+        let cleanName = rawName.replace(/\n/g, " ").replace(/\s+/g, " ").trim();
+        let cleanCat = itemEl
+          .querySelector(".item-cat-field")
+          .textContent.trim();
+
+        let rawPrice =
+          parseFloat(
+            itemEl
+              .querySelector(".price-edit")
+              .textContent.replace(/[^\d.-]/g, ""),
+          ) || 0;
+        let cleanPrice = `${currencyCode} ${Math.abs(rawPrice).toFixed(2)}`;
+        if (rawPrice < 0) cleanPrice = `- ${cleanPrice}`;
+
+        tableRows.push([sno++, cleanName, cleanCat, cleanPrice]);
+      });
+
+      if (tableRows.length > 0) {
+        if (docCursor > pageHeight - 150) {
+          doc.addPage();
+          doc.setFillColor(76, 29, 149);
+          doc.rect(0, 0, pageWidth, 40, "F");
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(14);
+          doc.setTextColor(255, 255, 255);
+          doc.text("QuickTotal", margin, 26);
+          docCursor = 80;
+        }
+
+        const subtotalEl = card.querySelector(".rc-subtotal-val");
+        let rawSubtotal = parseFloat(
+          subtotalEl ? subtotalEl.textContent.replace(/[^\d.-]/g, "") : 0,
+        );
+        const subtotalString = `${currencyCode} ${rawSubtotal.toFixed(2)}`;
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.setTextColor(76, 29, 149);
+        doc.text(`Document #${index + 1}`, margin, docCursor);
+
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(71, 85, 105);
+        doc.text(`Subtotal: ${subtotalString}`, pageWidth - margin, docCursor, {
+          align: "right",
+        });
+
+        docCursor += 15;
+
+        doc.autoTable({
+          head: [["#", "Description", "Category", "Amount"]],
+          body: tableRows,
+          startY: docCursor,
+          theme: "grid",
+          headStyles: {
+            fillColor: [139, 92, 246],
+            textColor: [255, 255, 255],
+            fontStyle: "bold",
+            fontSize: 10,
+            cellPadding: 8,
+            lineColor: [255, 255, 255],
+            lineWidth: 1,
+          },
+          bodyStyles: {
+            textColor: [15, 23, 42],
+            fontSize: 10,
+            cellPadding: 8,
+            lineColor: [226, 232, 240],
+          },
+          columnStyles: {
+            0: { cellWidth: 30, halign: "center" },
+            3: { halign: "right", fontStyle: "bold" },
+          },
+          styles: { font: "helvetica" },
+          margin: { left: margin, right: margin },
+        });
+
+        docCursor = doc.lastAutoTable.finalY + 40;
+      }
+    });
+
+    // 👣 5. BRANDED FOOTER WITH CLICKABLE HYPERLINK
+    const totalPages = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i);
+
+      // 🔗 The Clickable SaaS Hyperlink
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.setTextColor(109, 40, 217); // Vibrant Indigo/Purple
+
+      // Removed the arrow symbol
+      const ctaText = "Stop calculating manually. Try QuickTotal";
+      const ctaY = pageHeight - 35;
+
+      // Mathematical centering (ignores jsPDF auto-align bugs)
+      const ctaWidth = doc.getTextWidth(ctaText);
+      const ctaStartX = (pageWidth - ctaWidth) / 2;
+
+      doc.text(ctaText, ctaStartX, ctaY);
+
+      // Draw a crisp, exact underline matching the text length
+      doc.setDrawColor(109, 40, 217);
+      doc.setLineWidth(0.8);
+      doc.line(ctaStartX, ctaY + 2, ctaStartX + ctaWidth, ctaY + 2);
+
+      // Create the invisible clickable box directly over the text and underline
+      doc.link(ctaStartX, ctaY - 10, ctaWidth, 15, {
+        url: "https://yourwebsite.com",
+      });
+
+      // Standard Disclaimer
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(148, 163, 184); // Slate 400
+      doc.text(
+        `Powered by QuickTotal AI • Page ${i} of ${totalPages}`,
+        pageWidth / 2,
+        pageHeight - 20,
+        { align: "center" },
+      );
+    }
 
     doc.save(`QuickTotal_Financial_Report_${new Date().getTime()}.pdf`);
   } catch (error) {
     alert("Something went wrong downloading the PDF.");
+    console.error(error);
   }
-}
-
-resetBtn.addEventListener("click", resetApp);
-function resetApp() {
-  filesToProcess = [];
-  thumbnailGrid.innerHTML = "";
-  receiptsList.innerHTML = "";
-  previewArea.style.display = "none";
-  dropZone.style.display = "block";
-  resultsContainer.style.display = "none";
-  loadingEl.style.display = "none";
-  browseBtn.textContent = "Browse Files";
-  grandTotalCard.style.display = "none";
-
-  // ADD THIS: Restore the upload card for mobile devices
-  const mainCard = document.querySelector(".main-card");
-  if (mainCard) {
-    mainCard.classList.remove("d-none", "d-md-block");
-    mainCard.style.display = "block";
-  }
-
-  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 const langMap = {
