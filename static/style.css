@@ -1,6 +1,106 @@
 /* ═══════════════════════════════════════════
    PREMIUM RETAIL THEME (Depth & Animation)
 ═══════════════════════════════════════════ */
+/* =========================================
+   STARTUP SPLASH SCREEN ANIMATION
+========================================= */
+#qt-splash-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #ffffff; /* Pure White */
+  z-index: 99999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition:
+    opacity 0.8s ease-out,
+    visibility 0.8s ease-out;
+  overflow: hidden; /* Prevents scrollbars from appearing during the animation */
+}
+
+.qt-splash-content {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.qt-splash-logo .letter {
+  display: inline-block;
+  opacity: 0;
+  transform: translateX(150px);
+  animation: swipeAndSpring 0.7s ease-out forwards;
+  animation-delay: var(--delay);
+
+  /* Apply the gradient directly to the moving letters */
+  background: linear-gradient(135deg, #0f172a 0%, #059669 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Controls the individual letters */
+.qt-splash-logo .letter {
+  font-weight: 800;
+  display: inline-block;
+  opacity: 0;
+  /* Starts out invisible and pushed to the right */
+  transform: translateX(150px);
+  /* Runs the animation and pulls the specific delay from the HTML */
+  animation: swipeAndSpring 0.7s ease-out forwards;
+  animation-delay: var(--delay);
+}
+
+.qt-splash-subtext {
+  font-family: "Helvetica", Arial, sans-serif;
+  font-size: 1rem;
+  font-weight: 400;
+  color: #64748b;
+  margin-top: 8px;
+  opacity: 0;
+  /* Starts tiny (inside the screen) */
+  transform: scale(0);
+  /* Waits 0.9s for the logo to finish, then pops in */
+  animation: scaleUpReveal 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.9s
+    forwards;
+}
+
+/* 🎬 KEYFRAMES FOR THE SWIPE & SPRING (Right -> Left Overshoot -> Center) */
+@keyframes swipeAndSpring {
+  0% {
+    opacity: 0;
+    transform: translateX(150px);
+  }
+  65% {
+    opacity: 1;
+    transform: translateX(-15px); /* Overshoots to the left */
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0); /* Snaps perfectly to the center */
+  }
+}
+
+/* 🎬 KEYFRAMES FOR THE SUBTEXT (Scale Up from Center) */
+@keyframes scaleUpReveal {
+  0% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Class to fade out the entire screen when JS triggers */
+.qt-hide-splash {
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
 :root {
   --primary-solid: #059669;
   --bg-dark: #f1f5f9; /* Changed to a cool slate-gray for contrast */

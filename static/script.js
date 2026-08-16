@@ -1,3 +1,15 @@
+// QUICKTOTAL SPLASH SCREEN LOGIC
+window.addEventListener("load", () => {
+  const splashScreen = document.getElementById("qt-splash-screen");
+
+  if (splashScreen) {
+    // Set timer to let the swipe and scale animations fully finish
+    setTimeout(() => {
+      splashScreen.classList.add("qt-hide-splash");
+    }, 2800); // 2.8 seconds
+  }
+});
+
 // GLOBAL STATE
 let filesToProcess = [];
 let spendPieChart = null;
