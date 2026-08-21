@@ -67,6 +67,57 @@ const captureBtn = document.getElementById("captureBtn");
 const closeCameraBtn = document.getElementById("closeCameraBtn");
 let videoStream = null;
 
+function resetApp() {
+  filesToProcess = [];
+  activeMobileIndex = 0;
+
+  if (fileInput) fileInput.value = "";
+
+  if (thumbnailGrid) thumbnailGrid.innerHTML = "";
+  const mGrid = document.getElementById("mobileFilmstripGrid");
+  if (mGrid) mGrid.innerHTML = "";
+
+  const mImg = document.getElementById("mobileActiveImg");
+  if (mImg) mImg.src = "";
+
+  if (previewArea) previewArea.style.display = "none";
+  if (dropZone) dropZone.style.display = "block";
+  if (actionButtons) actionButtons.style.display = "none";
+  if (resultsContainer) resultsContainer.style.display = "none";
+  if (grandTotalCard) grandTotalCard.style.display = "none";
+
+  // 🚀 Restores original icon and "Browse Files" text
+  if (browseBtn) {
+    browseBtn.innerHTML = `
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" fill="rgba(245, 158, 11, 0.15)"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="12" y1="18" x2="12" y2="12"></line>
+          <polyline points="9 15 12 12 15 15"></polyline>
+      </svg>
+      Browse Files`;
+  }
+
+  const breakdownContainer = document.getElementById("categoryBreakdown");
+  if (breakdownContainer) breakdownContainer.style.display = "none";
+
+  const mainCard = document.querySelector(".main-card");
+  if (mainCard) {
+    mainCard.style.display = "block";
+    mainCard.style.removeProperty("display");
+  }
+
+  if (fileCountLabel) fileCountLabel.textContent = "0 Images Selected";
+  if (fileCountLabelMobile) fileCountLabelMobile.textContent = "0 Images";
+}
+
+if (resetBtn) {
+  resetBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    resetApp();
+  });
+}
+
 if (openCameraBtn) {
   openCameraBtn.addEventListener("click", async () => {
     try {
@@ -563,7 +614,6 @@ function updateUIState() {
   }
   dropZone.style.display = "none";
   previewArea.style.display = "block";
-  browseBtn.textContent = "Add More Documents";
   actionButtons.style.display = "flex";
 
   if (thumbnailGrid) thumbnailGrid.style.display = "flex";
@@ -2756,6 +2806,62 @@ document.addEventListener("DOMContentLoaded", () => {
         filesToProcess.length > 0
       ) {
         openModal(filesToProcess[activeMobileIndex], activeMobileIndex);
+      }
+    });
+  }
+});
+
+// ==========================================
+// PRICING MODAL & BILLING TOGGLE LOGIC
+// ==========================================
+document.addEventListener("DOMContentLoaded", () => {
+  const pricingModal = document.getElementById("pricingModal");
+  const closePricingBtn = document.getElementById("closePricingBtn");
+  const billingToggle = document.getElementById("billingToggle");
+  const proPrice = document.getElementById("proPrice");
+  const proPriceOld = document.getElementById("proPriceOld");
+  const monthlyLabel = document.getElementById("monthlyLabel");
+  const yearlyLabel = document.getElementById("yearlyLabel");
+
+  let isYearly = false;
+
+  // Global hook so you can open this modal from anywhere in your app
+  window.openPricingModal = function () {
+    if (pricingModal) {
+      pricingModal.style.display = "flex";
+      document.body.style.overflow = "hidden"; // Locks background scroll
+    }
+  };
+
+  if (closePricingBtn) {
+    closePricingBtn.addEventListener("click", () => {
+      pricingModal.style.display = "none";
+      document.body.style.overflow = "auto";
+    });
+  }
+
+  // Toggle Monthly vs Yearly pricing math
+  if (billingToggle) {
+    billingToggle.addEventListener("click", () => {
+      isYearly = !isYearly;
+      billingToggle.classList.toggle("active");
+
+      if (isYearly) {
+        proPriceOld.textContent = "₹299";
+        proPrice.innerHTML =
+          '₹239<span style="font-size: 1rem; color: #94a3b8; font-weight: 500;">/mo</span>';
+        yearlyLabel.style.color = "#ffffff";
+        yearlyLabel.style.fontWeight = "700";
+        monthlyLabel.style.color = "#64748b";
+        monthlyLabel.style.fontWeight = "600";
+      } else {
+        proPriceOld.textContent = "";
+        proPrice.innerHTML =
+          '₹299<span style="font-size: 1rem; color: #94a3b8; font-weight: 500;">/mo</span>';
+        monthlyLabel.style.color = "#ffffff";
+        monthlyLabel.style.fontWeight = "700";
+        yearlyLabel.style.color = "#64748b";
+        yearlyLabel.style.fontWeight = "600";
       }
     });
   }

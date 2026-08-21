@@ -491,3 +491,11 @@
 | **Batch 253** | 20:02:30 | `Batch (1 files)` | 1 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 1 images in 1 API Call | 32.79s | <b>90%</b> | <b>98%</b> |
 | **Batch 254** | 14:39:43 | `Batch (1 files)` | 1 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 1 images in 1 API Call | 26.89s | <b>90%</b> | <b>98%</b> |
 | **Batch 255** | 14:58:38 | `Batch (1 files)` | 1 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 1 images in 1 API Call | 52.78s | <b>90%</b> | <b>98%</b> |
+| **Batch 256** | 20:22:14 | `Batch (1 files)` | 1 images | ❌ Failed |  | 25.5s | <b>0%</b> | - |
+| **Batch 257** | 20:34:13 | `Batch (1 files)` | 1 images | ❌ Failed | ✅ Nemotron V2: Success | 44.83s | <b>80%</b> | <b>90%</b> |
+| **Batch 258** | 16:33:23 | `Batch (1 files)` | 1 images | ❌ Failed |  | 158096.6s | <b>0%</b> | - |
+| **Batch 259** | 16:44:53 | `Batch (1 files)` | 1 images | ✅ Success | ✅ Gemini 2.5 Flash: Processed 1 images in 1 API Call | 9.59s | <b>90%</b> | <b>95%</b> |
+| **Batch 260** | 17:05:44 | `Batch (1 files)` | 1 images | ✅ Success | ✅ gemini-3.5-flash-lite: Processed 1 images in 1 API Call | 3.8s | <b>90%</b> | <b>95%</b> |
+| **Batch 261** | 17:13:50 | `Batch (4 files)` | 4 images | ✅ Success | ✅ gemini-3.5-flash-lite: Processed 4 images in 1 API Call | 26.01s | <b>90%</b> | <b>95%</b> |
+| **Batch 262** | 17:30:30 | `Batch (3 files)` | 3 images | ✅ Success | ✅ gemini-3.5-flash-lite: Processed 3 images in 1 API Call | 61.41s | <b>85%</b> | <b>90%</b> |
+| **Batch 263** | 19:12:50 | `Batch (4 files)` | 4 images | ✅ Success | ✅ gemini-3.5-flash-lite: Processed 4 images in 1 API Call | 50.46s | <b>75%</b> | <b>85%</b> |

@@ -982,6 +982,119 @@
             });
         });
     </script>
+
+    <!-- ==========================================
+     💎 RESPONSIVE DARK MODE SUBSCRIPTION MODAL
+========================================== -->
+    <div id="pricingModal"
+        style="display: none; position: fixed; inset: 0; z-index: 10005; padding-top: 50px; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px); flex-direction: column;  justify-content: flex-start; overflow-y: auto; padding: 15px;">
+
+        <!-- INNER CONTAINER: Uses pt-5 so content starts below the fixed close area -->
+        <div class="position-relative animate-pop pt-5 pb-5" style="max-width: 850px; width: 100%; margin-top: 10px;">
+
+            <!-- ABSOLUTE CLOSE BUTTON: Anchored securely to the top-right of the inner card bounds -->
+            <button id="closePricingBtn" class="btn p-0 d-flex align-items-center justify-content-center"
+                style="position: absolute; top: 5px; right: 5px; width: 38px; height: 38px; border-radius: 50%; background: rgba(255, 255, 255, 0.15); color: white; border: 1px solid rgba(255, 255, 255, 0.3); z-index: 10010; cursor: pointer;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+
+            <!-- HEADER CONTENT -->
+            <div class="text-center mb-4">
+                <h2 style="font-weight: 800; color: #ffffff; font-size: 2rem; letter-spacing: -0.5px;">Unlock Financial
+                    <span style="color: #34d399;">Intelligence</span>
+                </h2>
+                <p style="color: #94a3b8; font-size: 0.95rem;">Choose the plan that fits your workflow.</p>
+
+                <!-- Billing Toggle -->
+                <div class="d-flex align-items-center justify-content-center gap-3 mt-3">
+                    <span id="monthlyLabel" style="color: #ffffff; font-weight: 700; font-size: 14px;">Monthly</span>
+                    <div class="qt-toggle" id="billingToggle">
+                        <div class="qt-toggle-circle"></div>
+                    </div>
+                    <span id="yearlyLabel" style="color: #64748b; font-weight: 600; font-size: 14px;">Yearly <span
+                            class="badge"
+                            style="background: rgba(16, 185, 129, 0.2); color: #34d399; margin-left: 4px;">Save
+                            20%</span></span>
+                </div>
+            </div>
+
+            <!-- CARDS CONTAINER -->
+            <div class="d-flex flex-column flex-md-row gap-3">
+
+                <!-- ⚪ BASIC TIER -->
+                <div class="pricing-card flex-fill"
+                    style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 24px; backdrop-filter: blur(16px);">
+                    <h3 style="color: #ffffff; font-weight: 800; font-size: 1.3rem;">Basic</h3>
+                    <p style="color: #94a3b8; font-size: 13px; min-height: 35px;">Perfect for occasional receipts and
+                        personal expense tracking.</p>
+                    <div class="my-3">
+                        <span style="font-size: 2.5rem; font-weight: 800; color: #ffffff;">Free</span>
+                    </div>
+                    <button class="btn w-100"
+                        style="background: rgba(255, 255, 255, 0.08); color: #94a3b8; font-weight: 700; padding: 12px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); font-size: 14px;">Current
+                        Plan</button>
+
+                    <ul class="pricing-features mt-3">
+                        <li><svg viewBox="0 0 24 24">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg> 15 Scans per month</li>
+                        <li><svg viewBox="0 0 24 24">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg> Standard AI Processing Speed</li>
+                        <li><svg viewBox="0 0 24 24">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg> Basic Categorization</li>
+                    </ul>
+                </div>
+
+                <!-- 🟢 PRO TIER -->
+                <div class="pricing-card flex-fill position-relative mt-3 mt-md-0"
+                    style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border: 2px solid #34d399; border-radius: 20px; padding: 24px; box-shadow: 0 0 30px rgba(52, 211, 153, 0.25);">
+                    <div class="position-absolute"
+                        style="top: -12px; left: 50%; transform: translateX(-50%); background: #059669; color: white; padding: 4px 14px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">
+                        Most Popular</div>
+
+                    <h3 style="color: #ffffff; font-weight: 800; font-size: 1.3rem;">Pro</h3>
+                    <p style="color: #94a3b8; font-size: 13px; min-height: 35px;">For heavy users who need unlimited
+                        scanning and advanced exports.</p>
+                    <div class="my-3">
+                        <span
+                            style="font-size: 1.8rem; font-weight: 700; color: #64748b; text-decoration: line-through; margin-right: 6px;"
+                            id="proPriceOld"></span>
+                        <span style="font-size: 2.5rem; font-weight: 800; color: #34d399;" id="proPrice">₹299<span
+                                style="font-size: 0.9rem; color: #94a3b8; font-weight: 500;">/mo</span></span>
+                    </div>
+                    <button class="btn w-100 qt-btn-pro"
+                        style="background: #059669; color: white; font-weight: 700; padding: 12px; border-radius: 12px; border: none; transition: all 0.2s; font-size: 14px;">Upgrade
+                        to Pro</button>
+
+                    <ul class="pricing-features pro-features mt-3">
+                        <li><svg viewBox="0 0 24 24">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg> <b>Unlimited</b> Receipt Scans</li>
+                        <li><svg viewBox="0 0 24 24">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg> Priority AI Processing (2x Speed)</li>
+                        <li><svg viewBox="0 0 24 24">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg> Advanced AI Categorization</li>
+                        <li><svg viewBox="0 0 24 24">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg> 1-Click Excel & PDF Exports</li>
+                        <li><svg viewBox="0 0 24 24">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg> Handwriting & Math Sheet Engine</li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
 </body>
 
 </html>

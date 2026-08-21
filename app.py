@@ -189,15 +189,17 @@ def gemini_batch_extraction(img_list, timeline):
     for attempt, api_key in enumerate(GEMINI_KEYS):
         try:
             genai.configure(api_key=api_key)
-            model = genai.GenerativeModel('gemini-2.5-flash') 
+            model = genai.GenerativeModel('gemini-3.5-flash-lite') 
             res = model.generate_content(
                 prompt_content, 
                 generation_config=genai.GenerationConfig(temperature=0.1, response_mime_type="application/json")
             )
             data = parse_response(res.text)
             if data and isinstance(data, dict) and 'receipts' in data:
-                timeline.append(f"✅ Gemini 2.5 Flash: Processed {len(img_list)} images in 1 API Call")
-                return data['receipts'], "Gemini 2.5 Flash "
+                # 🚀 Dynamically extract the model name from the active model instance
+                active_model_name = model.model_name.replace("models/", "")
+                timeline.append(f"✅ {active_model_name}: Processed {len(img_list)} images in 1 API Call")
+                return data['receipts'], active_model_name
         except Exception as e:
             print(f"⚠️ [EXTRACTION BATCH] Key #{attempt + 1} failed: {e}. Trying next key...")
             continue
@@ -279,7 +281,7 @@ Example: [true, false, true]"""
         try:
             genai.configure(api_key=key)
             # You can also change this to 'gemini-1.5-flash-8b' later if you want Google's dedicated high-speed router model
-            model = genai.GenerativeModel('gemini-2.5-flash')
+            model = genai.GenerativeModel('gemini-3.5-flash-lite')
             res = model.generate_content(
                 prompt_content, 
                 generation_config=genai.GenerationConfig(temperature=0.0, response_mime_type="application/json")

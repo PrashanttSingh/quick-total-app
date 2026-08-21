@@ -1531,3 +1531,92 @@ body {
   background: rgba(0, 0, 0, 0.85) !important;
   transform: scale(1.1);
 }
+
+/* =========================================
+   RESPONSIVE SUBSCRIPTION PRICING UI STYLES
+========================================= */
+#pricingModal {
+    overflow-y: auto; /* Allows smooth scrolling if the screen is too short */
+    -webkit-overflow-scrolling: touch;
+}
+
+.pricing-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.pricing-card:hover {
+    transform: translateY(-6px);
+}
+
+.qt-toggle {
+    width: 56px;
+    height: 30px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 30px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+.qt-toggle.active {
+    background: #059669;
+}
+.qt-toggle-circle {
+    width: 22px;
+    height: 22px;
+    background: #ffffff;
+    border-radius: 50%;
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+.qt-toggle.active .qt-toggle-circle {
+    transform: translateX(26px);
+}
+
+.pricing-features {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.pricing-features li {
+    font-size: 14.5px;
+    color: #94a3b8;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.pro-features li {
+    color: #e2e8f0;
+}
+.pricing-features svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: #34d399;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin:"round";
+    flex-shrink: 0;
+}
+.qt-btn-pro:hover {
+    background: #047857 !important;
+    box-shadow: 0 8px 25px rgba(5, 150, 105, 0.5);
+}
+
+/* 📱 MOBILE RESPONSIVE FIXES FOR PRICING MODAL */
+@media (max-width: 768px) {
+    #pricingModal {
+        padding: 15px !important;
+        justify-content: flex-start !important; /* Lets it scroll from top on phones */
+    }
+    
+    #pricingModal h2 {
+        font-size: 1.6rem !important;
+    }
+
+    #pricingModal .pricing-card {
+        padding: 20px !important;
+    }
+}
