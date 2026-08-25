@@ -705,41 +705,64 @@
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
         <div class="offcanvas-body p-4 text-dark">
-
-            <div class="w-100 p-3 d-flex align-items-center"
-                style="background: #ecfdf5; color: #059669; font-weight: 700; border-radius: 12px; border: 1.5px solid #a7f3d0; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.1);">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5"
-                    stroke-linecap="round" stroke-linejoin="round" style="margin-right: 10px;">
-                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="rgba(5, 150, 105, 0.15)"></path>
-                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
-                </svg>
-                Home / Scanner
+            <!-- 💎 PREMIUM UPGRADE BUTTON -->
+            <!-- ✨ UNIFORM PRO BUTTON (WORKS ON MOBILE & DESKTOP) -->
+            <div class="mb-4 mt-2">
+                <button class="btn w-100 text-start d-flex justify-content-between align-items-center uniform-pro-btn"
+                    onclick="openPricingModal()" data-bs-dismiss="offcanvas">
+                    <div class="d-flex align-items-center gap-2">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path
+                                d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z">
+                            </path>
+                        </svg>
+                        <span>Upgrade to Pro</span>
+                    </div>
+                    <svg class="pro-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                </button>
             </div>
 
             <hr class="text-muted my-4">
 
             <h6 class="fw-bold mb-3 text-uppercase tracking-wider text-muted small">Application Settings</h6>
 
-            <div class="dropdown">
-                <button class="btn w-100 text-start d-flex justify-content-between align-items-center premium-dropdown"
-                    type="button" data-bs-toggle="dropdown" aria-expanded="false" id="langBtn">
-                    <span>Hindi / English (Default)</span>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"
+            <!-- 🎙️ CLEAR AUDIO INPUT LABEL -->
+            <div class="mb-3">
+                <label class="form-label small fw-semibold d-flex align-items-center gap-1" style="color: #64748b;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                         stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="6 9 12 15 18 9"></polyline>
+                        <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                        <line x1="12" y1="19" x2="12" y2="22"></line>
                     </svg>
-                </button>
-                <ul class="dropdown-menu w-100 premium-dropdown-menu">
-                    <li><a class="dropdown-item active" href="#"
-                            onclick="selectOption(event, 'langBtn', 'settingsLanguage', 'Hindi / English (Default)', 'hi-IN')">Hindi
-                            / English (Default)</a></li>
-                    <li><a class="dropdown-item" href="#"
-                            onclick="selectOption(event, 'langBtn', 'settingsLanguage', 'Hindi (हिंदी)', 'hi-only')">Hindi</a>
-                    </li>
-                    <li><a class="dropdown-item" href="#"
-                            onclick="selectOption(event, 'langBtn', 'settingsLanguage', 'English', 'en-IN')">English</a>
-                    </li>
-                </ul>
+                    Voice / Mic Language
+                </label>
+                <div class="dropdown">
+                    <button
+                        class="btn w-100 text-start d-flex justify-content-between align-items-center premium-dropdown"
+                        type="button" data-bs-toggle="dropdown" aria-expanded="false" id="langBtn">
+                        <span>Hindi / English (Default)</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+                    <ul class="dropdown-menu w-100 premium-dropdown-menu">
+                        <li><a class="dropdown-item active" href="#"
+                                onclick="selectOption(event, 'langBtn', 'settingsLanguage', 'Hindi / English (Default)', 'hi-IN')">Hindi
+                                / English (Default)</a></li>
+                        <li><a class="dropdown-item" href="#"
+                                onclick="selectOption(event, 'langBtn', 'settingsLanguage', 'Hindi (हिंदी)', 'hi-only')">Hindi</a>
+                        </li>
+                        <li><a class="dropdown-item" href="#"
+                                onclick="selectOption(event, 'langBtn', 'settingsLanguage', 'English', 'en-IN')">English</a>
+                        </li>
+                    </ul>
+                </div>
             </div>
 
             <div class="mb-4">
@@ -986,15 +1009,19 @@
     <!-- ==========================================
      💎 RESPONSIVE DARK MODE SUBSCRIPTION MODAL
 ========================================== -->
+    <!-- ==========================================
+     ✨ RESPONSIVE LIGHT MODE SUBSCRIPTION MODAL
+    ========================================== -->
     <div id="pricingModal"
-        style="display: none; position: fixed; inset: 0; z-index: 10005; padding-top: 50px; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px); flex-direction: column;  justify-content: flex-start; overflow-y: auto; padding: 15px;">
+        style="display: none; position: fixed; inset: 0; z-index: 10005; padding-top: 50px; background: rgba(248, 250, 252, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); flex-direction: column; align-items: center; justify-content: flex-start; overflow-y: auto; padding: 15px;">
 
-        <!-- INNER CONTAINER: Uses pt-5 so content starts below the fixed close area -->
-        <div class="position-relative animate-pop pt-5 pb-5" style="max-width: 850px; width: 100%; margin-top: 10px;">
+        <!-- INNER CONTAINER -->
+        <div class="position-relative animate-pop pt-5 pb-5 mx-auto"
+            style="max-width: 850px; width: 100%; margin: 10px auto 0 auto;">
 
-            <!-- ABSOLUTE CLOSE BUTTON: Anchored securely to the top-right of the inner card bounds -->
-            <button id="closePricingBtn" class="btn p-0 d-flex align-items-center justify-content-center"
-                style="position: absolute; top: 5px; right: 5px; width: 38px; height: 38px; border-radius: 50%; background: rgba(255, 255, 255, 0.15); color: white; border: 1px solid rgba(255, 255, 255, 0.3); z-index: 10010; cursor: pointer;">
+            <!-- CLOSE BUTTON -->
+            <button id="closePricingBtn" class="btn p-0 d-flex align-items-center justify-content-center shadow-sm"
+                style="position: absolute; top: 5px; right: 5px; width: 38px; height: 38px; border-radius: 50%; background: #ffffff; color: #64748b; border: 1px solid #e2e8f0; z-index: 10010; cursor: pointer; transition: all 0.2s;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                     stroke-linecap="round" stroke-linejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -1004,20 +1031,21 @@
 
             <!-- HEADER CONTENT -->
             <div class="text-center mb-4">
-                <h2 style="font-weight: 800; color: #ffffff; font-size: 2rem; letter-spacing: -0.5px;">Unlock Financial
-                    <span style="color: #34d399;">Intelligence</span>
+                <h2 style="font-weight: 800; color: #1e293b; font-size: 2rem; letter-spacing: -0.5px;">Unlock Financial
+                    <span style="color: #10b981;">Intelligence</span>
                 </h2>
-                <p style="color: #94a3b8; font-size: 0.95rem;">Choose the plan that fits your workflow.</p>
+                <p style="color: #64748b; font-size: 0.95rem;">Choose the plan that fits your workflow.</p>
 
                 <!-- Billing Toggle -->
                 <div class="d-flex align-items-center justify-content-center gap-3 mt-3">
-                    <span id="monthlyLabel" style="color: #ffffff; font-weight: 700; font-size: 14px;">Monthly</span>
-                    <div class="qt-toggle" id="billingToggle">
-                        <div class="qt-toggle-circle"></div>
+                    <span id="monthlyLabel" style="color: #1e293b; font-weight: 700; font-size: 14px;">Monthly</span>
+                    <div class="qt-toggle" id="billingToggle" style="border: 2px solid #cbd5e1; background: #e2e8f0;">
+                        <div class="qt-toggle-circle"
+                            style="background: #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"></div>
                     </div>
-                    <span id="yearlyLabel" style="color: #64748b; font-weight: 600; font-size: 14px;">Yearly <span
+                    <span id="yearlyLabel" style="color: #94a3b8; font-weight: 600; font-size: 14px;">Yearly <span
                             class="badge"
-                            style="background: rgba(16, 185, 129, 0.2); color: #34d399; margin-left: 4px;">Save
+                            style="background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; margin-left: 4px;">Save
                             20%</span></span>
                 </div>
             </div>
@@ -1027,25 +1055,28 @@
 
                 <!-- ⚪ BASIC TIER -->
                 <div class="pricing-card flex-fill"
-                    style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 24px; backdrop-filter: blur(16px);">
-                    <h3 style="color: #ffffff; font-weight: 800; font-size: 1.3rem;">Basic</h3>
-                    <p style="color: #94a3b8; font-size: 13px; min-height: 35px;">Perfect for occasional receipts and
+                    style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 20px; padding: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+                    <h3 style="color: #1e293b; font-weight: 800; font-size: 1.3rem;">Basic</h3>
+                    <p style="color: #64748b; font-size: 13px; min-height: 35px;">Perfect for occasional receipts and
                         personal expense tracking.</p>
                     <div class="my-3">
-                        <span style="font-size: 2.5rem; font-weight: 800; color: #ffffff;">Free</span>
+                        <span style="font-size: 2.5rem; font-weight: 800; color: #0f172a;">Free</span>
                     </div>
-                    <button class="btn w-100"
-                        style="background: rgba(255, 255, 255, 0.08); color: #94a3b8; font-weight: 700; padding: 12px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); font-size: 14px;">Current
+                    <button id="btnBasicPlan" class="btn w-100"
+                        style="background: #f8fafc; color: #64748b; font-weight: 700; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 14px;">Current
                         Plan</button>
 
-                    <ul class="pricing-features mt-3">
-                        <li><svg viewBox="0 0 24 24">
+                    <ul class="pricing-features mt-4" style="color: #475569; list-style: none; padding: 0;">
+                        <li class="mb-2 d-flex align-items-center gap-2"><svg width="18" height="18" viewBox="0 0 24 24"
+                                fill="none" stroke="#94a3b8" stroke-width="2.5">
                                 <polyline points="20 6 9 17 4 12"></polyline>
                             </svg> 15 Scans per month</li>
-                        <li><svg viewBox="0 0 24 24">
+                        <li class="mb-2 d-flex align-items-center gap-2"><svg width="18" height="18" viewBox="0 0 24 24"
+                                fill="none" stroke="#94a3b8" stroke-width="2.5">
                                 <polyline points="20 6 9 17 4 12"></polyline>
                             </svg> Standard AI Processing Speed</li>
-                        <li><svg viewBox="0 0 24 24">
+                        <li class="mb-2 d-flex align-items-center gap-2"><svg width="18" height="18" viewBox="0 0 24 24"
+                                fill="none" stroke="#94a3b8" stroke-width="2.5">
                                 <polyline points="20 6 9 17 4 12"></polyline>
                             </svg> Basic Categorization</li>
                     </ul>
@@ -1053,48 +1084,59 @@
 
                 <!-- 🟢 PRO TIER -->
                 <div class="pricing-card flex-fill position-relative mt-3 mt-md-0"
-                    style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border: 2px solid #34d399; border-radius: 20px; padding: 24px; box-shadow: 0 0 30px rgba(52, 211, 153, 0.25);">
+                    style="background: #ffffff; border: 2px solid #34d399; border-radius: 20px; padding: 24px; box-shadow: 0 10px 30px rgba(16, 185, 129, 0.1);">
                     <div class="position-absolute"
-                        style="top: -12px; left: 50%; transform: translateX(-50%); background: #059669; color: white; padding: 4px 14px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">
+                        style="top: -12px; left: 50%; transform: translateX(-50%); background: #10b981; color: white; padding: 4px 14px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 4px 10px rgba(16,185,129,0.3);">
                         Most Popular</div>
 
-                    <h3 style="color: #ffffff; font-weight: 800; font-size: 1.3rem;">Pro</h3>
-                    <p style="color: #94a3b8; font-size: 13px; min-height: 35px;">For heavy users who need unlimited
+                    <h3 style="color: #1e293b; font-weight: 800; font-size: 1.3rem;">Pro</h3>
+                    <p style="color: #64748b; font-size: 13px; min-height: 35px;">For heavy users who need unlimited
                         scanning and advanced exports.</p>
                     <div class="my-3">
                         <span
-                            style="font-size: 1.8rem; font-weight: 700; color: #64748b; text-decoration: line-through; margin-right: 6px;"
+                            style="font-size: 1.8rem; font-weight: 700; color: #94a3b8; text-decoration: line-through; margin-right: 6px;"
                             id="proPriceOld"></span>
-                        <span style="font-size: 2.5rem; font-weight: 800; color: #34d399;" id="proPrice">₹299<span
-                                style="font-size: 0.9rem; color: #94a3b8; font-weight: 500;">/mo</span></span>
+                        <span style="font-size: 2.5rem; font-weight: 800; color: #10b981;" id="proPrice">₹299<span
+                                style="font-size: 0.9rem; color: #64748b; font-weight: 500;">/mo</span></span>
                     </div>
-                    <button class="btn w-100 qt-btn-pro"
-                        style="background: #059669; color: white; font-weight: 700; padding: 12px; border-radius: 12px; border: none; transition: all 0.2s; font-size: 14px;">Upgrade
+                    <button id="btnProPlan" class="btn w-100 qt-btn-pro"
+                        style="background: #10b981; color: white; font-weight: 700; padding: 12px; border-radius: 12px; border: none; transition: all 0.2s; font-size: 14px; box-shadow: 0 4px 12px rgba(16,185,129,0.2);">Upgrade
                         to Pro</button>
 
-                    <ul class="pricing-features pro-features mt-3">
-                        <li><svg viewBox="0 0 24 24">
+                    <ul class="pricing-features pro-features mt-4"
+                        style="color: #1e293b; list-style: none; padding: 0;">
+                        <!-- ✨ NEW LINE: Everything in Basic -->
+                        <li class="mb-2 d-flex align-items-center gap-2"><svg width="18" height="18" viewBox="0 0 24 24"
+                                fill="none" stroke="#10b981" stroke-width="3">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg> <b>Everything in Basic</b></li>
+
+                        <li class="mb-2 d-flex align-items-center gap-2"><svg width="18" height="18" viewBox="0 0 24 24"
+                                fill="none" stroke="#10b981" stroke-width="3">
                                 <polyline points="20 6 9 17 4 12"></polyline>
                             </svg> <b>Unlimited</b> Receipt Scans</li>
-                        <li><svg viewBox="0 0 24 24">
+                        <li class="mb-2 d-flex align-items-center gap-2"><svg width="18" height="18" viewBox="0 0 24 24"
+                                fill="none" stroke="#10b981" stroke-width="3">
                                 <polyline points="20 6 9 17 4 12"></polyline>
                             </svg> Priority AI Processing (2x Speed)</li>
-                        <li><svg viewBox="0 0 24 24">
+                        <li class="mb-2 d-flex align-items-center gap-2"><svg width="18" height="18" viewBox="0 0 24 24"
+                                fill="none" stroke="#10b981" stroke-width="3">
                                 <polyline points="20 6 9 17 4 12"></polyline>
                             </svg> Advanced AI Categorization</li>
-                        <li><svg viewBox="0 0 24 24">
+                        <li class="mb-2 d-flex align-items-center gap-2"><svg width="18" height="18" viewBox="0 0 24 24"
+                                fill="none" stroke="#10b981" stroke-width="3">
                                 <polyline points="20 6 9 17 4 12"></polyline>
                             </svg> 1-Click Excel & PDF Exports</li>
-                        <li><svg viewBox="0 0 24 24">
+                        <li class="mb-2 d-flex align-items-center gap-2"><svg width="18" height="18" viewBox="0 0 24 24"
+                                fill="none" stroke="#10b981" stroke-width="3">
                                 <polyline points="20 6 9 17 4 12"></polyline>
                             </svg> Handwriting & Math Sheet Engine</li>
                     </ul>
                 </div>
-
             </div>
         </div>
     </div>
-
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </body>
 
 </html>

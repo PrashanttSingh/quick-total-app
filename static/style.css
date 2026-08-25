@@ -1536,87 +1536,271 @@ body {
    RESPONSIVE SUBSCRIPTION PRICING UI STYLES
 ========================================= */
 #pricingModal {
-    overflow-y: auto; /* Allows smooth scrolling if the screen is too short */
-    -webkit-overflow-scrolling: touch;
+  overflow-y: auto; /* Allows smooth scrolling if the screen is too short */
+  -webkit-overflow-scrolling: touch;
 }
 
 .pricing-card {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
 }
 .pricing-card:hover {
-    transform: translateY(-6px);
+  transform: translateY(-6px);
 }
 
 .qt-toggle {
-    width: 56px;
-    height: 30px;
-    background: rgba(255, 255, 255, 0.15);
-    border-radius: 30px;
-    position: relative;
-    cursor: pointer;
-    transition: background 0.3s ease;
+  width: 56px;
+  height: 30px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 30px;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.3s ease;
 }
 .qt-toggle.active {
-    background: #059669;
+  background: #059669;
 }
 .qt-toggle-circle {
-    width: 22px;
-    height: 22px;
-    background: #ffffff;
-    border-radius: 50%;
-    position: absolute;
-    top: 4px;
-    left: 4px;
-    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  width: 22px;
+  height: 22px;
+  background: #ffffff;
+  border-radius: 50%;
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 .qt-toggle.active .qt-toggle-circle {
-    transform: translateX(26px);
+  transform: translateX(26px);
 }
 
 .pricing-features {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 .pricing-features li {
-    font-size: 14.5px;
-    color: #94a3b8;
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+  font-size: 14.5px;
+  color: #94a3b8;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 .pro-features li {
-    color: #e2e8f0;
+  color: #e2e8f0;
 }
 .pricing-features svg {
-    width: 18px;
-    height: 18px;
-    fill: none;
-    stroke: #34d399;
-    stroke-width: 3;
-    stroke-linecap: round;
-    stroke-linejoin:"round";
-    flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: #34d399;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: "round";
+  flex-shrink: 0;
 }
 .qt-btn-pro:hover {
-    background: #047857 !important;
-    box-shadow: 0 8px 25px rgba(5, 150, 105, 0.5);
+  background: #047857 !important;
+  box-shadow: 0 8px 25px rgba(5, 150, 105, 0.5);
 }
 
 /* 📱 MOBILE RESPONSIVE FIXES FOR PRICING MODAL */
 @media (max-width: 768px) {
-    #pricingModal {
-        padding: 15px !important;
-        justify-content: flex-start !important; /* Lets it scroll from top on phones */
-    }
-    
-    #pricingModal h2 {
-        font-size: 1.6rem !important;
-    }
+  #pricingModal {
+    padding: 0 !important;
+    background: rgba(
+      248,
+      250,
+      252,
+      0.85
+    ) !important; /* Restore Light Frosted Effect */
+    backdrop-filter: blur(12px) !important; /* Bring back the blur! */
+    -webkit-backdrop-filter: blur(12px) !important;
+    justify-content: flex-start !important;
+  }
 
-    #pricingModal .pricing-card {
-        padding: 20px !important;
-    }
+  #pricingModal > div {
+    margin-top: 0 !important;
+    padding-top: 70px !important;
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+    min-height: 100vh;
+    border-radius: 0 !important;
+  }
+
+  #closePricingBtn {
+    top: 20px !important;
+    right: 20px !important;
+  }
+}
+
+/* =========================================
+   📱 OPTION 1: MINIMALIST TABS (MOBILE ONLY)
+   Protects desktop by wrapping in max-width
+========================================= */
+@media (max-width: 767.98px) {
+  .mobile-tab-content {
+    display: none !important;
+  }
+  .mobile-tab-content.active-mobile-tab {
+    display: block !important;
+  }
+}
+
+/* Tab Button Styling (Minimalist & Clean) */
+#mobileTabContainer::-webkit-scrollbar {
+  display: none;
+}
+.mobile-tab-btn {
+  background: #f1f5f9 !important;
+  color: #64748b !important;
+  font-size: 13px !important;
+  padding: 8px 4px !important;
+  text-align: center;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+.mobile-tab-btn.active {
+  background: linear-gradient(135deg, #1e293b, #0f172a) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* =========================================
+   ✨ PREMIUM UNIFORM PRO BUTTON UI
+========================================= */
+.uniform-pro-btn {
+  background-color: #ecfdf5 !important;
+  border: 2px solid #a7f3d0 !important;
+  border-radius: 12px !important;
+  padding: 12px 16px !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  color: #059669 !important;
+
+  /* Required for the shine effect */
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* Base state for the arrow */
+.pro-arrow {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* 🔥 WORKS ON BOTH DESKTOP (HOVER) AND MOBILE (ACTIVE/TAP) */
+.uniform-pro-btn:hover,
+.uniform-pro-btn:active {
+  background-color: #ffffff !important; /* Snaps to crisp white */
+  border-color: #10b981 !important; /* Hardens to a sharp emerald border */
+  color: #047857 !important; /* Deepens the text color for contrast */
+  transform: translateY(-2px); /* Floats upward */
+  /* Premium multi-layered shadow */
+  box-shadow:
+    0 10px 25px -5px rgba(16, 185, 129, 0.2),
+    0 0 0 4px rgba(16, 185, 129, 0.05) !important;
+}
+
+/* 1. The Slide-Right Arrow Animation */
+.uniform-pro-btn:hover .pro-arrow,
+.uniform-pro-btn:active .pro-arrow {
+  transform: translateX(4px);
+}
+
+/* 2. The Glass Reflection Setup */
+.uniform-pro-btn::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -150%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.7) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: skewX(-25deg);
+  z-index: -1;
+  transition: none;
+}
+
+/* 3. The Glass Reflection Trigger */
+.uniform-pro-btn:hover::before,
+.uniform-pro-btn:active::before {
+  animation: premiumShine 0.7s ease-in-out forwards;
+}
+
+/* The actual animation moving the reflection across the button */
+@keyframes premiumShine {
+  0% {
+    left: -150%;
+  }
+  100% {
+    left: 200%;
+  }
+}
+
+/* =========================================
+   ✨ LIGHT THEME MODAL FIXES (Toggle & Text)
+========================================= */
+
+/* 1. Fix the broken Yearly Toggle Switch */
+#billingToggle {
+  width: 50px !important;
+  height: 28px !important;
+  background: #e2e8f0 !important;
+  border: 2px solid #cbd5e1 !important;
+  border-radius: 30px !important;
+  position: relative !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  padding: 2px !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* Make it snap to Emerald Green when active */
+#billingToggle.active {
+  background: #10b981 !important;
+  border-color: #10b981 !important;
+}
+
+#billingToggle .qt-toggle-circle {
+  width: 20px !important;
+  height: 20px !important;
+  background: #ffffff !important;
+  border-radius: 50% !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15) !important;
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+}
+
+/* Slide the circle smoothly to the right */
+#billingToggle.active .qt-toggle-circle {
+  transform: translateX(22px) !important;
+}
+
+/* 2. Fix the Faded Features Text */
+.pricing-features li {
+  opacity: 1 !important; /* Overrides any old dark-mode fading */
+  color: #475569 !important; /* Crisp slate color */
+  font-weight: 500 !important;
+  font-size: 14px !important;
+}
+
+/* Make the Pro features stand out even darker */
+.pro-features li {
+  color: #1e293b !important; /* Deep slate for emphasis */
+  font-weight: 600 !important;
+}
+
+/* Ensure checkmarks are bright emerald */
+.pro-features li svg {
+  stroke: #10b981 !important;
 }

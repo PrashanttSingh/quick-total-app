@@ -101,16 +101,36 @@ function resetApp() {
   const breakdownContainer = document.getElementById("categoryBreakdown");
   if (breakdownContainer) breakdownContainer.style.display = "none";
 
+  // 🚀 DYNAMIC PANEL WIDTH: Shrink back to compact mode on reset
+  const appMenu = document.getElementById("appMenu");
+  if (appMenu && window.innerWidth <= 768) {
+    appMenu.style.setProperty("--bs-offcanvas-width", "280px");
+  }
+
   const mainCard = document.querySelector(".main-card");
   if (mainCard) {
     mainCard.style.display = "block";
     mainCard.style.removeProperty("display");
   }
 
+  // 🚀 RESTORE THE TOP PILLS & GAP WHEN RESETTING APP
+  const pillContainer = document.querySelector(".pill-container");
+  if (pillContainer) {
+    // 🚀 Remove the forced block so Bootstrap's original d-flex takes over again
+    pillContainer.style.removeProperty("display");
+
+    // Restore the header's default breathing room
+    const mainHeader = document.querySelector("header");
+    if (mainHeader) {
+      mainHeader.style.marginBottom = "";
+      const headerInner = mainHeader.firstElementChild;
+      if (headerInner) headerInner.style.paddingBottom = "";
+    }
+  }
+
   if (fileCountLabel) fileCountLabel.textContent = "0 Images Selected";
   if (fileCountLabelMobile) fileCountLabelMobile.textContent = "0 Images";
 }
-
 if (resetBtn) {
   resetBtn.addEventListener("click", (e) => {
     e.preventDefault();
@@ -1029,7 +1049,11 @@ calculateBtn.addEventListener("click", async () => {
       validCount++;
     } else {
       const colWrap = document.createElement("div");
-      colWrap.className = "col-12 col-md-6 mb-4";
+      // 🚀 Center the card if there is only 1 document uploaded
+      colWrap.className =
+        totalFiles === 1
+          ? "col-12 col-md-6 mx-auto mb-4"
+          : "col-12 col-md-6 mb-4";
       colWrap.innerHTML = `
         <div class="receipt-card glass-panel h-100 animate-pop rounded-4 shadow-sm" data-image-index="${i}">
             <div class="rc-header p-3 border-bottom border-secondary" style="display: flex; justify-content: space-between; align-items: center;">
@@ -1077,7 +1101,11 @@ calculateBtn.addEventListener("click", async () => {
       const file = filesToProcess[originalIndex];
 
       const colWrap = document.createElement("div");
-      colWrap.className = "col-12 col-md-6 mb-4";
+      // 🚀 Center the card if there is only 1 document uploaded
+      colWrap.className =
+        totalFiles === 1
+          ? "col-12 col-md-6 mx-auto mb-4"
+          : "col-12 col-md-6 mb-4";
 
       const tempCard = document.createElement("div");
       tempCard.className =
@@ -1207,11 +1235,68 @@ calculateBtn.addEventListener("click", async () => {
       if (grandTotalCard) grandTotalCard.style.display = "flex";
       recalculateLiveMath();
 
-      // 🚨 FIX: INSERT GRAND TOTAL AT THE VERY TOP OF RESULTS (Safe for both)
+      // 🚨 MOBILE FOCUS MODE: Hide pills and pull Grand Total perfectly up
+      const pillContainer = document.querySelector(".pill-container");
+      if (pillContainer && window.innerWidth <= 768) {
+        // 🚀 FORCE override Bootstrap's d-flex !important rule
+        pillContainer.style.setProperty("display", "none", "important");
+
+        // 🚀 Eliminate the massive empty gap left behind by the pills
+        const mainHeader = document.querySelector("header");
+        if (mainHeader) {
+          mainHeader.style.marginBottom = "0px";
+          const headerInner = mainHeader.firstElementChild;
+          if (headerInner) headerInner.style.paddingBottom = "0px";
+        }
+      }
+
+      // 🚨 FIX: INSERT GRAND TOTAL AT THE VERY TOP OF RESULTS
       if (resultsContainer && grandTotalCard && receiptsList) {
         resultsContainer.insertBefore(grandTotalCard, receiptsList);
-        grandTotalCard.classList.remove("mt-4");
-        grandTotalCard.classList.add("mt-2", "mb-4");
+        grandTotalCard.classList.remove("mt-4", "mt-2");
+        grandTotalCard.classList.add("mb-4");
+        // Force the card to sit completely flush against the header
+        grandTotalCard.style.marginTop = "0px";
+      }
+      // 🚨 OPTION 1: MINIMALIST MOBILE TABS (Responsive Equal Width)
+      let oldTabs = document.getElementById("mobileTabContainer");
+      if (oldTabs) oldTabs.remove();
+
+      const allCards = receiptsList.querySelectorAll(".col-12.col-md-6");
+
+      if (allCards.length > 1) {
+        const tabContainer = document.createElement("div");
+        tabContainer.id = "mobileTabContainer";
+        // w-100 and d-flex ensures the tabs span the exact container width
+        tabContainer.className = "d-flex d-md-none w-100 gap-2 mb-3 px-1";
+
+        allCards.forEach((card, idx) => {
+          card.classList.add("mobile-tab-content");
+          if (idx === 0) card.classList.add("active-mobile-tab");
+
+          const tabBtn = document.createElement("button");
+          // 'flex-fill' makes all tabs share screen width equally
+          tabBtn.className = `btn rounded-pill fw-bold border-0 py-2 flex-fill mobile-tab-btn ${idx === 0 ? "active" : ""}`;
+          tabBtn.innerText = `Doc #${idx + 1}`;
+
+          tabBtn.onclick = () => {
+            tabContainer
+              .querySelectorAll(".mobile-tab-btn")
+              .forEach((btn) => btn.classList.remove("active"));
+            tabBtn.classList.add("active");
+
+            allCards.forEach((c, cIdx) => {
+              if (cIdx === idx) {
+                c.classList.add("active-mobile-tab");
+              } else {
+                c.classList.remove("active-mobile-tab");
+              }
+            });
+          };
+          tabContainer.appendChild(tabBtn);
+        });
+
+        resultsContainer.insertBefore(tabContainer, receiptsList);
       }
 
       // 🚨 FIX: Forcibly remove old link to ensure the premium button generates
@@ -1220,7 +1305,8 @@ calculateBtn.addEventListener("click", async () => {
 
       // Create the premium touch-friendly button with the updated "New Scan" text
       const resetDiv = document.createElement("div");
-      resetDiv.className = "w-100 text-center mt-4 mb-4 d-md-none px-2";
+      // 🚀 Pulled up (mt-2) and added a bottom cushion (mb-5 pb-4) to prevent clipping!
+      resetDiv.className = "w-100 text-center mt-2 mb-5 pb-4 d-md-none px-2";
       resetDiv.innerHTML = `
         <button id="resultsResetBtn" class="btn w-100 fw-bold d-flex align-items-center justify-content-center gap-2" onclick="document.getElementById('resetBtn').click()" style="background: #ffffff; color: #1e293b; border-radius: 14px; padding: 14px; border: 2px solid #cbd5e1; box-shadow: 0 4px 10px rgba(0,0,0,0.04); font-size: 15px; transition: all 0.2s;">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
@@ -1777,10 +1863,20 @@ function recalculateLiveMath() {
     grandTotalValue.textContent = `${getSym()}${newGrandTotal.toFixed(2)}`;
 
   let breakdownContainer = document.getElementById("categoryBreakdown");
+  const appMenu = document.getElementById("appMenu");
+
   if (newGrandTotal === 0 && Object.keys(categoryTotals).length === 0) {
     breakdownContainer.style.display = "none";
+    // 🚀 DYNAMIC PANEL WIDTH: Keep compact when empty
+    if (appMenu && window.innerWidth <= 768) {
+      appMenu.style.setProperty("--bs-offcanvas-width", "280px");
+    }
   } else {
     breakdownContainer.style.display = "block";
+    // 🚀 DYNAMIC PANEL WIDTH: Widen to fit the pie chart perfectly
+    if (appMenu && window.innerWidth <= 768) {
+      appMenu.style.setProperty("--bs-offcanvas-width", "350px");
+    }
 
     // 🚨 FIX 1: Matched the header style to the rest of the sidebar
     let breakdownHtml = `<h6 class="fw-bold mb-3 mt-4 text-uppercase text-muted small" style="letter-spacing: 0.5px;">📊 Spend by Category</h6>`;
@@ -2826,12 +2922,126 @@ document.addEventListener("DOMContentLoaded", () => {
   let isYearly = false;
 
   // Global hook so you can open this modal from anywhere in your app
-  window.openPricingModal = function () {
+  window.openPricingModal = async function () {
+    const pricingModal = document.getElementById("pricingModal");
     if (pricingModal) {
       pricingModal.style.display = "flex";
       document.body.style.overflow = "hidden"; // Locks background scroll
+
+      // 🚀 Trigger the Dynamic Button Logic
+      await renderDynamicPricingButtons();
     }
   };
+
+  // 🧠 THE STATE MACHINE: Safer SaaS Subscription Logic
+  async function renderDynamicPricingButtons() {
+    const btnBasic = document.getElementById("btnBasicPlan");
+    const btnPro = document.getElementById("btnProPlan");
+    if (!btnBasic || !btnPro) return;
+
+    // ⏳ Set temporary loading state while fetching from database
+    btnBasic.innerHTML = "Loading...";
+    btnPro.innerHTML = "Loading...";
+    btnBasic.style.pointerEvents = "none";
+    btnPro.style.pointerEvents = "none";
+
+    try {
+      /* 
+          🔌 INTEGRATION POINT: Fetch from your Python backend
+          Example: const currentPlan = await fetch('/api/user/plan').then(res => res.json());
+        */
+      const currentPlan = localStorage.getItem("quickTotalUserPlan") || "basic";
+
+      if (currentPlan === "basic") {
+        // 👤 USER IS ON FREE TIER
+
+        // Basic Button -> "Current Plan" (Locked)
+        btnBasic.innerHTML = "Current Plan";
+        btnBasic.style.background = "#f8fafc";
+        btnBasic.style.color = "#94a3b8";
+        btnBasic.style.border = "1px solid #e2e8f0";
+        btnBasic.style.pointerEvents = "none";
+
+        // Pro Button -> "Upgrade to Pro" (Active)
+        btnPro.innerHTML = "Upgrade to Pro";
+        btnPro.style.background = "#10b981";
+        btnPro.style.color = "white";
+        btnPro.style.border = "none";
+        btnPro.style.boxShadow = "0 4px 12px rgba(16,185,129,0.2)";
+        btnPro.style.pointerEvents = "auto";
+
+        btnPro.onclick = async () => {
+          btnPro.innerHTML =
+            '<span class="spinner-border spinner-border-sm me-2"></span> Connecting...';
+
+          try {
+            // 🌍 Change region to 'US' to test Stripe, or 'IN' to test Razorpay
+            const payload = { region: "IN" };
+
+            const response = await fetch("/api/checkout", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            });
+
+            const data = await response.json();
+
+            if (data.gateway === "stripe") {
+              // 🌍 STRIPE: Teleport international user to secure checkout page
+              window.location.href = data.url;
+            } else if (data.gateway === "razorpay") {
+              // 🇮🇳 RAZORPAY: Open sleek native overlay for Indian users
+              const options = {
+                key: data.key,
+                amount: data.amount,
+                currency: "INR",
+                name: "QuickTotal",
+                description: "Pro Subscription",
+                order_id: data.order_id,
+                prefill: {
+                  // Leave blank so each customer enters their own details:
+                  name: "",
+                  email: "",
+                  contact: "",
+                },
+                theme: { color: "#10b981" },
+              };
+              const rzp = new Razorpay(options);
+              rzp.open();
+              btnPro.innerHTML = "Manage Subscription";
+            }
+          } catch (error) {
+            console.error("Payment Gateway Error:", error);
+            btnPro.innerHTML = "Manage Subscription";
+          }
+        };
+      } else if (currentPlan === "pro") {
+        // 💎 USER IS ALREADY PAYING FOR PRO
+
+        // Basic Button -> "Included" (Locked)
+        btnBasic.innerHTML = "Included";
+        btnBasic.style.background = "#f8fafc";
+        btnBasic.style.color = "#94a3b8";
+        btnBasic.style.border = "1px solid #e2e8f0";
+        btnBasic.style.pointerEvents = "none";
+
+        // Pro Button -> "Manage Subscription" (Active Portal Link)
+        btnPro.innerHTML = "Manage Subscription";
+        btnPro.style.background = "#ecfdf5";
+        btnPro.style.color = "#059669";
+        btnPro.style.border = "2px solid #a7f3d0";
+        btnPro.style.boxShadow = "none";
+        btnPro.style.pointerEvents = "auto";
+
+        btnPro.onclick = () => {
+          // TODO: Redirect to Stripe Customer Portal
+          alert("Opening Stripe billing portal to manage your subscription...");
+        };
+      }
+    } catch (err) {
+      console.error("Failed to load user plan:", err);
+    }
+  }
 
   if (closePricingBtn) {
     closePricingBtn.addEventListener("click", () => {
@@ -2849,20 +3059,86 @@ document.addEventListener("DOMContentLoaded", () => {
       if (isYearly) {
         proPriceOld.textContent = "₹299";
         proPrice.innerHTML =
-          '₹239<span style="font-size: 1rem; color: #94a3b8; font-weight: 500;">/mo</span>';
-        yearlyLabel.style.color = "#ffffff";
+          '₹239<span style="font-size: 0.9rem; color: #64748b; font-weight: 500;">/mo</span>';
+        yearlyLabel.style.color = "#1e293b"; // Dark text for active
         yearlyLabel.style.fontWeight = "700";
-        monthlyLabel.style.color = "#64748b";
+        monthlyLabel.style.color = "#94a3b8"; // Muted text for inactive
         monthlyLabel.style.fontWeight = "600";
       } else {
         proPriceOld.textContent = "";
         proPrice.innerHTML =
-          '₹299<span style="font-size: 1rem; color: #94a3b8; font-weight: 500;">/mo</span>';
-        monthlyLabel.style.color = "#ffffff";
+          '₹299<span style="font-size: 0.9rem; color: #64748b; font-weight: 500;">/mo</span>';
+        monthlyLabel.style.color = "#1e293b"; // Dark text for active
         monthlyLabel.style.fontWeight = "700";
-        yearlyLabel.style.color = "#64748b";
+        yearlyLabel.style.color = "#94a3b8"; // Muted text for inactive
         yearlyLabel.style.fontWeight = "600";
       }
     });
+  }
+});
+
+// ==========================================
+// 📱 MOBILE SWIPE-TO-SWITCH GESTURE
+// ==========================================
+let touchStartX = 0;
+let touchStartY = 0;
+let touchEndX = 0;
+let touchEndY = 0;
+
+const receiptContainer = document.getElementById("receiptsList");
+
+if (receiptContainer) {
+  receiptContainer.addEventListener(
+    "touchstart",
+    (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+      touchStartY = e.changedTouches[0].screenY;
+    },
+    { passive: true },
+  );
+
+  receiptContainer.addEventListener(
+    "touchend",
+    (e) => {
+      touchEndX = e.changedTouches[0].screenX;
+      touchEndY = e.changedTouches[0].screenY;
+
+      const tabContainer = document.getElementById("mobileTabContainer");
+
+      // 🛡️ DESKTOP GUARD: Ignore completely if on a laptop or tabs don't exist
+      if (!tabContainer || window.innerWidth > 768) return;
+
+      const swipeX = touchStartX - touchEndX;
+      const swipeY = touchStartY - touchEndY;
+
+      // MATH CHECK: Ensure the user swiped horizontally, not scrolled vertically
+      if (Math.abs(swipeX) > 50 && Math.abs(swipeX) > Math.abs(swipeY)) {
+        const tabs = Array.from(
+          tabContainer.querySelectorAll(".mobile-tab-btn"),
+        );
+        const activeTab = tabContainer.querySelector(".mobile-tab-btn.active");
+        if (!activeTab) return;
+
+        const currentIdx = tabs.indexOf(activeTab);
+
+        if (swipeX > 0 && currentIdx < tabs.length - 1) {
+          // Swiped Left -> Load Next Document
+          tabs[currentIdx + 1].click();
+        } else if (swipeX < 0 && currentIdx > 0) {
+          // Swiped Right -> Load Previous Document
+          tabs[currentIdx - 1].click();
+        }
+      }
+    },
+    { passive: true },
+  );
+}
+// ==========================================
+// 🚀 INITIALIZE COMPACT SIDE PANEL ON LOAD
+// ==========================================
+document.addEventListener("DOMContentLoaded", () => {
+  const appMenu = document.getElementById("appMenu");
+  if (appMenu && window.innerWidth <= 768) {
+    appMenu.style.setProperty("--bs-offcanvas-width", "280px");
   }
 });

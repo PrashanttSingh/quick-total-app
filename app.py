@@ -13,6 +13,8 @@ from PIL import Image, ImageEnhance
 from dotenv import load_dotenv
 import google.generativeai as genai
 import tempfile
+import stripe
+import razorpay
 
 load_dotenv()
 
@@ -518,6 +520,64 @@ def process_voice():
         'text': transcribed_text, 
         'tier_used': current_tier
     })
+    
+# ==========================================
+# 🔑 RAZORPAY ENVIRONMENT SETUP
+# ==========================================
+RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID")
+RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET")
+
+stripe.api_key = os.getenv("STRIPE_SECRET_KEY", "sk_test_your_stripe_secret")
+rzp_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+
+# ==========================================
+# 🌐 HYBRID CHECKOUT ENDPOINT (Stripe & Razorpay)
+# ==========================================
+@app.route('/api/checkout', methods=['POST'])
+def create_checkout():
+    try:
+        data = request.get_json()
+        user_region = data.get('region', 'IN') 
+
+        # 🚀 Automatically detect if we are running locally or live in production
+        base_url = "https://quicktotal.com" if os.environ.get("RENDER") or os.environ.get("RAILWAY_ENVIRONMENT") or os.environ.get("VERCEL") else "http://localhost:5000"
+
+        if user_region == 'IN':
+            # 🇮🇳 ROUTE 1: RAZORPAY FOR INDIA
+            order_data = {
+                "amount": 29900,
+                "currency": "INR",
+                "receipt": "quicktotal_receipt_001",
+                "payment_capture": 1
+            }
+            order = rzp_client.order.create(data=order_data)
+            
+            return jsonify({
+                "gateway": "razorpay",
+                "order_id": order['id'],
+                "amount": 29900,
+                "key": RAZORPAY_KEY_ID
+            })
+
+        else:
+            # 🌍 ROUTE 2: STRIPE FOR INTERNATIONAL
+            session = stripe.checkout.Session.create(
+                payment_method_types=['card'],
+                line_items=[{
+                    'price': os.getenv('STRIPE_PRICE_ID', 'price_your_stripe_price_id'), 
+                    'quantity': 1,
+                }],
+                mode='subscription',
+                success_url=f"{base_url}/?success=true",
+                cancel_url=f"{base_url}/?canceled=true",
+            )
+            return jsonify({
+                "gateway": "stripe",
+                "url": session.url
+            })
+
+    except Exception as e:
+        return jsonify(error=str(e)), 403  
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
