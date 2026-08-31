@@ -1,3 +1,165 @@
+// ==========================================
+// 🔐 SUPABASE INITIALIZATION (AUTH & DATABASE)
+// ==========================================
+const SUPABASE_URL = "https://vxzupqjkmnyqqvpbqiap.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_4oSVhdaS3DiZQ3RrdyBCbg_kmbuEN0m";
+
+// 🚨 FIX: Renamed to 'supabaseClient' to stop the SyntaxError crash!
+const supabaseClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY,
+);
+
+// Global user state
+let currentUser = null;
+
+// ==========================================
+// 🔐 AUTHENTICATION LOGIC (LOGIN / SIGNUP)
+// ==========================================
+let isLoginMode = true;
+
+const loginTab = document.getElementById("showLoginBtn");
+const signupTab = document.getElementById("showSignupBtn");
+const submitBtn = document.getElementById("authSubmitBtn");
+const authAlert = document.getElementById("authAlert");
+const authForm = document.getElementById("authForm");
+const navLoginText = document.getElementById("navLoginText");
+const navLoginBtn = document.getElementById("navLoginBtn");
+
+// Toggle to "Log In" mode
+if (loginTab) {
+  loginTab.addEventListener("click", (e) => {
+    e.preventDefault();
+    isLoginMode = true;
+    loginTab.classList.add("active-auth-tab");
+    loginTab.style.cssText =
+      "background: white; color: #1e293b; box-shadow: 0 2px 4px rgba(0,0,0,0.05);";
+    if (signupTab) {
+      signupTab.classList.remove("active-auth-tab");
+      signupTab.style.background = "transparent";
+      signupTab.style.color = "#6c757d";
+      signupTab.style.boxShadow = "none";
+    }
+    if (submitBtn) submitBtn.innerText = "Log In";
+    if (authAlert) authAlert.classList.add("d-none");
+  });
+}
+
+// Toggle to "Sign Up" mode
+if (signupTab) {
+  signupTab.addEventListener("click", (e) => {
+    e.preventDefault();
+    isLoginMode = false;
+    signupTab.classList.add("active-auth-tab");
+    signupTab.style.cssText =
+      "background: white; color: #1e293b; box-shadow: 0 2px 4px rgba(0,0,0,0.05);";
+    if (loginTab) {
+      loginTab.classList.remove("active-auth-tab");
+      loginTab.style.background = "transparent";
+      loginTab.style.color = "#6c757d";
+      loginTab.style.boxShadow = "none";
+    }
+    if (submitBtn) submitBtn.innerText = "Sign Up";
+    if (authAlert) authAlert.classList.add("d-none");
+  });
+}
+// Handle the Form Submission
+if (authForm) {
+  authForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const emailInput = document.getElementById("authEmail");
+    const passwordInput = document.getElementById("authPassword");
+    if (!emailInput || !passwordInput) return;
+
+    const email = emailInput.value;
+    const password = passwordInput.value;
+
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerText = "Processing...";
+    }
+    if (authAlert) authAlert.classList.add("d-none");
+
+    let authError = null;
+
+    if (isLoginMode) {
+      const { data, error } = await supabaseClient.auth.signInWithPassword({
+        email,
+        password,
+      });
+      authError = error;
+      if (data && data.user) currentUser = data.user;
+    } else {
+      const { data, error } = await supabaseClient.auth.signUp({
+        email,
+        password,
+      });
+      authError = error;
+      if (data && data.user) currentUser = data.user;
+    }
+
+    if (authError) {
+      if (authAlert) {
+        authAlert.innerText = authError.message;
+        authAlert.classList.remove("d-none");
+      }
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerText = isLoginMode ? "Log In" : "Sign Up";
+      }
+    } else {
+      const modalEl = document.getElementById("authModal");
+      if (modalEl) {
+        const modalInstance =
+          bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+        modalInstance.hide();
+      }
+      authForm.reset();
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerText = isLoginMode ? "Log In" : "Sign Up";
+      }
+      checkUserSession();
+    }
+  });
+}
+
+// Check session safely
+async function checkUserSession() {
+  try {
+    const {
+      data: { session },
+    } = await supabaseClient.auth.getSession();
+
+    if (session && session.user) {
+      currentUser = session.user;
+      if (navLoginText) navLoginText.innerText = "Log Out";
+      if (navLoginBtn) {
+        navLoginBtn.removeAttribute("data-bs-toggle");
+        navLoginBtn.removeAttribute("data-bs-target");
+        navLoginBtn.onclick = async () => {
+          await supabaseClient.auth.signOut();
+          currentUser = null;
+          checkUserSession();
+        };
+      }
+    } else {
+      currentUser = null;
+      // 🚨 Change this line to include " / Sign Up"
+      if (navLoginText) navLoginText.innerText = "Log In / Sign Up";
+      if (navLoginBtn) {
+        navLoginBtn.setAttribute("data-bs-toggle", "modal");
+        navLoginBtn.setAttribute("data-bs-target", "#authModal");
+        navLoginBtn.onclick = null;
+      }
+    }
+  } catch (err) {
+    console.error("Session check error:", err);
+  }
+}
+
+checkUserSession();
 // QUICKTOTAL SPLASH SCREEN LOGIC
 window.addEventListener("load", () => {
   const splashScreen = document.getElementById("qt-splash-screen");
@@ -50,6 +212,7 @@ const browseBtn = document.getElementById("browseBtn");
 
 // IMAGE MODAL ELEMENTS
 const imageModal = document.getElementById("imageModal");
+const modalImage = document.getElementById("modalImage");
 const modalTransformWrapper = document.getElementById("imageZoomWrapper");
 const modalCropCanvas = document.getElementById("modalCropCanvas");
 const closeImageModal = document.getElementById("closeImageModal");
@@ -2912,233 +3075,183 @@ document.addEventListener("DOMContentLoaded", () => {
 // ==========================================
 document.addEventListener("DOMContentLoaded", () => {
   const pricingModal = document.getElementById("pricingModal");
-  const closePricingBtn = document.getElementById("closePricingBtn");
-  const billingToggle = document.getElementById("billingToggle");
-  const proPrice = document.getElementById("proPrice");
-  const proPriceOld = document.getElementById("proPriceOld");
-  const monthlyLabel = document.getElementById("monthlyLabel");
-  const yearlyLabel = document.getElementById("yearlyLabel");
+  // ==========================================
+  // 💎 PRICING MODAL & BILLING LOGIC
+  // ==========================================
 
-  let isYearly = false;
-
-  // Global hook so you can open this modal from anywhere in your app
-  window.openPricingModal = async function () {
+  window.openPricingModal = function () {
     const pricingModal = document.getElementById("pricingModal");
-    if (pricingModal) {
-      pricingModal.style.display = "flex";
-      document.body.style.overflow = "hidden"; // Locks background scroll
+    if (!pricingModal) return;
 
-      // 🚀 Trigger the Dynamic Button Logic
-      await renderDynamicPricingButtons();
+    pricingModal.style.display = "flex";
+    document.body.style.overflow = "hidden";
+
+    const btnBasic = document.getElementById("btnBasicPlan");
+    const btnPro = document.getElementById("btnProPlan");
+    const btnMax = document.getElementById("btnMaxPlan");
+    const currentPlan = localStorage.getItem("quickTotalUserPlan") || "basic";
+
+    // 1. Reset all buttons to active, clickable states first
+    if (btnBasic) {
+      btnBasic.innerHTML = "Current Plan";
+      btnBasic.style.cssText =
+        "background: #f8fafc; color: #94a3b8; border: 1px solid #e2e8f0; pointer-events: none;";
+    }
+    if (btnPro) {
+      btnPro.innerHTML = "Upgrade to Pro";
+      btnPro.style.cssText =
+        "background: #10b981; color: white; border: none; box-shadow: 0 4px 12px rgba(16,185,129,0.2); cursor: pointer;";
+    }
+    if (btnMax) {
+      btnMax.innerHTML = "Upgrade to Max";
+      btnMax.style.cssText =
+        "background: #3b82f6; color: white; border: none; box-shadow: 0 4px 12px rgba(59,130,246,0.25); cursor: pointer;";
+    }
+
+    // 2. Lock buttons if the user already bought a plan
+    if (currentPlan === "pro") {
+      if (btnBasic) btnBasic.innerHTML = "Included";
+      if (btnPro) {
+        btnPro.innerHTML = "Manage Subscription";
+        btnPro.style.cssText =
+          "background: #ecfdf5; color: #059669; border: 2px solid #a7f3d0; cursor: pointer;";
+      }
+    } else if (currentPlan === "max") {
+      if (btnBasic) btnBasic.innerHTML = "Included";
+      if (btnPro) {
+        btnPro.innerHTML = "Included";
+        btnPro.style.cssText =
+          "background: #ecfdf5; color: #059669; border: 2px solid #a7f3d0; pointer-events: none;";
+      }
+      if (btnMax) {
+        btnMax.innerHTML = "Manage Subscription";
+        btnMax.style.cssText =
+          "background: #eff6ff; color: #2563eb; border: 2px solid #bfdbfe; cursor: pointer;";
+      }
     }
   };
 
-  // 🧠 THE STATE MACHINE: Safer SaaS Subscription Logic
-  async function renderDynamicPricingButtons() {
-    const btnBasic = document.getElementById("btnBasicPlan");
-    const btnPro = document.getElementById("btnProPlan");
-    if (!btnBasic || !btnPro) return;
+  window.triggerCheckout = async function (tier) {
+    const btn =
+      tier === "pro"
+        ? document.getElementById("btnProPlan")
+        : document.getElementById("btnMaxPlan");
+    if (!btn) return;
 
-    // ⏳ Set temporary loading state while fetching from database
-    btnBasic.innerHTML = "Loading...";
-    btnPro.innerHTML = "Loading...";
-    btnBasic.style.pointerEvents = "none";
-    btnPro.style.pointerEvents = "none";
+    const originalText = btn.innerHTML;
+    btn.innerHTML = "Connecting...";
 
     try {
-      /* 
-          🔌 INTEGRATION POINT: Fetch from your Python backend
-          Example: const currentPlan = await fetch('/api/user/plan').then(res => res.json());
-        */
-      const currentPlan = localStorage.getItem("quickTotalUserPlan") || "basic";
+      const response = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan: tier, region: "IN" }),
+      });
 
-      if (currentPlan === "basic") {
-        // 👤 USER IS ON FREE TIER
+      if (!response.ok) throw new Error("Backend not wired");
+      const data = await response.json();
 
-        // Basic Button -> "Current Plan" (Locked)
-        btnBasic.innerHTML = "Current Plan";
-        btnBasic.style.background = "#f8fafc";
-        btnBasic.style.color = "#94a3b8";
-        btnBasic.style.border = "1px solid #e2e8f0";
-        btnBasic.style.pointerEvents = "none";
-
-        // Pro Button -> "Upgrade to Pro" (Active)
-        btnPro.innerHTML = "Upgrade to Pro";
-        btnPro.style.background = "#10b981";
-        btnPro.style.color = "white";
-        btnPro.style.border = "none";
-        btnPro.style.boxShadow = "0 4px 12px rgba(16,185,129,0.2)";
-        btnPro.style.pointerEvents = "auto";
-
-        btnPro.onclick = async () => {
-          btnPro.innerHTML =
-            '<span class="spinner-border spinner-border-sm me-2"></span> Connecting...';
-
-          try {
-            // 🌍 Change region to 'US' to test Stripe, or 'IN' to test Razorpay
-            const payload = { region: "IN" };
-
-            const response = await fetch("/api/checkout", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(payload),
-            });
-
-            const data = await response.json();
-
-            if (data.gateway === "stripe") {
-              // 🌍 STRIPE: Teleport international user to secure checkout page
-              window.location.href = data.url;
-            } else if (data.gateway === "razorpay") {
-              // 🇮🇳 RAZORPAY: Open sleek native overlay for Indian users
-              const options = {
-                key: data.key,
-                amount: data.amount,
-                currency: "INR",
-                name: "QuickTotal",
-                description: "Pro Subscription",
-                order_id: data.order_id,
-                prefill: {
-                  // Leave blank so each customer enters their own details:
-                  name: "",
-                  email: "",
-                  contact: "",
-                },
-                theme: { color: "#10b981" },
-              };
-              const rzp = new Razorpay(options);
-              rzp.open();
-              btnPro.innerHTML = "Manage Subscription";
-            }
-          } catch (error) {
-            console.error("Payment Gateway Error:", error);
-            btnPro.innerHTML = "Manage Subscription";
-          }
-        };
-      } else if (currentPlan === "pro") {
-        // 💎 USER IS ALREADY PAYING FOR PRO
-
-        // Basic Button -> "Included" (Locked)
-        btnBasic.innerHTML = "Included";
-        btnBasic.style.background = "#f8fafc";
-        btnBasic.style.color = "#94a3b8";
-        btnBasic.style.border = "1px solid #e2e8f0";
-        btnBasic.style.pointerEvents = "none";
-
-        // Pro Button -> "Manage Subscription" (Active Portal Link)
-        btnPro.innerHTML = "Manage Subscription";
-        btnPro.style.background = "#ecfdf5";
-        btnPro.style.color = "#059669";
-        btnPro.style.border = "2px solid #a7f3d0";
-        btnPro.style.boxShadow = "none";
-        btnPro.style.pointerEvents = "auto";
-
-        btnPro.onclick = () => {
-          // TODO: Redirect to Stripe Customer Portal
-          alert("Opening Stripe billing portal to manage your subscription...");
-        };
+      if (data.gateway === "razorpay" && window.Razorpay) {
+        new window.Razorpay({
+          key: data.key,
+          amount: data.amount,
+          currency: "INR",
+          name: "QuickTotal",
+          order_id: data.order_id,
+        }).open();
+      } else if (data.url) {
+        window.location.href = data.url;
       }
     } catch (err) {
-      console.error("Failed to load user plan:", err);
+      alert(
+        "Payment backend not linked yet. Launching checkout for the " +
+          tier.toUpperCase() +
+          " plan.",
+      );
+    } finally {
+      btn.innerHTML = originalText;
     }
-  }
+  };
 
-  if (closePricingBtn) {
-    closePricingBtn.addEventListener("click", () => {
-      pricingModal.style.display = "none";
+  // 3. MASTER CLICK LISTENER (Handles Modal Close, Billing Toggle, and Checkout Buttons)
+  document.addEventListener("click", function (e) {
+    // Safety check to prevent errors if clicking empty space
+    if (!e.target || typeof e.target.closest !== "function") return;
+
+    // 🔘 A. Button Click Logic
+    if (e.target.closest("#btnProPlan")) {
+      const currentPlan = localStorage.getItem("quickTotalUserPlan") || "basic";
+      if (currentPlan === "basic") window.triggerCheckout("pro");
+      else if (currentPlan === "pro") alert("Opening billing portal...");
+    }
+
+    if (e.target.closest("#btnMaxPlan")) {
+      const currentPlan = localStorage.getItem("quickTotalUserPlan") || "basic";
+      if (currentPlan !== "max") window.triggerCheckout("max");
+      else alert("Opening billing portal...");
+    }
+
+    // 🔘 B. Close Button Logic
+    if (e.target.closest("#closePricingBtn")) {
+      const pricingModal = document.getElementById("pricingModal");
+      if (pricingModal) pricingModal.style.display = "none";
       document.body.style.overflow = "auto";
-    });
-  }
+    }
 
-  // Toggle Monthly vs Yearly pricing math
-  if (billingToggle) {
-    billingToggle.addEventListener("click", () => {
-      isYearly = !isYearly;
-      billingToggle.classList.toggle("active");
+    // 🔘 C. Billing Toggle Logic (Monthly / Yearly)
+    if (e.target.closest("#billingToggle")) {
+      const toggle = e.target.closest("#billingToggle");
 
+      // Triggers the CSS animations
+      toggle.classList.toggle("active");
+      const isYearly = toggle.classList.contains("active");
+
+      // Grab price elements
+      const proPrice = document.getElementById("proPrice");
+      const proOld = document.getElementById("proPriceOld");
+      const maxPrice = document.getElementById("maxPrice");
+      const maxOld = document.getElementById("maxPriceOld");
+      const monthlyLabel = document.getElementById("monthlyLabel");
+      const yearlyLabel = document.getElementById("yearlyLabel");
+
+      // Swap the prices instantly
       if (isYearly) {
-        proPriceOld.textContent = "₹299";
-        proPrice.innerHTML =
-          '₹239<span style="font-size: 0.9rem; color: #64748b; font-weight: 500;">/mo</span>';
-        yearlyLabel.style.color = "#1e293b"; // Dark text for active
-        yearlyLabel.style.fontWeight = "700";
-        monthlyLabel.style.color = "#94a3b8"; // Muted text for inactive
-        monthlyLabel.style.fontWeight = "600";
+        if (proOld) proOld.textContent = "₹299";
+        if (proPrice)
+          proPrice.innerHTML =
+            '₹239<span style="font-size: 0.9rem; color: #64748b; font-weight: 500;">/mo</span>';
+        if (maxOld) maxOld.textContent = "₹799";
+        if (maxPrice)
+          maxPrice.innerHTML =
+            '₹639<span style="font-size: 0.9rem; color: #64748b; font-weight: 500;">/mo</span>';
+
+        if (yearlyLabel) {
+          yearlyLabel.style.color = "#1e293b";
+          yearlyLabel.style.fontWeight = "700";
+        }
+        if (monthlyLabel) {
+          monthlyLabel.style.color = "#94a3b8";
+          monthlyLabel.style.fontWeight = "600";
+        }
       } else {
-        proPriceOld.textContent = "";
-        proPrice.innerHTML =
-          '₹299<span style="font-size: 0.9rem; color: #64748b; font-weight: 500;">/mo</span>';
-        monthlyLabel.style.color = "#1e293b"; // Dark text for active
-        monthlyLabel.style.fontWeight = "700";
-        yearlyLabel.style.color = "#94a3b8"; // Muted text for inactive
-        yearlyLabel.style.fontWeight = "600";
-      }
-    });
-  }
-});
+        if (proOld) proOld.textContent = "";
+        if (proPrice)
+          proPrice.innerHTML =
+            '₹299<span style="font-size: 0.9rem; color: #64748b; font-weight: 500;">/mo</span>';
+        if (maxOld) maxOld.textContent = "";
+        if (maxPrice)
+          maxPrice.innerHTML =
+            '₹799<span style="font-size: 0.9rem; color: #64748b; font-weight: 500;">/mo</span>';
 
-// ==========================================
-// 📱 MOBILE SWIPE-TO-SWITCH GESTURE
-// ==========================================
-let touchStartX = 0;
-let touchStartY = 0;
-let touchEndX = 0;
-let touchEndY = 0;
-
-const receiptContainer = document.getElementById("receiptsList");
-
-if (receiptContainer) {
-  receiptContainer.addEventListener(
-    "touchstart",
-    (e) => {
-      touchStartX = e.changedTouches[0].screenX;
-      touchStartY = e.changedTouches[0].screenY;
-    },
-    { passive: true },
-  );
-
-  receiptContainer.addEventListener(
-    "touchend",
-    (e) => {
-      touchEndX = e.changedTouches[0].screenX;
-      touchEndY = e.changedTouches[0].screenY;
-
-      const tabContainer = document.getElementById("mobileTabContainer");
-
-      // 🛡️ DESKTOP GUARD: Ignore completely if on a laptop or tabs don't exist
-      if (!tabContainer || window.innerWidth > 768) return;
-
-      const swipeX = touchStartX - touchEndX;
-      const swipeY = touchStartY - touchEndY;
-
-      // MATH CHECK: Ensure the user swiped horizontally, not scrolled vertically
-      if (Math.abs(swipeX) > 50 && Math.abs(swipeX) > Math.abs(swipeY)) {
-        const tabs = Array.from(
-          tabContainer.querySelectorAll(".mobile-tab-btn"),
-        );
-        const activeTab = tabContainer.querySelector(".mobile-tab-btn.active");
-        if (!activeTab) return;
-
-        const currentIdx = tabs.indexOf(activeTab);
-
-        if (swipeX > 0 && currentIdx < tabs.length - 1) {
-          // Swiped Left -> Load Next Document
-          tabs[currentIdx + 1].click();
-        } else if (swipeX < 0 && currentIdx > 0) {
-          // Swiped Right -> Load Previous Document
-          tabs[currentIdx - 1].click();
+        if (monthlyLabel) {
+          monthlyLabel.style.color = "#1e293b";
+          monthlyLabel.style.fontWeight = "700";
+        }
+        if (yearlyLabel) {
+          yearlyLabel.style.color = "#94a3b8";
+          yearlyLabel.style.fontWeight = "600";
         }
       }
-    },
-    { passive: true },
-  );
-}
-// ==========================================
-// 🚀 INITIALIZE COMPACT SIDE PANEL ON LOAD
-// ==========================================
-document.addEventListener("DOMContentLoaded", () => {
-  const appMenu = document.getElementById("appMenu");
-  if (appMenu && window.innerWidth <= 768) {
-    appMenu.style.setProperty("--bs-offcanvas-width", "280px");
-  }
+    }
+  });
 });

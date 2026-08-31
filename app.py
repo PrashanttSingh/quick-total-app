@@ -54,6 +54,52 @@ MODEL_NAMES = {
     "openrouter:google/gemma-3-27b-it:free": "Gemma 3 27B",
     "openrouter:nvidia/nemotron-nano-12b-v2-vl:free": "Nemotron V2"
 }
+# =================================================================
+# --- PASTE THE NEW TRACKER CODE HERE ---
+# =================================================================
+
+# --- IN-MEMORY USAGE TRACKER (Bridge until Login DB is ready) ---
+user_usage = {}
+
+def check_usage_limits(user_ip, num_scans):
+    now = time.time()
+    
+    # 1. If user is new, add them to the clipboard
+    if user_ip not in user_usage:
+        user_usage[user_ip] = {
+            "minute_count": 0, "minute_reset": now + 60,
+            "daily_count": 0, "daily_reset": now + 86400 # 24 hours in seconds
+        }
+    
+    user_data = user_usage[user_ip]
+
+    # 2. Reset the clocks if their time window has expired
+    if now > user_data["minute_reset"]:
+        user_data["minute_count"] = 0
+        user_data["minute_reset"] = now + 60
+
+    if now > user_data["daily_reset"]:
+        user_data["daily_count"] = 0
+        user_data["daily_reset"] = now + 86400
+
+    # 3. ANTI-BOT SHIELD: Max 10 scans per 60 seconds
+    if user_data["minute_count"] + num_scans > 10:
+        return False, "You're scanning too fast! Please wait 60 seconds.", False
+
+    # 4. BUDGET PROTECTOR: Max 50 scans per day
+    if user_data["daily_count"] + num_scans > 50:
+        hours_left = int((user_data["daily_reset"] - now) / 3600) or 1
+        return False, f"Daily limit reached. Your free scans reset in {hours_left} hours.", False
+
+    # 5. FLAG FOR TIERED FALLBACK: Passing 20 scans makes them high-volume
+    is_high_volume = (user_data["daily_count"] + num_scans) > 20
+
+    # Update their tallies since they passed the checks
+    user_data["minute_count"] += num_scans
+    user_data["daily_count"] += num_scans
+
+    return True, "", is_high_volume
+
 
 def get_latest_batch_id():
     log_file = "processing_logs.md"
