@@ -416,7 +416,7 @@
                     <span style="color: #10b981;">Intelligence</span>
                 </h2>
 
-                <!-- Billing Toggle (Now with inline animations) -->
+                <!-- Billing Toggle -->
                 <div class="d-flex align-items-center justify-content-center gap-3 mt-3">
                     <span id="monthlyLabel" style="color: #1e293b; font-weight: 700; font-size: 14px;">Monthly</span>
                     <div class="qt-toggle" id="billingToggle"
@@ -433,7 +433,7 @@
             </div>
 
             <!-- CARDS CONTAINER -->
-            <div class="d-flex flex-column flex-md-row gap-3">
+            <div class="d-flex flex-column flex-md-row gap-3 w-100">
                 <!-- ⚪ BASIC TIER -->
                 <div class="pricing-card flex-fill"
                     style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 20px; padding: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
@@ -454,11 +454,11 @@
                         <li class="mb-2 d-flex align-items-center gap-2"><svg width="16" height="16" viewBox="0 0 24 24"
                                 fill="none" stroke="#94a3b8" stroke-width="2.5">
                                 <polyline points="20 6 9 17 4 12"></polyline>
-                            </svg> Standard AI Speed</li>
+                            </svg> <b>Scan 1 Document</b> at a time</li>
                         <li class="mb-2 d-flex align-items-center gap-2"><svg width="16" height="16" viewBox="0 0 24 24"
                                 fill="none" stroke="#94a3b8" stroke-width="2.5">
                                 <polyline points="20 6 9 17 4 12"></polyline>
-                            </svg> Basic Categorization</li>
+                            </svg> Standard AI Speed</li>
                     </ul>
                 </div>
 
@@ -486,11 +486,11 @@
                         <li class="mb-2 d-flex align-items-center gap-2"><svg width="16" height="16" viewBox="0 0 24 24"
                                 fill="none" stroke="#10b981" stroke-width="3">
                                 <polyline points="20 6 9 17 4 12"></polyline>
-                            </svg> <b>Everything in Basic</b></li>
+                            </svg> <b>100</b> Receipt Scans / mo</li>
                         <li class="mb-2 d-flex align-items-center gap-2"><svg width="16" height="16" viewBox="0 0 24 24"
                                 fill="none" stroke="#10b981" stroke-width="3">
                                 <polyline points="20 6 9 17 4 12"></polyline>
-                            </svg> <b>100</b> Receipt Scans / mo</li>
+                            </svg> <b>Scan 3 Documents</b> at a time</li>
                         <li class="mb-2 d-flex align-items-center gap-2"><svg width="16" height="16" viewBox="0 0 24 24"
                                 fill="none" stroke="#10b981" stroke-width="3">
                                 <polyline points="20 6 9 17 4 12"></polyline>
@@ -499,10 +499,6 @@
                                 fill="none" stroke="#10b981" stroke-width="3">
                                 <polyline points="20 6 9 17 4 12"></polyline>
                             </svg> 1-Click Excel & PDF</li>
-                        <li class="mb-2 d-flex align-items-center gap-2"><svg width="16" height="16" viewBox="0 0 24 24"
-                                fill="none" stroke="#10b981" stroke-width="3">
-                                <polyline points="20 6 9 17 4 12"></polyline>
-                            </svg> Handwriting Engine</li>
                     </ul>
                 </div>
 
@@ -511,10 +507,10 @@
                     style="background: #ffffff; border: 2px solid #3b82f6; border-radius: 20px; padding: 24px; box-shadow: 0 10px 30px rgba(59, 130, 246, 0.15);">
                     <div class="position-absolute"
                         style="top: -12px; left: 50%; transform: translateX(-50%); background: #3b82f6; color: white; padding: 4px 14px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3); white-space: nowrap;">
-                        Best for Teams</div>
+                        Max Volume</div>
                     <h3 style="color: #1e293b; font-weight: 800; font-size: 1.3rem;">Max</h3>
-                    <p style="color: #64748b; font-size: 13px; min-height: 35px;">For small teams needing API &
-                        integrations.</p>
+                    <p style="color: #64748b; font-size: 13px; min-height: 35px;">For power users and high-volume
+                        workflows.</p>
                     <div class="my-3">
                         <span
                             style="font-size: 1.5rem; font-weight: 700; color: #94a3b8; text-decoration: line-through; margin-right: 4px;"
@@ -538,22 +534,14 @@
                         <li class="mb-2 d-flex align-items-center gap-2"><svg width="16" height="16" viewBox="0 0 24 24"
                                 fill="none" stroke="#3b82f6" stroke-width="3">
                                 <polyline points="20 6 9 17 4 12"></polyline>
-                            </svg> Multi-Page (Up to 5)</li>
-                        <li class="mb-2 d-flex align-items-center gap-2"><svg width="16" height="16" viewBox="0 0 24 24"
-                                fill="none" stroke="#3b82f6" stroke-width="3">
-                                <polyline points="20 6 9 17 4 12"></polyline>
-                            </svg> 3 Team Seats</li>
-                        <li class="mb-2 d-flex align-items-center gap-2"><svg width="16" height="16" viewBox="0 0 24 24"
-                                fill="none" stroke="#3b82f6" stroke-width="3">
-                                <polyline points="20 6 9 17 4 12"></polyline>
-                            </svg> API Key Access</li>
+                            </svg> <b>Scan 5 Documents</b> at a time</li>
                     </ul>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- AUTH MODAL -->
+    <!-- AUTH MODAL (ONLY ONE EXISTS NOW!) -->
     <div class="modal fade" id="authModal" tabindex="-1" aria-labelledby="authModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content rounded-4 border-0 shadow-lg">
@@ -562,6 +550,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
+
                     <!-- Toggle Buttons (Login vs Signup) -->
                     <div class="d-flex mb-4 bg-light rounded-pill p-1">
                         <button class="btn btn-sm w-50 rounded-pill fw-bold active-auth-tab" id="showLoginBtn"
@@ -570,7 +559,9 @@
                         <button class="btn btn-sm w-50 rounded-pill fw-bold text-muted" id="showSignupBtn"
                             style="background: transparent; color: #6c757d; box-shadow: none;">Sign Up</button>
                     </div>
+
                     <div id="authAlert" class="alert alert-danger d-none" style="font-size: 14px; padding: 10px;"></div>
+
                     <!-- Email & Password Form -->
                     <form id="authForm">
                         <div class="mb-3">
@@ -583,6 +574,7 @@
                             <input type="password" class="form-control rounded-3" id="authPassword" required
                                 placeholder="••••••••" style="padding: 12px; border: 1px solid #cbd5e1;">
                         </div>
+
                         <button type="submit" class="btn w-100 fw-bold py-2 rounded-3 shadow-sm" id="authSubmitBtn"
                             style="background: #10b981; color: white;">Log In</button>
                     </form>
@@ -596,7 +588,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- 🚀 FORCE BROWSER TO PULL THE CLEAN SCRIPT -->
-    <script src="{{ url_for('static', filename='script.js') }}?v=10020"></script>
+    <script src="{{ url_for('static', filename='script.js') }}?v=10025"></script>
 
     <!-- 🚀 PRICING MODAL STYLES & HOVERS -->
     <style>

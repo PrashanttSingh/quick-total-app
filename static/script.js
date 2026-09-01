@@ -717,46 +717,56 @@ fileInput.addEventListener("change", (e) => {
 // ==========================================
 // 📦 FILE UPLOAD & BATCH CAP SYSTEM
 // ==========================================
-const MAX_BATCH_LIMIT = 4; // Capped at 5 documents max
+
+// Checks user plan and returns their dynamic concurrent scan limit
+function getBatchLimit() {
+  const plan = localStorage.getItem("quickTotalUserPlan") || "basic";
+  if (plan === "max") return 5;
+  if (plan === "pro") return 3;
+  return 1; // Basic/Free users are strictly capped at 1
+}
 
 async function addFiles(newFiles) {
   if (!newFiles || newFiles.length === 0) return;
   const incomingFiles = Array.from(newFiles);
+  const MAX_FILE_SIZE_MB = 5;
+  const LIMIT = getBatchLimit();
 
-  const MAX_FILE_SIZE_MB = 5; // 🚨 5MB Limit per image
+  // 🚨 DYNAMIC BATCH CAP & UPSELL WALL
+  if (filesToProcess.length + incomingFiles.length > LIMIT) {
+    const plan = localStorage.getItem("quickTotalUserPlan") || "basic";
 
-  // 🚨 BATCH CAP CHECK
-  if (filesToProcess.length + incomingFiles.length > MAX_BATCH_LIMIT) {
-    showPremiumError(
-      `Maximum ${MAX_BATCH_LIMIT} documents allowed per batch. Please remove some files or process in smaller groups.`,
-    );
-    return;
+    if (plan === "basic") {
+      // Direct Upsell: Open the pricing modal immediately in their face
+      if (window.openPricingModal) window.openPricingModal();
+    } else {
+      // Paid users get a standard limit warning
+      showPremiumError(
+        `Your ${plan.toUpperCase()} plan allows up to ${LIMIT} documents at a time.`,
+      );
+    }
+    return; // Block the upload entirely
   }
 
   let addedCount = 0;
 
   for (let f of incomingFiles) {
-    // 🚨 SIZE LIMIT CHECK
     if (f.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-      // Clean up the filename so the error isn't too long
       let shortName =
         f.name.length > 15 ? f.name.substring(0, 15) + "..." : f.name;
       showPremiumError(
         `"${shortName}" is too large! Please upload images under ${MAX_FILE_SIZE_MB}MB.`,
       );
-      continue; // Skip this oversized file and move to the next one
+      continue;
     }
-
     f.precalcQuality = null;
     f.previewUrl = URL.createObjectURL(f);
     filesToProcess.push(f);
     addedCount++;
   }
 
-  // Only update UI and trigger background processing if valid files were actually added
   if (addedCount > 0) {
     updateUIState();
-
     for (
       let i = filesToProcess.length - addedCount;
       i < filesToProcess.length;
@@ -766,6 +776,7 @@ async function addFiles(newFiles) {
     }
   }
 }
+
 async function fetchQualityInBackground(fileObj, index) {
   const fd = new FormData();
   fd.append("image", fileObj);
@@ -784,6 +795,7 @@ function removeFile(index, event) {
   filesToProcess.splice(index, 1);
   updateUIState();
 }
+
 function updateUIState() {
   const count = filesToProcess.length;
   fileCountLabel.textContent = `${count} Document${count !== 1 ? "s" : ""} Ready`;
@@ -795,25 +807,45 @@ function updateUIState() {
     resetApp();
     return;
   }
+
   dropZone.style.display = "none";
   previewArea.style.display = "block";
   actionButtons.style.display = "flex";
 
   if (thumbnailGrid) thumbnailGrid.style.display = "flex";
 
-  // 🚨 NEW LOGIC: Lock the Add More button at 4 images
+  // 🚨 NEW LOGIC: Lock the "Add More" button visually and functionally
+  const limit = getBatchLimit();
   const addMoreBtn = document.getElementById("addMoreDropdownBtn");
+
   if (addMoreBtn) {
-    if (count >= 4) {
-      addMoreBtn.disabled = true;
-      addMoreBtn.style.cursor = "not-allowed";
+    if (count >= limit) {
+      // 1. Visually fade out the button
       addMoreBtn.style.opacity = "0.5";
-      addMoreBtn.title = "Maximum limit of 4 documents reached.";
+
+      // 2. Overwrite the click behavior so it triggers the upsell instead of the file browser
+      addMoreBtn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const plan = localStorage.getItem("quickTotalUserPlan") || "basic";
+        if (plan === "basic") {
+          if (window.openPricingModal) window.openPricingModal();
+        } else {
+          showPremiumError(
+            `Your plan allows a maximum of ${limit} scans at once.`,
+          );
+        }
+      };
     } else {
-      addMoreBtn.disabled = false;
-      addMoreBtn.style.cursor = "pointer";
+      // Restore normal functional state if they haven't hit the limit yet
       addMoreBtn.style.opacity = "1";
-      addMoreBtn.title = "";
+      addMoreBtn.style.cursor = "pointer";
+
+      // Restore default file browser behavior
+      addMoreBtn.onclick = (e) => {
+        e.preventDefault();
+        document.getElementById("fileInput").click();
+      };
     }
   }
 
