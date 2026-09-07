@@ -18,6 +18,7 @@
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
@@ -705,9 +706,27 @@
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
         <div class="offcanvas-body p-4 text-dark">
-            <!-- 💎 PREMIUM UPGRADE BUTTON -->
-            <!-- ✨ UNIFORM PRO BUTTON (WORKS ON MOBILE & DESKTOP) -->
-            <div class="mb-4 mt-2">
+
+            <!-- 1. ACCOUNT SECTION (Identity First) -->
+            <h6 class="fw-bold mb-3 mt-2 text-uppercase tracking-wider text-muted small">Account</h6>
+            <div class="mb-4">
+                <button class="btn w-100 fw-bold d-flex align-items-center justify-content-center gap-2 auth-btn-hover"
+                    data-bs-toggle="modal" data-bs-target="#authModal" id="navLoginBtn"
+                    style="background: #1e293b; color: #ffffff !important; border: none; border-radius: 12px; padding: 12px 16px; box-shadow: 0 4px 12px rgba(30, 41, 59, 0.2); transition: all 0.2s ease;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                    <span id="navLoginText" style="color: #ffffff !important;">Log In / Sign Up</span>
+                </button>
+            </div>
+
+            <hr class="text-muted my-4">
+
+            <!-- 2. SUBSCRIPTION SECTION (Billing Second) -->
+            <h6 class="fw-bold mb-3 text-uppercase tracking-wider text-muted small">Subscription</h6>
+            <div class="mb-4">
                 <button class="btn w-100 text-start d-flex justify-content-between align-items-center uniform-pro-btn"
                     onclick="openPricingModal()" data-bs-dismiss="offcanvas">
                     <div class="d-flex align-items-center gap-2">
@@ -728,6 +747,7 @@
 
             <hr class="text-muted my-4">
 
+            <!-- 3. APPLICATION SETTINGS (Universal Last) -->
             <h6 class="fw-bold mb-3 text-uppercase tracking-wider text-muted small">Application Settings</h6>
 
             <!-- 🎙️ CLEAR AUDIO INPUT LABEL -->
@@ -1154,6 +1174,54 @@
                                 <polyline points="20 6 9 17 4 12"></polyline>
                             </svg> <b>Scan 5 Documents</b> at a time</li>
                     </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 🔐 AUTH MODAL (LOGIN/SIGNUP) -->
+    <div class="modal fade" id="authModal" tabindex="-1" aria-labelledby="authModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow-lg"
+                style="background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);">
+                <div class="modal-header border-bottom-0 pb-0">
+                    <h5 class="modal-title fw-bold" id="authModalLabel" style="color: #1e293b;">Welcome to QuickTotal
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+
+                    <!-- Toggle Buttons (Login vs Signup) -->
+                    <div class="d-flex mb-4 bg-light rounded-pill p-1 border" style="border-color: #e2e8f0;">
+                        <button class="btn btn-sm w-50 rounded-pill fw-bold active-auth-tab" id="showLoginBtn"
+                            style="background: white; color: #1e293b; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">Log
+                            In</button>
+                        <button class="btn btn-sm w-50 rounded-pill fw-bold text-muted" id="showSignupBtn"
+                            style="background: transparent; box-shadow: none;">Sign Up</button>
+                    </div>
+
+                    <div id="authAlert" class="d-none d-flex align-items-center gap-2 mb-4"
+                        style="background: #fff1f2; color: #be123c; border: 1px solid #ffe4e6; border-radius: 12px; padding: 14px 16px; font-size: 13.5px; font-weight: 600; box-shadow: 0 4px 12px rgba(225, 29, 72, 0.08);">
+                    </div>
+
+                    <!-- Email & Password Form -->
+                    <form id="authForm">
+                        <div class="mb-3">
+                            <label class="form-label text-muted small fw-bold">Email address</label>
+                            <input type="email" class="form-control rounded-3" id="authEmail" required
+                                placeholder="name@example.com"
+                                style="padding: 12px; border: 1px solid #cbd5e1; font-weight: 500;">
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label text-muted small fw-bold">Password</label>
+                            <input type="password" class="form-control rounded-3" id="authPassword" required
+                                placeholder="••••••••"
+                                style="padding: 12px; border: 1px solid #cbd5e1; font-weight: 500;">
+                        </div>
+
+                        <button type="submit" class="btn w-100 fw-bold py-3 rounded-3 shadow-sm" id="authSubmitBtn"
+                            style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; font-size: 16px;">Log
+                            In</button>
+                    </form>
                 </div>
             </div>
         </div>

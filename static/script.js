@@ -1,3 +1,149 @@
+// ==========================================
+// 🔐 SUPABASE INITIALIZATION & AUTH LOGIC
+// ==========================================
+const SUPABASE_URL = "https://vxzupqjkmnyqqvpbqiap.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_4oSVhdaS3DiZQ3RrdyBCbg_kmbuEN0m";
+const supabaseClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY,
+);
+let currentUser = null;
+
+let isLoginMode = true;
+
+document.addEventListener("DOMContentLoaded", () => {
+  const loginTab = document.getElementById("showLoginBtn");
+  const signupTab = document.getElementById("showSignupBtn");
+  const submitBtn = document.getElementById("authSubmitBtn");
+  const authAlert = document.getElementById("authAlert");
+  const authForm = document.getElementById("authForm");
+
+  // Toggle Mode UI
+  if (loginTab && signupTab) {
+    loginTab.onclick = (e) => {
+      e.preventDefault();
+      isLoginMode = true;
+      loginTab.style.cssText =
+        "background: white; color: #1e293b; box-shadow: 0 2px 4px rgba(0,0,0,0.05);";
+      signupTab.style.cssText =
+        "background: transparent; color: #6c757d; box-shadow: none;";
+      if (submitBtn) submitBtn.innerText = "Log In";
+      if (authAlert) authAlert.classList.add("d-none");
+    };
+
+    signupTab.onclick = (e) => {
+      e.preventDefault();
+      isLoginMode = false;
+      signupTab.style.cssText =
+        "background: white; color: #1e293b; box-shadow: 0 2px 4px rgba(0,0,0,0.05);";
+      loginTab.style.cssText =
+        "background: transparent; color: #6c757d; box-shadow: none;";
+      if (submitBtn) submitBtn.innerText = "Sign Up";
+      if (authAlert) authAlert.classList.add("d-none");
+    };
+  }
+
+  // Handle Auth Form Submission
+  if (authForm) {
+    authForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("authEmail").value;
+      const password = document.getElementById("authPassword").value;
+
+      submitBtn.disabled = true;
+      submitBtn.innerText = "Processing...";
+      authAlert.classList.add("d-none");
+
+      let authError = null;
+
+      if (isLoginMode) {
+        const { data, error } = await supabaseClient.auth.signInWithPassword({
+          email,
+          password,
+        });
+        authError = error;
+      } else {
+        const { data, error } = await supabaseClient.auth.signUp({
+          email,
+          password,
+        });
+        authError = error;
+      }
+
+      if (authError) {
+        // 🚀 Inject a modern SVG icon alongside the error text
+        authAlert.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg> <span>${authError.message}</span>`;
+
+        // Remove d-none so the d-flex class takes over
+        authAlert.classList.remove("d-none");
+        submitBtn.disabled = false;
+        submitBtn.innerText = isLoginMode ? "Log In" : "Sign Up";
+      } else {
+        const modalEl = document.getElementById("authModal");
+        if (modalEl)
+          bootstrap.Modal.getInstance(modalEl)?.hide() ||
+            new bootstrap.Modal(modalEl).hide();
+        authForm.reset();
+        submitBtn.disabled = false;
+        submitBtn.innerText = isLoginMode ? "Log In" : "Sign Up";
+        checkUserSession();
+      }
+    });
+  }
+
+  checkUserSession(); // Run on load
+});
+
+// 🚀 Database Plan Fetcher
+async function checkUserSession() {
+  try {
+    const {
+      data: { session },
+    } = await supabaseClient.auth.getSession();
+    const navLoginText = document.getElementById("navLoginText");
+    const navLoginBtn = document.getElementById("navLoginBtn");
+
+    if (session && session.user) {
+      currentUser = session.user;
+
+      // Pull tier from the database instantly!
+      const { data: profile } = await supabaseClient
+        .from("user_profiles")
+        .select("plan")
+        .eq("user_id", currentUser.id)
+        .single();
+
+      if (profile && profile.plan) {
+        localStorage.setItem("quickTotalUserPlan", profile.plan);
+      } else {
+        localStorage.setItem("quickTotalUserPlan", "basic");
+      }
+
+      if (navLoginText) navLoginText.innerText = "Log Out";
+      if (navLoginBtn) {
+        navLoginBtn.removeAttribute("data-bs-toggle");
+        navLoginBtn.removeAttribute("data-bs-target");
+        navLoginBtn.onclick = async () => {
+          await supabaseClient.auth.signOut();
+          localStorage.setItem("quickTotalUserPlan", "basic");
+          window.location.reload();
+        };
+      }
+    } else {
+      currentUser = null;
+      localStorage.setItem("quickTotalUserPlan", "basic");
+      if (navLoginText) navLoginText.innerText = "Log In / Sign Up";
+      if (navLoginBtn) {
+        navLoginBtn.setAttribute("data-bs-toggle", "modal");
+        navLoginBtn.setAttribute("data-bs-target", "#authModal");
+        navLoginBtn.onclick = null;
+      }
+    }
+  } catch (err) {
+    console.error("Session error:", err);
+  }
+}
+
 // QUICKTOTAL SPLASH SCREEN LOGIC
 window.addEventListener("load", () => {
   const splashScreen = document.getElementById("qt-splash-screen");
@@ -1726,7 +1872,7 @@ receiptsList.addEventListener("click", async (e) => {
     recalculateLiveMath();
   }
 
-  if (
+ if (
     e.target.classList.contains("save-train-btn") ||
     e.target.closest(".save-train-btn")
   ) {
@@ -1735,14 +1881,12 @@ receiptsList.addEventListener("click", async (e) => {
       : e.target.closest(".save-train-btn");
     const card = btn.closest(".receipt-card");
 
-    // ERROR-PROOF UNIQUE ID
     if (!card.dataset.receiptId) {
       const timestamp = Date.now();
       const randomStr = Math.random().toString(36).substring(2, 8);
       card.dataset.receiptId = "receipt_" + timestamp + "_" + randomStr;
     }
 
-    const isUpdate = card.dataset.isUpdate === "true";
     const imageIndex = parseInt(card.dataset.imageIndex);
     const fileToSave = filesToProcess[imageIndex];
     let correctedItems = [];
@@ -1761,68 +1905,83 @@ receiptsList.addEventListener("click", async (e) => {
     });
 
     const originalContent = btn.innerHTML;
-    const existingReceiptId = card.dataset.receiptId || "";
-
-    // 1. LOCK BUTTON & SHOW LOADING (No flip yet!)
     btn.style.pointerEvents = "none";
-    btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Saving...`;
+    btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Saving to Cloud...`;
 
     try {
-      const formData = new FormData();
-      formData.append("image", fileToSave);
-      formData.append("original_filename", card.dataset.receiptId); // Works perfectly with your current Python code
-      formData.append("receipt_id", card.dataset.receiptId);
-      formData.append("is_update", isUpdate ? "true" : "false");
-      formData.append("json_data", JSON.stringify({ items: correctedItems }));
+      // 1. Security Check
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      
+      if (!session || !session.user) {
+        alert("Security Block: You must be logged in to save receipts. Please log in using the sidebar.");
+        btn.innerHTML = originalContent;
+        btn.style.pointerEvents = "auto";
+        return; 
+      }
 
-      fetch("/save_training_data", { method: "POST", body: formData })
-        .then((res) => {
-          if (!res.ok) throw new Error("Backend failed");
-          return res.json();
-        })
-        .then((data) => {
-          // 2. THE REAL SUCCESS: Flip the button ONLY AFTER the server says it saved!
-          card.dataset.isSaved = "true";
-
-          if (data.receipt_id) {
-            card.dataset.receiptId = data.receipt_id;
-          }
-
-          // Start the 3D flip
-          btn.style.transition =
-            "transform 0.2s ease-in-out, background 0.2s, color 0.2s";
-          btn.style.transform = "rotateX(90deg)";
-
-          // Change content halfway through flip
-          setTimeout(() => {
-            btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg> Thank You`;
-            btn.style.background = "#eff6ff";
-            btn.style.color = "#2563eb";
-            btn.style.fontWeight = "600";
-            btn.style.border = "none";
-            btn.style.display = "flex";
-            btn.style.alignItems = "center";
-            btn.style.justifyContent = "center";
-
-            // Finish the flip
-            btn.style.transform = "rotateX(0deg)";
-          }, 200);
-        })
-        .catch((err) => {
-          // 3. THE FAIL STATE: If the folder/database fails, revert back so they can try again
-          alert("Network error. Could not save feedback.");
-          btn.innerHTML = originalContent;
-          btn.style.pointerEvents = "auto";
-          card.dataset.isSaved = "false";
+      if (!fileToSave) throw new Error("No image found in memory. Please upload the receipt again.");
+      
+      // 2. Upload Image
+      const fileName = fileToSave.name || "capture.jpg";
+      const fileExtension = fileName.split('.').pop() || "jpg";
+      const uniqueFileName = `${card.dataset.receiptId}.${fileExtension}`;
+      
+      const { data: uploadData, error: uploadError } = await supabaseClient
+        .storage
+        .from('recipt_images')
+        .upload(uniqueFileName, fileToSave, {
+          cacheControl: '3600',
+          upsert: true
         });
+
+      if (uploadError) throw uploadError;
+
+      const { data: publicUrlData } = supabaseClient
+        .storage
+        .from('recipt_images')
+        .getPublicUrl(uniqueFileName);
+      
+      const imageUrl = publicUrlData.publicUrl;
+
+      // 3. Save to Database
+      const { error: dbError } = await supabaseClient
+        .from("saved_receipts")
+        .insert([
+          {
+            user_id: session.user.id, 
+            recipt_data: { items: correctedItems },
+            image_url: imageUrl
+          }
+        ]);
+
+      if (dbError) throw dbError;
+
+      // 4. Success Animation
+      card.dataset.isSaved = "true";
+      btn.style.transition = "transform 0.2s ease-in-out, background 0.2s, color 0.2s";
+      btn.style.transform = "rotateX(90deg)";
+
+      setTimeout(() => {
+        btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg> Thank You`;
+        btn.style.background = "#eff6ff";
+        btn.style.color = "#2563eb";
+        btn.style.fontWeight = "600";
+        btn.style.border = "none";
+        btn.style.display = "flex";
+        btn.style.alignItems = "center";
+        btn.style.justifyContent = "center";
+        btn.style.transform = "rotateX(0deg)";
+      }, 200);
+
     } catch (err) {
-      alert("Error preparing training data.");
+      console.error("Cloud Save Error:", err);
+      alert("Error details: " + (err.message || JSON.stringify(err)));
       btn.innerHTML = originalContent;
       btn.style.pointerEvents = "auto";
+      card.dataset.isSaved = "false";
     }
   }
 });
-
 function recalculateLiveMath() {
   let newGrandTotal = 0;
   let categoryTotals = {};
@@ -2931,38 +3090,85 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  // 🧠 THE STATE MACHINE: Safer SaaS Subscription Logic
-  // 🧠 THE STATE MACHINE: Safer SaaS Subscription Logic
+  // 🧠 THE STATE MACHINE: Accurate SaaS Subscription Logic
   async function renderDynamicPricingButtons() {
     const btnBasic = document.getElementById("btnBasicPlan");
     const btnPro = document.getElementById("btnProPlan");
     const btnMax = document.getElementById("btnMaxPlan");
     if (!btnBasic || !btnPro || !btnMax) return;
 
-    // 🚀 ALWAYS FORCE "UPGRADE" BUTTONS FOR TESTING RAZORPAY
-    // This completely removes the Stripe "Manage Subscription" alerts!
-
-    btnBasic.innerHTML = "Current Plan";
-    btnBasic.style.background = "#f8fafc";
-    btnBasic.style.color = "#94a3b8";
-    btnBasic.style.border = "1px solid #e2e8f0";
+    btnBasic.innerHTML = "Loading...";
+    btnPro.innerHTML = "Loading...";
+    btnMax.innerHTML = "Loading...";
     btnBasic.style.pointerEvents = "none";
+    btnPro.style.pointerEvents = "none";
+    btnMax.style.pointerEvents = "none";
 
-    btnPro.innerHTML = "Upgrade to Pro";
-    btnPro.style.background = "#10b981";
-    btnPro.style.color = "white";
-    btnPro.style.border = "none";
-    btnPro.style.boxShadow = "0 4px 12px rgba(16,185,129,0.2)";
-    btnPro.style.pointerEvents = "auto";
-    btnPro.onclick = () => window.triggerCheckout("pro", btnPro);
+    try {
+      // 🚨 FIX: Convert to lowercase and trim spaces so "Max", "MAX", or " max " all work perfectly!
+      const rawPlan = localStorage.getItem("quickTotalUserPlan") || "basic";
+      const currentPlan = rawPlan.toLowerCase().trim();
 
-    btnMax.innerHTML = "Upgrade to Max";
-    btnMax.style.background = "#3b82f6";
-    btnMax.style.color = "white";
-    btnMax.style.border = "none";
-    btnMax.style.boxShadow = "0 4px 12px rgba(59,130,246,0.25)";
-    btnMax.style.pointerEvents = "auto";
-    btnMax.onclick = () => window.triggerCheckout("max", btnMax);
+      if (currentPlan === "basic") {
+        // 👤 USER IS ON FREE TIER
+        btnBasic.innerHTML = "Current Plan";
+        btnBasic.style.background = "#f8fafc";
+        btnBasic.style.color = "#94a3b8";
+        btnBasic.style.border = "1px solid #e2e8f0";
+
+        btnPro.innerHTML = "Upgrade to Pro";
+        btnPro.style.background = "#10b981";
+        btnPro.style.color = "white";
+        btnPro.style.border = "none";
+        btnPro.style.pointerEvents = "auto";
+        btnPro.onclick = () => window.triggerCheckout("pro", btnPro);
+
+        btnMax.innerHTML = "Upgrade to Max";
+        btnMax.style.background = "#3b82f6";
+        btnMax.style.color = "white";
+        btnMax.style.border = "none";
+        btnMax.style.pointerEvents = "auto";
+        btnMax.onclick = () => window.triggerCheckout("max", btnMax);
+      } else if (currentPlan === "pro") {
+        // 🟢 USER IS ON PRO TIER
+        btnBasic.innerHTML = "Included";
+        btnBasic.style.background = "#f8fafc";
+        btnBasic.style.color = "#94a3b8";
+        btnBasic.style.border = "1px solid #e2e8f0";
+
+        btnPro.innerHTML = "Current Plan";
+        btnPro.style.background = "#ecfdf5";
+        btnPro.style.color = "#059669";
+        btnPro.style.border = "2px solid #a7f3d0";
+        btnPro.style.pointerEvents = "none";
+
+        btnMax.innerHTML = "Upgrade to Max";
+        btnMax.style.background = "#3b82f6";
+        btnMax.style.color = "white";
+        btnMax.style.border = "none";
+        btnMax.style.pointerEvents = "auto";
+        btnMax.onclick = () => window.triggerCheckout("max", btnMax);
+      } else if (currentPlan === "max") {
+        // 🚀 USER IS ON MAX TIER
+        btnBasic.innerHTML = "Included";
+        btnBasic.style.background = "#f8fafc";
+        btnBasic.style.color = "#94a3b8";
+        btnBasic.style.border = "1px solid #e2e8f0";
+
+        btnPro.innerHTML = "Included";
+        btnPro.style.background = "#f8fafc";
+        btnPro.style.color = "#94a3b8";
+        btnPro.style.border = "1px solid #e2e8f0";
+
+        btnMax.innerHTML = "Current Plan";
+        btnMax.style.background = "#eff6ff";
+        btnMax.style.color = "#2563eb";
+        btnMax.style.border = "2px solid #bfdbfe";
+        btnMax.style.pointerEvents = "none"; // Lock the button
+      }
+    } catch (err) {
+      console.error("Failed to load user plan:", err);
+    }
   }
   window.triggerCheckout = async function (tier, btnElement) {
     const originalText = btnElement.innerHTML;
