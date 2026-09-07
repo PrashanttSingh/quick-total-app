@@ -527,57 +527,61 @@ def process_voice():
 RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET")
 
-stripe.api_key = os.getenv("STRIPE_SECRET_KEY", "sk_test_your_stripe_secret")
 rzp_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
 
 # ==========================================
 # 🌐 HYBRID CHECKOUT ENDPOINT (Stripe & Razorpay)
 # ==========================================
+# ==========================================
+# 🌐 HYBRID CHECKOUT ENDPOINT (Stripe & Razorpay)
+# ==========================================
+@app.route('/api/checkout', methods=['POST'])
+# ==========================================
+# 🌐 HYBRID CHECKOUT ENDPOINT (Stripe & Razorpay)
+# ==========================================
+@app.route('/api/checkout', methods=['POST'])
+# ==========================================
+# 🌐 RAZORPAY CHECKOUT ENDPOINT
+# ==========================================
 @app.route('/api/checkout', methods=['POST'])
 def create_checkout():
     try:
         data = request.get_json()
-        user_region = data.get('region', 'IN') 
+        requested_plan = data.get('plan', 'pro')
+        billing_cycle = data.get('cycle', 'monthly') 
 
-        # 🚀 Automatically detect if we are running locally or live in production
-        base_url = "https://quicktotal.com" if os.environ.get("RENDER") or os.environ.get("RAILWAY_ENVIRONMENT") or os.environ.get("VERCEL") else "http://localhost:5000"
+        # 🚀 CENTRALIZED PRICING DICTIONARY (Edit future prices here!)
+        PRICES = {
+            'pro': {'monthly': 299, 'yearly_rate': 239},
+            'max': {'monthly': 799, 'yearly_rate': 639}
+        }
 
-        if user_region == 'IN':
-            # 🇮🇳 ROUTE 1: RAZORPAY FOR INDIA
-            order_data = {
-                "amount": 29900,
-                "currency": "INR",
-                "receipt": "quicktotal_receipt_001",
-                "payment_capture": 1
-            }
-            order = rzp_client.order.create(data=order_data)
-            
-            return jsonify({
-                "gateway": "razorpay",
-                "order_id": order['id'],
-                "amount": 29900,
-                "key": RAZORPAY_KEY_ID
-            })
+        plan_rates = PRICES.get(requested_plan, PRICES['pro'])
 
+        if billing_cycle == 'yearly':
+            total_amount = plan_rates['yearly_rate'] * 12
         else:
-            # 🌍 ROUTE 2: STRIPE FOR INTERNATIONAL
-            session = stripe.checkout.Session.create(
-                payment_method_types=['card'],
-                line_items=[{
-                    'price': os.getenv('STRIPE_PRICE_ID', 'price_your_stripe_price_id'), 
-                    'quantity': 1,
-                }],
-                mode='subscription',
-                success_url=f"{base_url}/?success=true",
-                cancel_url=f"{base_url}/?canceled=true",
-            )
-            return jsonify({
-                "gateway": "stripe",
-                "url": session.url
-            })
+            total_amount = plan_rates['monthly']
+
+        # Razorpay expects amounts in paise (multiply by 100)
+        amount_in_paise = total_amount * 100
+
+        order_data = {
+            "amount": amount_in_paise,
+            "currency": "INR",
+            "receipt": f"qt_receipt_{int(time.time())}",
+            "payment_capture": 1
+        }
+        order = rzp_client.order.create(data=order_data)
+        
+        return jsonify({
+            "gateway": "razorpay",
+            "order_id": order['id'],
+            "amount": amount_in_paise,
+            "key": RAZORPAY_KEY_ID
+        })
 
     except Exception as e:
-        return jsonify(error=str(e)), 403  
-
+        return jsonify(error=str(e)), 403
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

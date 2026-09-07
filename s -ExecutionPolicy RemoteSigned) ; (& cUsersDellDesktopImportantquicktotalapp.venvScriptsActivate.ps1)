@@ -1,0 +1,44 @@
+[33m60f72a4[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m fixed subscription modal bugs
+[33mbe89457[m introduced max plan and fixed some  upgrade modal bugs
+[33m677f186[m inialized razorpay to  handel subscriptions and fixed ui bugs
+[33mb8648f0[m fixed some bugs in the app dashboard
+[33m7debfb9[m Added the animation at complete start of the app
+[33m9c11038[m  enhanced some features and mobile screen view too
+[33mffed2b0[m Improved the mobile interface of the app
+[33mff2a9f1[m IMproved the ui and core functionality in the app
+[33m0bb44d9[m removed emojis and added new ui to the app and changed the whole script.js
+[33m7e4b248[m updated processing_logs.md
+[33m7764027[m updated
+[33m05de6c9[m updated paf and csv functions ,so that they caunderstand other languages also to process a clean file while downloading
+[33m0559a3e[m upgraded app.py
+[33m6a51fbe[m updated processing logs
+[33mfd45f80[m updated
+[33m7e4e707[m[33m ([m[1;33mtag: [m[1;33mV4.0.0[m[33m)[m improved the save dataset button and added audio feature in the app to edit items and more....
+[33m992e0dc[m improved the golden prompt resolved issues with backend
+[33m117da48[m deleted old unorganised recipts from training_dataset
+[33m6901615[m updated the golden prompt so that recipt elements are analized and outputted in a sequence for easily readiblity of the recipt
+[33md449768[m added delete feature and resolved issue of dropping images in drop box randomly with proper sequence
+[33m1f15048[m updated processing_logs.md
+[33mfa640de[m updated gitignore file
+[33m7dcef44[m enhanced ui and processing_log.md
+[33md248601[m updated .gitignore file
+[33m73f837c[m Added glowing effect when 100% accuracy is touched  by a recipt
+[33m44c5e22[m improved the ui
+[33mff498c5[m[33m ([m[1;33mtag: [m[1;33mv3.2.0[m[33m)[m updated app.py and .gitignore file
+[33m9eb7f65[m updated the logs
+[33m6b5ae20[m improved the bugs in ui and  added hugging face models
+[33mce16b95[m Added a log file which track all the processes in a clean manner
+[33m74e649c[m Added multiple features to the app like csv file and pdf downloading
+[33m40bc52c[m[33m ([m[1;33mtag: [m[1;33mv3.0.0[m[33m)[m resolved some errors and added multi-photo adding option
+[33ma23601c[m fixed ui and added some features
+[33m567ccb0[m[33m ([m[1;33mtag: [m[1;33mv2.2.0[m[33m)[m model is Excellent in processing printed bills Etc..
+[33m8351f38[m updated requirements.txt
+[33m439e22b[m[33m ([m[1;33mtag: [m[1;33mv2.0.0[m[33m)[m removed tesseract and added ollama model llava:7b
+[33m533c19b[m[33m ([m[1;33mtag: [m[1;33mv1.2.0[m[33m)[m improved the ui and enhanced  models for better interpretion of the bill or any calculation image
+[33mf7efc88[m[33m ([m[1;33mtag: [m[1;33mv1.0.0[m[33m)[m implemented tesseract model for  calculation
+[33mf0277be[m added the backend process and enhanced ui
+[33m8d78b26[m first version of my app(simple) and updated readme.md
+[33mf9ad650[m Added gitignore file
+[33mbaf1eb2[m chore: init QuickTotal app
+[33mde2933b[m chore: init QuickTotal app
+[33m591533f[m Initial commit

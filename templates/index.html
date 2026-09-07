@@ -1051,34 +1051,32 @@
             </div>
 
             <!-- CARDS CONTAINER -->
-            <div class="d-flex flex-column flex-md-row gap-3">
-
+            <div class="d-flex flex-column flex-md-row gap-3 w-100">
                 <!-- ⚪ BASIC TIER -->
                 <div class="pricing-card flex-fill"
                     style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 20px; padding: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
                     <h3 style="color: #1e293b; font-weight: 800; font-size: 1.3rem;">Basic</h3>
-                    <p style="color: #64748b; font-size: 13px; min-height: 35px;">Perfect for occasional receipts and
-                        personal expense tracking.</p>
-                    <div class="my-3">
-                        <span style="font-size: 2.5rem; font-weight: 800; color: #0f172a;">Free</span>
+                    <p style="color: #64748b; font-size: 13px; min-height: 35px;">Perfect for occasional personal
+                        tracking.</p>
+                    <div class="my-3"><span style="font-size: 2.2rem; font-weight: 800; color: #0f172a;">Free</span>
                     </div>
                     <button id="btnBasicPlan" class="btn w-100"
                         style="background: #f8fafc; color: #64748b; font-weight: 700; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 14px;">Current
                         Plan</button>
-
-                    <ul class="pricing-features mt-4" style="color: #475569; list-style: none; padding: 0;">
-                        <li class="mb-2 d-flex align-items-center gap-2"><svg width="18" height="18" viewBox="0 0 24 24"
+                    <ul class="pricing-features mt-4"
+                        style="color: #475569; list-style: none; padding: 0; font-size: 13px;">
+                        <li class="mb-2 d-flex align-items-center gap-2"><svg width="16" height="16" viewBox="0 0 24 24"
                                 fill="none" stroke="#94a3b8" stroke-width="2.5">
                                 <polyline points="20 6 9 17 4 12"></polyline>
                             </svg> 15 Scans per month</li>
-                        <li class="mb-2 d-flex align-items-center gap-2"><svg width="18" height="18" viewBox="0 0 24 24"
+                        <li class="mb-2 d-flex align-items-center gap-2"><svg width="16" height="16" viewBox="0 0 24 24"
                                 fill="none" stroke="#94a3b8" stroke-width="2.5">
                                 <polyline points="20 6 9 17 4 12"></polyline>
-                            </svg> Standard AI Processing Speed</li>
-                        <li class="mb-2 d-flex align-items-center gap-2"><svg width="18" height="18" viewBox="0 0 24 24"
+                            </svg> <b>Scan 1 Document</b> at a time</li>
+                        <li class="mb-2 d-flex align-items-center gap-2"><svg width="16" height="16" viewBox="0 0 24 24"
                                 fill="none" stroke="#94a3b8" stroke-width="2.5">
                                 <polyline points="20 6 9 17 4 12"></polyline>
-                            </svg> Basic Categorization</li>
+                            </svg> Standard AI Speed</li>
                     </ul>
                 </div>
 
@@ -1086,51 +1084,75 @@
                 <div class="pricing-card flex-fill position-relative mt-3 mt-md-0"
                     style="background: #ffffff; border: 2px solid #34d399; border-radius: 20px; padding: 24px; box-shadow: 0 10px 30px rgba(16, 185, 129, 0.1);">
                     <div class="position-absolute"
-                        style="top: -12px; left: 50%; transform: translateX(-50%); background: #10b981; color: white; padding: 4px 14px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 4px 10px rgba(16,185,129,0.3);">
+                        style="top: -12px; left: 50%; transform: translateX(-50%); background: #10b981; color: white; padding: 4px 14px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 4px 10px rgba(16,185,129,0.3); white-space: nowrap;">
                         Most Popular</div>
-
                     <h3 style="color: #1e293b; font-weight: 800; font-size: 1.3rem;">Pro</h3>
-                    <p style="color: #64748b; font-size: 13px; min-height: 35px;">For heavy users who need unlimited
-                        scanning and advanced exports.</p>
+                    <p style="color: #64748b; font-size: 13px; min-height: 35px;">For heavy users needing advanced
+                        exports.</p>
                     <div class="my-3">
                         <span
-                            style="font-size: 1.8rem; font-weight: 700; color: #94a3b8; text-decoration: line-through; margin-right: 6px;"
+                            style="font-size: 1.5rem; font-weight: 700; color: #94a3b8; text-decoration: line-through; margin-right: 4px;"
                             id="proPriceOld"></span>
-                        <span style="font-size: 2.5rem; font-weight: 800; color: #10b981;" id="proPrice">₹299<span
+                        <span style="font-size: 2.2rem; font-weight: 800; color: #10b981;" id="proPrice">₹299<span
                                 style="font-size: 0.9rem; color: #64748b; font-weight: 500;">/mo</span></span>
                     </div>
                     <button id="btnProPlan" class="btn w-100 qt-btn-pro"
-                        style="background: #10b981; color: white; font-weight: 700; padding: 12px; border-radius: 12px; border: none; transition: all 0.2s; font-size: 14px; box-shadow: 0 4px 12px rgba(16,185,129,0.2);">Upgrade
+                        style="background: #10b981; color: white; font-weight: 700; padding: 12px; border-radius: 12px; border: none; font-size: 14px; box-shadow: 0 4px 12px rgba(16,185,129,0.2);">Upgrade
                         to Pro</button>
-
                     <ul class="pricing-features pro-features mt-4"
-                        style="color: #1e293b; list-style: none; padding: 0;">
-                        <!-- ✨ NEW LINE: Everything in Basic -->
-                        <li class="mb-2 d-flex align-items-center gap-2"><svg width="18" height="18" viewBox="0 0 24 24"
+                        style="color: #1e293b; list-style: none; padding: 0; font-size: 13px;">
+                        <li class="mb-2 d-flex align-items-center gap-2"><svg width="16" height="16" viewBox="0 0 24 24"
                                 fill="none" stroke="#10b981" stroke-width="3">
                                 <polyline points="20 6 9 17 4 12"></polyline>
-                            </svg> <b>Everything in Basic</b></li>
+                            </svg> <b>100</b> Receipt Scans / mo</li>
+                        <li class="mb-2 d-flex align-items-center gap-2"><svg width="16" height="16" viewBox="0 0 24 24"
+                                fill="none" stroke="#10b981" stroke-width="3">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg> <b>Scan 3 Documents</b> at a time</li>
+                        <li class="mb-2 d-flex align-items-center gap-2"><svg width="16" height="16" viewBox="0 0 24 24"
+                                fill="none" stroke="#10b981" stroke-width="3">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg> Priority AI Processing</li>
+                        <li class="mb-2 d-flex align-items-center gap-2"><svg width="16" height="16" viewBox="0 0 24 24"
+                                fill="none" stroke="#10b981" stroke-width="3">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg> 1-Click Excel & PDF</li>
+                    </ul>
+                </div>
 
-                        <li class="mb-2 d-flex align-items-center gap-2"><svg width="18" height="18" viewBox="0 0 24 24"
-                                fill="none" stroke="#10b981" stroke-width="3">
+                <!-- 🚀 MAX TIER -->
+                <div class="pricing-card flex-fill mt-3 mt-md-0 position-relative"
+                    style="background: #ffffff; border: 2px solid #3b82f6; border-radius: 20px; padding: 24px; box-shadow: 0 10px 30px rgba(59, 130, 246, 0.15);">
+                    <div class="position-absolute"
+                        style="top: -12px; left: 50%; transform: translateX(-50%); background: #3b82f6; color: white; padding: 4px 14px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3); white-space: nowrap;">
+                        Max Volume</div>
+                    <h3 style="color: #1e293b; font-weight: 800; font-size: 1.3rem;">Max</h3>
+                    <p style="color: #64748b; font-size: 13px; min-height: 35px;">For power users and high-volume
+                        workflows.</p>
+                    <div class="my-3">
+                        <span
+                            style="font-size: 1.5rem; font-weight: 700; color: #94a3b8; text-decoration: line-through; margin-right: 4px;"
+                            id="maxPriceOld"></span>
+                        <span style="font-size: 2.2rem; font-weight: 800; color: #3b82f6;" id="maxPrice">₹799<span
+                                style="font-size: 0.9rem; color: #64748b; font-weight: 500;">/mo</span></span>
+                    </div>
+                    <button id="btnMaxPlan" class="btn w-100 qt-btn-max"
+                        style="background: #3b82f6; color: white; font-weight: 700; padding: 12px; border-radius: 12px; border: none; font-size: 14px; box-shadow: 0 4px 12px rgba(59,130,246,0.25);">Upgrade
+                        to Max</button>
+                    <ul class="pricing-features max-features mt-4"
+                        style="color: #1e293b; list-style: none; padding: 0; font-size: 13px;">
+                        <li class="mb-2 d-flex align-items-center gap-2"><svg width="16" height="16" viewBox="0 0 24 24"
+                                fill="none" stroke="#3b82f6" stroke-width="3">
                                 <polyline points="20 6 9 17 4 12"></polyline>
-                            </svg> <b>Unlimited</b> Receipt Scans</li>
-                        <li class="mb-2 d-flex align-items-center gap-2"><svg width="18" height="18" viewBox="0 0 24 24"
-                                fill="none" stroke="#10b981" stroke-width="3">
+                            </svg> <b>Everything in Pro</b></li>
+                        <li class="mb-2 d-flex align-items-center gap-2"><svg width="16" height="16" viewBox="0 0 24 24"
+                                fill="none" stroke="#3b82f6" stroke-width="3">
                                 <polyline points="20 6 9 17 4 12"></polyline>
-                            </svg> Priority AI Processing (2x Speed)</li>
-                        <li class="mb-2 d-flex align-items-center gap-2"><svg width="18" height="18" viewBox="0 0 24 24"
-                                fill="none" stroke="#10b981" stroke-width="3">
+                            </svg> <b>500</b> Scans / month</li>
+                        <li class="mb-2 d-flex align-items-center gap-2"><svg width="16" height="16" viewBox="0 0 24 24"
+                                fill="none" stroke="#3b82f6" stroke-width="3">
                                 <polyline points="20 6 9 17 4 12"></polyline>
-                            </svg> Advanced AI Categorization</li>
-                        <li class="mb-2 d-flex align-items-center gap-2"><svg width="18" height="18" viewBox="0 0 24 24"
-                                fill="none" stroke="#10b981" stroke-width="3">
-                                <polyline points="20 6 9 17 4 12"></polyline>
-                            </svg> 1-Click Excel & PDF Exports</li>
-                        <li class="mb-2 d-flex align-items-center gap-2"><svg width="18" height="18" viewBox="0 0 24 24"
-                                fill="none" stroke="#10b981" stroke-width="3">
-                                <polyline points="20 6 9 17 4 12"></polyline>
-                            </svg> Handwriting & Math Sheet Engine</li>
+                            </svg> <b>Scan 5 Documents</b> at a time</li>
                     </ul>
                 </div>
             </div>

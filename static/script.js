@@ -2927,121 +2927,83 @@ document.addEventListener("DOMContentLoaded", () => {
     if (pricingModal) {
       pricingModal.style.display = "flex";
       document.body.style.overflow = "hidden"; // Locks background scroll
-
-      // 🚀 Trigger the Dynamic Button Logic
       await renderDynamicPricingButtons();
     }
   };
 
   // 🧠 THE STATE MACHINE: Safer SaaS Subscription Logic
+  // 🧠 THE STATE MACHINE: Safer SaaS Subscription Logic
   async function renderDynamicPricingButtons() {
     const btnBasic = document.getElementById("btnBasicPlan");
     const btnPro = document.getElementById("btnProPlan");
-    if (!btnBasic || !btnPro) return;
+    const btnMax = document.getElementById("btnMaxPlan");
+    if (!btnBasic || !btnPro || !btnMax) return;
 
-    // ⏳ Set temporary loading state while fetching from database
-    btnBasic.innerHTML = "Loading...";
-    btnPro.innerHTML = "Loading...";
+    // 🚀 ALWAYS FORCE "UPGRADE" BUTTONS FOR TESTING RAZORPAY
+    // This completely removes the Stripe "Manage Subscription" alerts!
+
+    btnBasic.innerHTML = "Current Plan";
+    btnBasic.style.background = "#f8fafc";
+    btnBasic.style.color = "#94a3b8";
+    btnBasic.style.border = "1px solid #e2e8f0";
     btnBasic.style.pointerEvents = "none";
-    btnPro.style.pointerEvents = "none";
+
+    btnPro.innerHTML = "Upgrade to Pro";
+    btnPro.style.background = "#10b981";
+    btnPro.style.color = "white";
+    btnPro.style.border = "none";
+    btnPro.style.boxShadow = "0 4px 12px rgba(16,185,129,0.2)";
+    btnPro.style.pointerEvents = "auto";
+    btnPro.onclick = () => window.triggerCheckout("pro", btnPro);
+
+    btnMax.innerHTML = "Upgrade to Max";
+    btnMax.style.background = "#3b82f6";
+    btnMax.style.color = "white";
+    btnMax.style.border = "none";
+    btnMax.style.boxShadow = "0 4px 12px rgba(59,130,246,0.25)";
+    btnMax.style.pointerEvents = "auto";
+    btnMax.onclick = () => window.triggerCheckout("max", btnMax);
+  }
+  window.triggerCheckout = async function (tier, btnElement) {
+    const originalText = btnElement.innerHTML;
+    btnElement.innerHTML =
+      '<span class="spinner-border spinner-border-sm me-2"></span> Connecting...';
 
     try {
-      /* 
-          🔌 INTEGRATION POINT: Fetch from your Python backend
-          Example: const currentPlan = await fetch('/api/user/plan').then(res => res.json());
-        */
-      const currentPlan = localStorage.getItem("quickTotalUserPlan") || "basic";
+      const toggleEl = document.getElementById("billingToggle");
+      const isYearly = toggleEl ? toggleEl.classList.contains("active") : false;
 
-      if (currentPlan === "basic") {
-        // 👤 USER IS ON FREE TIER
+      // 🚀 Send strictly the plan and cycle (No regions needed anymore)
+      const payload = { plan: tier, cycle: isYearly ? "yearly" : "monthly" };
 
-        // Basic Button -> "Current Plan" (Locked)
-        btnBasic.innerHTML = "Current Plan";
-        btnBasic.style.background = "#f8fafc";
-        btnBasic.style.color = "#94a3b8";
-        btnBasic.style.border = "1px solid #e2e8f0";
-        btnBasic.style.pointerEvents = "none";
+      const response = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
 
-        // Pro Button -> "Upgrade to Pro" (Active)
-        btnPro.innerHTML = "Upgrade to Pro";
-        btnPro.style.background = "#10b981";
-        btnPro.style.color = "white";
-        btnPro.style.border = "none";
-        btnPro.style.boxShadow = "0 4px 12px rgba(16,185,129,0.2)";
-        btnPro.style.pointerEvents = "auto";
+      const data = await response.json();
 
-        btnPro.onclick = async () => {
-          btnPro.innerHTML =
-            '<span class="spinner-border spinner-border-sm me-2"></span> Connecting...';
-
-          try {
-            // 🌍 Change region to 'US' to test Stripe, or 'IN' to test Razorpay
-            const payload = { region: "IN" };
-
-            const response = await fetch("/api/checkout", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(payload),
-            });
-
-            const data = await response.json();
-
-            if (data.gateway === "stripe") {
-              // 🌍 STRIPE: Teleport international user to secure checkout page
-              window.location.href = data.url;
-            } else if (data.gateway === "razorpay") {
-              // 🇮🇳 RAZORPAY: Open sleek native overlay for Indian users
-              const options = {
-                key: data.key,
-                amount: data.amount,
-                currency: "INR",
-                name: "QuickTotal",
-                description: "Pro Subscription",
-                order_id: data.order_id,
-                prefill: {
-                  // Leave blank so each customer enters their own details:
-                  name: "",
-                  email: "",
-                  contact: "",
-                },
-                theme: { color: "#10b981" },
-              };
-              const rzp = new Razorpay(options);
-              rzp.open();
-              btnPro.innerHTML = "Manage Subscription";
-            }
-          } catch (error) {
-            console.error("Payment Gateway Error:", error);
-            btnPro.innerHTML = "Manage Subscription";
-          }
+      if (data.gateway === "razorpay" && window.Razorpay) {
+        const options = {
+          key: data.key,
+          amount: data.amount, // Python safely dictates the final price
+          currency: "INR",
+          name: "QuickTotal",
+          description: tier === "max" ? "Max Subscription" : "Pro Subscription",
+          order_id: data.order_id,
+          prefill: { name: "", email: "", contact: "" },
+          theme: { color: tier === "max" ? "#3b82f6" : "#10b981" },
         };
-      } else if (currentPlan === "pro") {
-        // 💎 USER IS ALREADY PAYING FOR PRO
-
-        // Basic Button -> "Included" (Locked)
-        btnBasic.innerHTML = "Included";
-        btnBasic.style.background = "#f8fafc";
-        btnBasic.style.color = "#94a3b8";
-        btnBasic.style.border = "1px solid #e2e8f0";
-        btnBasic.style.pointerEvents = "none";
-
-        // Pro Button -> "Manage Subscription" (Active Portal Link)
-        btnPro.innerHTML = "Manage Subscription";
-        btnPro.style.background = "#ecfdf5";
-        btnPro.style.color = "#059669";
-        btnPro.style.border = "2px solid #a7f3d0";
-        btnPro.style.boxShadow = "none";
-        btnPro.style.pointerEvents = "auto";
-
-        btnPro.onclick = () => {
-          // TODO: Redirect to Stripe Customer Portal
-          alert("Opening Stripe billing portal to manage your subscription...");
-        };
+        const rzp = new Razorpay(options);
+        rzp.open();
       }
-    } catch (err) {
-      console.error("Failed to load user plan:", err);
+    } catch (error) {
+      console.error("Payment Gateway Error:", error);
+    } finally {
+      btnElement.innerHTML = originalText;
     }
-  }
+  };
 
   if (closePricingBtn) {
     closePricingBtn.addEventListener("click", () => {
@@ -3060,17 +3022,35 @@ document.addEventListener("DOMContentLoaded", () => {
         proPriceOld.textContent = "₹299";
         proPrice.innerHTML =
           '₹239<span style="font-size: 0.9rem; color: #64748b; font-weight: 500;">/mo</span>';
-        yearlyLabel.style.color = "#1e293b"; // Dark text for active
+
+        // 🚀 Add Max Toggle Math
+        const maxPriceOld = document.getElementById("maxPriceOld");
+        const maxPrice = document.getElementById("maxPrice");
+        if (maxPriceOld) maxPriceOld.textContent = "₹799";
+        if (maxPrice)
+          maxPrice.innerHTML =
+            '₹639<span style="font-size: 0.9rem; color: #64748b; font-weight: 500;">/mo</span>';
+
+        yearlyLabel.style.color = "#1e293b";
         yearlyLabel.style.fontWeight = "700";
-        monthlyLabel.style.color = "#94a3b8"; // Muted text for inactive
+        monthlyLabel.style.color = "#94a3b8";
         monthlyLabel.style.fontWeight = "600";
       } else {
         proPriceOld.textContent = "";
         proPrice.innerHTML =
           '₹299<span style="font-size: 0.9rem; color: #64748b; font-weight: 500;">/mo</span>';
-        monthlyLabel.style.color = "#1e293b"; // Dark text for active
+
+        // 🚀 Reset Max Toggle Math
+        const maxPriceOld = document.getElementById("maxPriceOld");
+        const maxPrice = document.getElementById("maxPrice");
+        if (maxPriceOld) maxPriceOld.textContent = "";
+        if (maxPrice)
+          maxPrice.innerHTML =
+            '₹799<span style="font-size: 0.9rem; color: #64748b; font-weight: 500;">/mo</span>';
+
+        monthlyLabel.style.color = "#1e293b";
         monthlyLabel.style.fontWeight = "700";
-        yearlyLabel.style.color = "#94a3b8"; // Muted text for inactive
+        yearlyLabel.style.color = "#94a3b8";
         yearlyLabel.style.fontWeight = "600";
       }
     });
