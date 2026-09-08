@@ -296,8 +296,8 @@ if (openCameraBtn) {
       cameraModal.style.display = "flex";
     } catch (err) {
       console.error("Camera Hardware Error:", err);
-      alert(
-        "Camera access denied or hardware is busy. Please refresh the page.",
+      showSystemError(
+        "Camera access denied. Please check your device permissions and try again.",
       );
     }
   });
@@ -700,18 +700,33 @@ fileInput.addEventListener("change", (e) => {
 // ==========================================
 // 📦 FILE UPLOAD & BATCH CAP SYSTEM
 // ==========================================
-const MAX_BATCH_LIMIT = 4; // Capped at 5 documents max
+const MAX_BATCH_LIMIT = 5; // Capped at 5 documents max
 
+// ==========================================
+// 📦 FILE UPLOAD & BATCH CAP SYSTEM
+// ==========================================
 async function addFiles(newFiles) {
   if (!newFiles || newFiles.length === 0) return;
   const incomingFiles = Array.from(newFiles);
 
-  const MAX_FILE_SIZE_MB = 5; // 🚨 5MB Limit per image
+  const MAX_FILE_SIZE_MB = 5;
 
-  // 🚨 BATCH CAP CHECK
-  if (filesToProcess.length + incomingFiles.length > MAX_BATCH_LIMIT) {
+  const userPlan = (localStorage.getItem("quickTotalUserPlan") || "basic")
+    .toLowerCase()
+    .trim();
+  let effectiveLimit = 1;
+
+  if (userPlan === "max") {
+    effectiveLimit = 5;
+  } else if (userPlan === "pro") {
+    effectiveLimit = 3;
+  }
+
+  if (filesToProcess.length + incomingFiles.length > effectiveLimit) {
     showPremiumError(
-      `Maximum ${MAX_BATCH_LIMIT} documents allowed per batch. Please remove some files or process in smaller groups.`,
+      userPlan === "basic"
+        ? "Free tier allows 1 document per scan. Go Pro for batch uploads."
+        : `Batch threshold reached: Your ${userPlan.toUpperCase()} workspace allows up to ${effectiveLimit} simultaneous documents.`,
     );
     return;
   }
@@ -719,15 +734,13 @@ async function addFiles(newFiles) {
   let addedCount = 0;
 
   for (let f of incomingFiles) {
-    // 🚨 SIZE LIMIT CHECK
     if (f.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-      // Clean up the filename so the error isn't too long
       let shortName =
         f.name.length > 15 ? f.name.substring(0, 15) + "..." : f.name;
       showPremiumError(
-        `"${shortName}" is too large! Please upload images under ${MAX_FILE_SIZE_MB}MB.`,
+        `File constraint: "${shortName}" exceeds the ${MAX_FILE_SIZE_MB}MB limit.`,
       );
-      continue; // Skip this oversized file and move to the next one
+      continue;
     }
 
     f.precalcQuality = null;
@@ -736,10 +749,8 @@ async function addFiles(newFiles) {
     addedCount++;
   }
 
-  // Only update UI and trigger background processing if valid files were actually added
   if (addedCount > 0) {
     updateUIState();
-
     for (
       let i = filesToProcess.length - addedCount;
       i < filesToProcess.length;
@@ -1872,7 +1883,7 @@ receiptsList.addEventListener("click", async (e) => {
     recalculateLiveMath();
   }
 
- if (
+  if (
     e.target.classList.contains("save-train-btn") ||
     e.target.closest(".save-train-btn")
   ) {
@@ -1910,55 +1921,88 @@ receiptsList.addEventListener("click", async (e) => {
 
     try {
       // 1. Security Check
-      const { data: { session } } = await supabaseClient.auth.getSession();
-      
+      const {
+        data: { session },
+      } = await supabaseClient.auth.getSession();
+
       if (!session || !session.user) {
-        alert("Security Block: You must be logged in to save receipts. Please log in using the sidebar.");
+        showSystemError(
+          "Authentication required. Please log in to securely process this document.",
+          "Log In",
+          "document.getElementById('system-alert')?.remove(); bootstrap.Modal.getOrCreateInstance(document.getElementById('authModal')).show();",
+        );
         btn.innerHTML = originalContent;
         btn.style.pointerEvents = "auto";
-        return; 
+        return;
       }
 
-      if (!fileToSave) throw new Error("No image found in memory. Please upload the receipt again.");
-      
+      if (!fileToSave) {
+        showSystemError("No image found in memory.");
+        btn.innerHTML = originalContent;
+        btn.style.pointerEvents = "auto";
+        return;
+      }
+
+      if (!fileToSave)
+        throw new Error(
+          "No image found in memory. Please upload the receipt again.",
+        );
+
       // 2. Upload Image
       const fileName = fileToSave.name || "capture.jpg";
-      const fileExtension = fileName.split('.').pop() || "jpg";
+      const fileExtension = fileName.split(".").pop() || "jpg";
       const uniqueFileName = `${card.dataset.receiptId}.${fileExtension}`;
-      
-      const { data: uploadData, error: uploadError } = await supabaseClient
-        .storage
-        .from('recipt_images')
-        .upload(uniqueFileName, fileToSave, {
-          cacheControl: '3600',
-          upsert: true
-        });
+
+      const { data: uploadData, error: uploadError } =
+        await supabaseClient.storage
+          .from("recipt_images")
+          .upload(uniqueFileName, fileToSave, {
+            cacheControl: "3600",
+            upsert: true,
+          });
 
       if (uploadError) throw uploadError;
 
-      const { data: publicUrlData } = supabaseClient
-        .storage
-        .from('recipt_images')
+      const { data: publicUrlData } = supabaseClient.storage
+        .from("recipt_images")
         .getPublicUrl(uniqueFileName);
-      
+
       const imageUrl = publicUrlData.publicUrl;
 
-      // 3. Save to Database
-      const { error: dbError } = await supabaseClient
+      // 3. Save or Update Database
+      const { data: existingReceipt } = await supabaseClient
         .from("saved_receipts")
-        .insert([
+        .select("id")
+        .eq("image_url", imageUrl)
+        .maybeSingle();
+
+      let dbError;
+
+      if (existingReceipt) {
+        // OVERWRITE existing row if it already exists
+        const { error } = await supabaseClient
+          .from("saved_receipts")
+          .update({ recipt_data: { items: correctedItems } })
+          .eq("id", existingReceipt.id);
+        dbError = error;
+      } else {
+        // CREATE new row for the first time
+        const { error } = await supabaseClient.from("saved_receipts").insert([
           {
-            user_id: session.user.id, 
+            user_id: session.user.id,
             recipt_data: { items: correctedItems },
-            image_url: imageUrl
-          }
+            image_url: imageUrl,
+          },
         ]);
+        dbError = error;
+      }
 
       if (dbError) throw dbError;
 
       // 4. Success Animation
       card.dataset.isSaved = "true";
-      btn.style.transition = "transform 0.2s ease-in-out, background 0.2s, color 0.2s";
+      btn.style.transition =
+        "transform 0.2s ease-in-out, background 0.2s, color 0.2s";
       btn.style.transform = "rotateX(90deg)";
 
       setTimeout(() => {
@@ -1972,10 +2016,11 @@ receiptsList.addEventListener("click", async (e) => {
         btn.style.justifyContent = "center";
         btn.style.transform = "rotateX(0deg)";
       }, 200);
-
     } catch (err) {
       console.error("Cloud Save Error:", err);
-      alert("Error details: " + (err.message || JSON.stringify(err)));
+      showSystemError(
+        "Sync failed. Please check your internet connection and try again.",
+      );
       btn.innerHTML = originalContent;
       btn.style.pointerEvents = "auto";
       card.dataset.isSaved = "false";
@@ -2574,28 +2619,57 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function showPremiumError(message) {
-  // Remove existing alert if one is already showing
   const existing = document.getElementById("premium-alert");
   if (existing) existing.remove();
 
-  // Create the premium error toast
   const alertDiv = document.createElement("div");
   alertDiv.id = "premium-alert";
-  alertDiv.style.cssText =
-    "position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #be123c; color: white; padding: 12px 24px; border-radius: 8px; font-weight: 600; font-size: 14px; box-shadow: 0 10px 25px rgba(190, 18, 60, 0.2); z-index: 9999; opacity: 0; transition: opacity 0.3s ease; display: flex; align-items: center; gap: 8px;";
+  alertDiv.style.cssText = `
+    position: fixed;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    width: 92%;
+    max-width: 420px;
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    color: #f8fafc;
+    padding: 14px 16px;
+    border-radius: 14px;
+    font-weight: 500;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    z-index: 99999;
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  `;
 
-  alertDiv.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg> ${message}`;
+  alertDiv.innerHTML = `
+    <div style="background: rgba(16, 185, 129, 0.15); color: #34d399; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1px solid rgba(16, 185, 129, 0.3);">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path></svg>
+    </div>
+    <div style="line-height: 1.4; flex-grow: 1; text-align: left;">${message}</div>
+    <button onclick="if(typeof openPricingModal === 'function') openPricingModal(); document.getElementById('premium-alert')?.remove();" style="background: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 12px; cursor: pointer; flex-shrink: 0; transition: background 0.2s;">Upgrade</button>
+  `;
 
   document.body.appendChild(alertDiv);
 
-  // Fade it in
-  setTimeout(() => (alertDiv.style.opacity = "1"), 10);
+  requestAnimationFrame(() => {
+    alertDiv.style.opacity = "1";
+    alertDiv.style.transform = "translateX(-50%) translateY(0)";
+  });
 
-  // Fade it out and remove after 3 seconds
   setTimeout(() => {
     alertDiv.style.opacity = "0";
-    setTimeout(() => alertDiv.remove(), 300);
-  }, 3000);
+    alertDiv.style.transform = "translateX(-50%) translateY(-10px)";
+    setTimeout(() => alertDiv.remove(), 400);
+  }, 5000);
 }
 // --- HELPER FUNCTION 1: PARSE & APPLY TRANSCRIPT ---
 function applyTranscriptToRow(transcript, nameField, priceField, catField) {
@@ -3328,3 +3402,93 @@ document.addEventListener("DOMContentLoaded", () => {
     appMenu.style.setProperty("--bs-offcanvas-width", "280px");
   }
 });
+function showSystemError(message, buttonText = null, buttonAction = null) {
+  const existing = document.getElementById("system-alert");
+  if (existing) existing.remove();
+
+  const alertDiv = document.createElement("div");
+  alertDiv.id = "system-alert";
+  alertDiv.style.cssText = `
+    position: fixed;
+    top: 24px;
+    left: 16px;
+    right: 16px;
+    margin: 0 auto;
+    max-width: 420px;
+    box-sizing: border-box;
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    color: #f8fafc;
+    padding: 14px 16px;
+    border-radius: 14px;
+    font-weight: 500;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    z-index: 99999;
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  `;
+
+  let buttonHtml = "";
+  if (buttonText && buttonAction) {
+    buttonHtml = `<button onclick="${buttonAction}" style="background: #334155; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 12px; cursor: pointer; flex-shrink: 0; transition: background 0.2s;">${buttonText}</button>`;
+  }
+
+  alertDiv.innerHTML = `
+    <div style="background: rgba(239, 68, 68, 0.15); color: #f87171; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1px solid rgba(239, 68, 68, 0.3);">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+    </div>
+    <div style="line-height: 1.4; flex-grow: 1; text-align: left;">${message}</div>
+    ${buttonHtml}
+  `;
+
+  // Mobile Swipe-to-Dismiss Mechanics
+  let startX = 0,
+    startY = 0;
+  alertDiv.addEventListener(
+    "touchstart",
+    (e) => {
+      startX = e.changedTouches[0].screenX;
+      startY = e.changedTouches[0].screenY;
+    },
+    { passive: true },
+  );
+
+  alertDiv.addEventListener(
+    "touchend",
+    (e) => {
+      let endX = e.changedTouches[0].screenX;
+      let endY = e.changedTouches[0].screenY;
+
+      // Detect significant swipe up, left, or right
+      if (startY - endY > 30 || Math.abs(endX - startX) > 40) {
+        alertDiv.style.opacity = "0";
+        alertDiv.style.transform = "translateY(-20px)";
+        setTimeout(() => alertDiv.remove(), 300);
+      }
+    },
+    { passive: true },
+  );
+
+  document.body.appendChild(alertDiv);
+
+  requestAnimationFrame(() => {
+    alertDiv.style.opacity = "1";
+    alertDiv.style.transform = "translateY(0)";
+  });
+
+  setTimeout(() => {
+    if (document.getElementById("system-alert")) {
+      alertDiv.style.opacity = "0";
+      alertDiv.style.transform = "translateY(-10px)";
+      setTimeout(() => alertDiv.remove(), 400);
+    }
+  }, 5000);
+}
