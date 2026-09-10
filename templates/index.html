@@ -1183,20 +1183,43 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content rounded-4 border-0 shadow-lg"
                 style="background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);">
-                <div class="modal-header border-bottom-0 pb-0">
-                    <h5 class="modal-title fw-bold" id="authModalLabel" style="color: #1e293b;">Welcome to QuickTotal
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <!-- Centered Logo Header -->
+                <div
+                    class="modal-header border-bottom-0 pb-0 position-relative pt-4 d-flex flex-column align-items-center w-100">
+                    <!-- Absolute positioned close button (stays in the top right) -->
+                    <button type="button" class="btn-close position-absolute top-0 end-0 mt-3 me-3"
+                        data-bs-dismiss="modal" aria-label="Close" style="z-index: 10;"></button>
+
+                    <!-- Centered Logo -->
+                    <img src="/static/images/qt_monogram.svg" alt="QuickTotal Logo"
+                        style="width: 60px; height: 60px; border-radius: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 16px;">
+
+                    <!-- Centered Title -->
+                    <h5 class="modal-title fw-bold text-center w-100" id="authModalLabel"
+                        style="color: #1e293b; font-size: 22px; letter-spacing: -0.5px;">Welcome to QuickTotal</h5>
                 </div>
                 <div class="modal-body p-4">
 
-                    <!-- Toggle Buttons (Login vs Signup) -->
-                    <div class="d-flex mb-4 bg-light rounded-pill p-1 border" style="border-color: #e2e8f0;">
-                        <button class="btn btn-sm w-50 rounded-pill fw-bold active-auth-tab" id="showLoginBtn"
-                            style="background: white; color: #1e293b; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">Log
-                            In</button>
-                        <button class="btn btn-sm w-50 rounded-pill fw-bold text-muted" id="showSignupBtn"
-                            style="background: transparent; box-shadow: none;">Sign Up</button>
+                    <!-- Animated Log In / Sign Up Toggle -->
+                    <div class="position-relative mb-4"
+                        style="background-color: #f1f5f9; border-radius: 99px; padding: 4px; display: flex; cursor: pointer;">
+
+                        <!-- The sliding white background -->
+                        <!-- Default position: left side (Log In is active) -->
+                        <div id="authSlider"
+                            style="position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc(50% - 4px); background-color: #ffffff; border-radius: 99px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 1; transform: translateX(0);">
+                        </div>
+
+                        <!-- The Text Buttons -->
+                        <button type="button" id="tabLogin"
+                            class="btn flex-fill text-center fw-bold border-0 position-relative"
+                            style="z-index: 2; color: #0f172a; padding: 10px 16px; transition: color 0.3s;"
+                            onclick="toggleAuthUI('login')">Sign In</button>
+
+                        <button type="button" id="tabSignup"
+                            class="btn flex-fill text-center fw-bold border-0 position-relative"
+                            style="z-index: 2; color: #64748b; padding: 10px 16px; transition: color 0.3s;"
+                            onclick="toggleAuthUI('signup')">Sign Up</button>
                     </div>
 
                     <div id="authAlert" class="d-none d-flex align-items-center gap-2 mb-4"
@@ -1205,7 +1228,7 @@
 
                     <!-- Email & Password Form -->
                     <form id="authForm">
-                        <div class="mb-3">
+                        <div class="mb-3 mt-2">
                             <label class="form-label text-muted small fw-bold">Email address</label>
                             <input type="email" class="form-control rounded-3" id="authEmail" required
                                 placeholder="name@example.com"
@@ -1221,6 +1244,35 @@
                         <button type="submit" class="btn w-100 fw-bold py-3 rounded-3 shadow-sm" id="authSubmitBtn"
                             style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; font-size: 16px;">Log
                             In</button>
+
+                        <!-- Divider -->
+                        <div class="d-flex align-items-center mt-4 mb-3" style="opacity: 0.6;">
+                            <hr class="flex-grow-1 border-secondary">
+                            <span class="mx-3 text-secondary"
+                                style="font-size: 12px; font-weight: 600; letter-spacing: 1px;">OR</span>
+                            <hr class="flex-grow-1 border-secondary">
+                        </div>
+
+                        <!-- Google Login Button -->
+                        <button id="googleLoginBtn" type="button"
+                            class="btn w-100 fw-bold d-flex align-items-center justify-content-center gap-2"
+                            style="background: #ffffff; color: #1e293b; border: 1px solid #cbd5e1; padding: 12px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: all 0.2s;">
+                            <svg width="20" height="20" viewBox="0 0 48 48">
+                                <path fill="#EA4335"
+                                    d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.73 17.74 9.5 24 9.5z">
+                                </path>
+                                <path fill="#4285F4"
+                                    d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z">
+                                </path>
+                                <path fill="#FBBC05"
+                                    d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z">
+                                </path>
+                                <path fill="#34A853"
+                                    d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z">
+                                </path>
+                            </svg>
+                            Continue with Google
+                        </button>
                     </form>
                 </div>
             </div>

@@ -43,6 +43,32 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
 
+  // Handle Google OAuth Login
+  const googleLoginBtn = document.getElementById("googleLoginBtn");
+  if (googleLoginBtn) {
+    googleLoginBtn.addEventListener("click", async () => {
+      // Add a tiny loading state to the button
+      const originalHtml = googleLoginBtn.innerHTML;
+      googleLoginBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Connecting...`;
+      googleLoginBtn.style.pointerEvents = "none";
+
+      try {
+        const { data, error } = await supabaseClient.auth.signInWithOAuth({
+          provider: "google",
+          options: {
+            redirectTo: window.location.origin, // Automatically brings them back to your app after login
+          },
+        });
+
+        if (error) throw error;
+      } catch (err) {
+        console.error("Google Auth Error:", err);
+        showSystemError("Google sign-in failed. Please try again.");
+        googleLoginBtn.innerHTML = originalHtml;
+        googleLoginBtn.style.pointerEvents = "auto";
+      }
+    });
+  }
   // Handle Auth Form Submission
   if (authForm) {
     authForm.addEventListener("submit", async (e) => {
@@ -232,6 +258,13 @@ function resetApp() {
   if (resultsContainer) resultsContainer.style.display = "none";
   if (grandTotalCard) grandTotalCard.style.display = "none";
 
+  // 🚨 CRITICAL FIX: Instantly kill the loading animation if reset is triggered
+  const loadingEl = document.getElementById("loading");
+  if (loadingEl) {
+    loadingEl.style.display = "none";
+    loadingEl.style.opacity = "0";
+  }
+
   // 🚀 Restores original icon and "Browse Files" text
   if (browseBtn) {
     browseBtn.innerHTML = `
@@ -262,10 +295,7 @@ function resetApp() {
   // 🚀 RESTORE THE TOP PILLS & GAP WHEN RESETTING APP
   const pillContainer = document.querySelector(".pill-container");
   if (pillContainer) {
-    // 🚀 Remove the forced block so Bootstrap's original d-flex takes over again
     pillContainer.style.removeProperty("display");
-
-    // Restore the header's default breathing room
     const mainHeader = document.querySelector("header");
     if (mainHeader) {
       mainHeader.style.marginBottom = "";
@@ -1538,7 +1568,13 @@ calculateBtn.addEventListener("click", async () => {
     } else {
       // IF AI FAILS: Put everything back to normal
       if (loadingEl) loadingEl.style.display = "none";
-      if (actionButtons) actionButtons.style.display = "flex";
+
+      // 🚨 FIX: Only restore the action buttons and preview if files STILL exist
+      if (filesToProcess.length > 0 && actionButtons) {
+        actionButtons.style.display = "flex";
+      } else if (actionButtons) {
+        actionButtons.style.display = "none";
+      }
 
       // Ensure the box comes back if it fails
       if (mainCard) {
@@ -1546,7 +1582,7 @@ calculateBtn.addEventListener("click", async () => {
         mainCard.classList.remove("d-none", "d-md-block");
       }
 
-      if (mobilePreviewWrapper) {
+      if (mobilePreviewWrapper && filesToProcess.length > 0) {
         mobilePreviewWrapper.style.display = "block";
         mobilePreviewWrapper.style.opacity = "1";
         mobilePreviewWrapper.style.transform = "translateY(0)";
@@ -3491,4 +3527,42 @@ function showSystemError(message, buttonText = null, buttonAction = null) {
       setTimeout(() => alertDiv.remove(), 400);
     }
   }, 5000);
+}
+
+// Auth Modal Sliding Toggle Logic
+window.currentAuthMode = "signup"; // Keeps track of state without breaking existing code
+
+function toggleAuthUI(mode) {
+  const slider = document.getElementById("authSlider");
+  const tabLogin = document.getElementById("tabLogin");
+  const tabSignup = document.getElementById("tabSignup");
+
+  // Find your main green submit button inside the form
+  const submitBtn =
+    document.querySelector("#authForm button[type='submit']") ||
+    document.querySelector("#authForm .btn-success");
+
+  window.currentAuthMode = mode;
+
+  if (mode === "login") {
+    // Slide left to Log In
+    slider.style.transform = "translateX(0)";
+
+    // Highlight 'Log In' text, dim 'Sign Up'
+    tabLogin.style.color = "#0f172a";
+    tabSignup.style.color = "#64748b";
+
+    // Update the big green button
+    if (submitBtn) submitBtn.textContent = "Log In";
+  } else {
+    // Slide right to Sign Up (moves exactly its own width)
+    slider.style.transform = "translateX(100%)";
+
+    // Highlight 'Sign Up' text, dim 'Log In'
+    tabLogin.style.color = "#64748b";
+    tabSignup.style.color = "#0f172a";
+
+    // Update the big green button
+    if (submitBtn) submitBtn.textContent = "Sign Up";
+  }
 }
