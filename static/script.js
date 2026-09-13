@@ -69,58 +69,133 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+  // Real-Time Keystroke Blocker for Phone Field
+  const authPhoneInput = document.getElementById("authPhone");
+  if (authPhoneInput) {
+    authPhoneInput.addEventListener("input", function () {
+      // Instantly removes any character that is not a number or a '+' sign
+      this.value = this.value.replace(/[^0-9+]/g, "");
+    });
+  }
+
   // Handle Auth Form Submission
   if (authForm) {
     authForm.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const email = document.getElementById("authEmail").value;
-      const password = document.getElementById("authPassword").value;
 
+      const email = document.getElementById("authEmail").value.trim();
+      const password = document.getElementById("authPassword").value;
+      const phoneInputEl = document.getElementById("authPhone");
+      const phone = phoneInputEl ? phoneInputEl.value.trim() : "";
+
+      const isLogin =
+        window.currentAuthMode === "login" || !window.currentAuthMode;
+      const submitBtn = document.getElementById("authSubmitBtn");
+
+      // Clean Error UI Helper
+      const showError = (message) => {
+        authAlert.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg> <span>${message}</span>`;
+        authAlert.classList.remove("d-none");
+        submitBtn.disabled = false;
+        submitBtn.innerText = isLogin ? "Log In" : "Sign Up";
+      };
+
+      // 🛡️ 1. Strict Email Format Check
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email))
+        return showError("Please enter a valid email address.");
+
+      // 🛡️ 2. Supabase Strict Password Rule
+      if (password.length < 6)
+        return showError("Password must be at least 6 characters.");
+
+      if (!isLogin) {
+        // 🛡️ 3. Smart Dynamic Phone Length Check (Sign Up Only)
+        const numericPhone = phone.replace(/[^0-9]/g, "");
+
+        // ONLY validate the length if the user decided to enter a number
+        if (numericPhone.length > 0) {
+          const requiredMin = parseInt(
+            phoneInputEl.getAttribute("data-min-length") || "7",
+            10,
+          );
+          const requiredMax = parseInt(
+            phoneInputEl.getAttribute("maxlength") || "15",
+            10,
+          );
+
+          if (
+            numericPhone.length < requiredMin ||
+            numericPhone.length > requiredMax
+          ) {
+            return showError(
+              `Please enter a valid ${requiredMax}-digit phone number for this country.`,
+            );
+          }
+        }
+
+        // 🛡️ 4. Passwords Match Check (Sign Up Only)
+        const confirmPassword = document.getElementById(
+          "authConfirmPassword",
+        ).value;
+        if (password !== confirmPassword)
+          return showError("Passwords do not match.");
+      }
+
+      // If all checks pass, proceed to database
       submitBtn.disabled = true;
       submitBtn.innerText = "Processing...";
       authAlert.classList.add("d-none");
 
       let authError = null;
 
-      if (isLoginMode) {
+      // 🌍 Combine Country Code and Clean Phone Number
+      const countryCodeInput = document.getElementById("countryCode");
+      const countryCode = countryCodeInput ? countryCodeInput.value : "+91";
+      const cleanPhone = phone.replace(/[^0-9]/g, "");
+
+      // If no phone is typed, pass an empty string to the database
+      const fullPhoneNumber = cleanPhone ? `${countryCode}${cleanPhone}` : "";
+
+      if (isLogin) {
         const { data, error } = await supabaseClient.auth.signInWithPassword({
           email,
           password,
         });
         authError = error;
       } else {
+        // Saves the combined full phone number directly into free user metadata
         const { data, error } = await supabaseClient.auth.signUp({
           email,
           password,
+          options: {
+            data: {
+              phone_number: fullPhoneNumber,
+              country_code: countryCode,
+            },
+          },
         });
         authError = error;
       }
 
       if (authError) {
-        // 🚀 Inject a modern SVG icon alongside the error text
-        authAlert.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg> <span>${authError.message}</span>`;
-
-        // Remove d-none so the d-flex class takes over
-        authAlert.classList.remove("d-none");
-        submitBtn.disabled = false;
-        submitBtn.innerText = isLoginMode ? "Log In" : "Sign Up";
+        showError(authError.message);
       } else {
         const modalEl = document.getElementById("authModal");
-        if (modalEl)
+        if (modalEl) {
           bootstrap.Modal.getInstance(modalEl)?.hide() ||
             new bootstrap.Modal(modalEl).hide();
+        }
         authForm.reset();
         submitBtn.disabled = false;
-        submitBtn.innerText = isLoginMode ? "Log In" : "Sign Up";
+        submitBtn.innerText = isLogin ? "Log In" : "Sign Up";
         checkUserSession();
       }
     });
   }
-
   checkUserSession(); // Run on load
 });
 
-// 🚀 Database Plan Fetcher
 async function checkUserSession() {
   try {
     const {
@@ -131,6 +206,9 @@ async function checkUserSession() {
 
     if (session && session.user) {
       currentUser = session.user;
+
+      // NEW: Drop a permanent breadcrumb on this device
+      localStorage.setItem("quickTotalKnownUser", "true");
 
       // Pull tier from the database instantly!
       const { data: profile } = await supabaseClient
@@ -162,13 +240,328 @@ async function checkUserSession() {
       if (navLoginBtn) {
         navLoginBtn.setAttribute("data-bs-toggle", "modal");
         navLoginBtn.setAttribute("data-bs-target", "#authModal");
-        navLoginBtn.onclick = null;
+        // Foolproof way to close the sidebar when opening the modal
+        navLoginBtn.onclick = () => {
+          const closeBtn = document.querySelector("#appMenu .btn-close");
+          if (closeBtn) closeBtn.click();
+        };
       }
     }
   } catch (err) {
     console.error("Session error:", err);
   }
 }
+// ==========================================
+// 🌍 COMPLETE ISO 3166-1 GLOBAL COUNTRY CODES
+// ==========================================
+const allCountries = [
+  { name: "Afghanistan", code: "+93", iso: "af" },
+  { name: "Åland Islands", code: "+35818", iso: "ax" },
+  { name: "Albania", code: "+355", iso: "al" },
+  { name: "Algeria", code: "+213", iso: "dz" },
+  { name: "American Samoa", code: "+1684", iso: "as" },
+  { name: "Andorra", code: "+376", iso: "ad" },
+  { name: "Angola", code: "+244", iso: "ao" },
+  { name: "Anguilla", code: "+1264", iso: "ai" },
+  { name: "Antarctica", code: "+672", iso: "aq" },
+  { name: "Antigua and Barbuda", code: "+1268", iso: "ag" },
+  { name: "Argentina", code: "+54", iso: "ar" },
+  { name: "Armenia", code: "+374", iso: "am" },
+  { name: "Aruba", code: "+297", iso: "aw" },
+  { name: "Australia", code: "+61", iso: "au" },
+  { name: "Austria", code: "+43", iso: "at" },
+  { name: "Azerbaijan", code: "+994", iso: "az" },
+  { name: "Bahamas", code: "+1242", iso: "bs" },
+  { name: "Bahrain", code: "+973", iso: "bh" },
+  { name: "Bangladesh", code: "+880", iso: "bd" },
+  { name: "Barbados", code: "+1246", iso: "bb" },
+  { name: "Belarus", code: "+375", iso: "by" },
+  { name: "Belgium", code: "+32", iso: "be" },
+  { name: "Belize", code: "+501", iso: "bz" },
+  { name: "Benin", code: "+229", iso: "bj" },
+  { name: "Bermuda", code: "+1441", iso: "bm" },
+  { name: "Bhutan", code: "+975", iso: "bt" },
+  { name: "Bolivia", code: "+591", iso: "bo" },
+  { name: "Bonaire", code: "+599", iso: "bq" },
+  { name: "Bosnia and Herzegovina", code: "+387", iso: "ba" },
+  { name: "Botswana", code: "+267", iso: "bw" },
+  { name: "Bouvet Island", code: "+47", iso: "bv" },
+  { name: "Brazil", code: "+55", iso: "br" },
+  { name: "British Indian Ocean Territory", code: "+246", iso: "io" },
+  { name: "British Virgin Islands", code: "+1284", iso: "vg" },
+  { name: "Brunei", code: "+673", iso: "bn" },
+  { name: "Bulgaria", code: "+359", iso: "bg" },
+  { name: "Burkina Faso", code: "+226", iso: "bf" },
+  { name: "Burundi", code: "+257", iso: "bi" },
+  { name: "Cambodia", code: "+855", iso: "kh" },
+  { name: "Cameroon", code: "+237", iso: "cm" },
+  { name: "Canada", code: "+1", iso: "ca" },
+  { name: "Cape Verde", code: "+238", iso: "cv" },
+  { name: "Cayman Islands", code: "+1345", iso: "ky" },
+  { name: "Central African Republic", code: "+236", iso: "cf" },
+  { name: "Chad", code: "+235", iso: "td" },
+  { name: "Chile", code: "+56", iso: "cl" },
+  { name: "China", code: "+86", iso: "cn" },
+  { name: "Christmas Island", code: "+61", iso: "cx" },
+  { name: "Cocos Islands", code: "+61", iso: "cc" },
+  { name: "Colombia", code: "+57", iso: "co" },
+  { name: "Comoros", code: "+269", iso: "km" },
+  { name: "Cook Islands", code: "+682", iso: "ck" },
+  { name: "Costa Rica", code: "+506", iso: "cr" },
+  { name: "Croatia", code: "+385", iso: "hr" },
+  { name: "Cuba", code: "+53", iso: "cu" },
+  { name: "Curacao", code: "+599", iso: "cw" },
+  { name: "Cyprus", code: "+357", iso: "cy" },
+  { name: "Czech Republic", code: "+420", iso: "cz" },
+  { name: "Democratic Republic of the Congo", code: "+243", iso: "cd" },
+  { name: "Denmark", code: "+45", iso: "dk" },
+  { name: "Djibouti", code: "+253", iso: "dj" },
+  { name: "Dominica", code: "+1767", iso: "dm" },
+  { name: "Dominican Republic", code: "+1809", iso: "do" },
+  { name: "East Timor", code: "+670", iso: "tl" },
+  { name: "Ecuador", code: "+593", iso: "ec" },
+  { name: "Egypt", code: "+20", iso: "eg" },
+  { name: "El Salvador", code: "+503", iso: "sv" },
+  { name: "Equatorial Guinea", code: "+240", iso: "gq" },
+  { name: "Eritrea", code: "+291", iso: "er" },
+  { name: "Estonia", code: "+372", iso: "ee" },
+  { name: "Eswatini", code: "+268", iso: "sz" },
+  { name: "Ethiopia", code: "+251", iso: "et" },
+  { name: "Falkland Islands", code: "+500", iso: "fk" },
+  { name: "Faroe Islands", code: "+298", iso: "fo" },
+  { name: "Fiji", code: "+679", iso: "fj" },
+  { name: "Finland", code: "+358", iso: "fi" },
+  { name: "France", code: "+33", iso: "fr" },
+  { name: "French Guiana", code: "+594", iso: "gf" },
+  { name: "French Polynesia", code: "+689", iso: "pf" },
+  { name: "French Southern Territories", code: "+262", iso: "tf" },
+  { name: "Gabon", code: "+241", iso: "ga" },
+  { name: "Gambia", code: "+220", iso: "gm" },
+  { name: "Georgia", code: "+995", iso: "ge" },
+  { name: "Germany", code: "+49", iso: "de" },
+  { name: "Ghana", code: "+233", iso: "gh" },
+  { name: "Gibraltar", code: "+350", iso: "gi" },
+  { name: "Greece", code: "+30", iso: "gr" },
+  { name: "Greenland", code: "+299", iso: "gl" },
+  { name: "Grenada", code: "+1473", iso: "gd" },
+  { name: "Guadeloupe", code: "+590", iso: "gp" },
+  { name: "Guam", code: "+1671", iso: "gu" },
+  { name: "Guatemala", code: "+502", iso: "gt" },
+  { name: "Guernsey", code: "+441481", iso: "gg" },
+  { name: "Guinea", code: "+224", iso: "gn" },
+  { name: "Guinea-Bissau", code: "+245", iso: "gw" },
+  { name: "Guyana", code: "+592", iso: "gy" },
+  { name: "Haiti", code: "+509", iso: "ht" },
+  { name: "Heard Island and McDonald Islands", code: "+672", iso: "hm" },
+  { name: "Honduras", code: "+504", iso: "hn" },
+  { name: "Hong Kong", code: "+852", iso: "hk" },
+  { name: "Hungary", code: "+36", iso: "hu" },
+  { name: "Iceland", code: "+354", iso: "is" },
+  { name: "India", code: "+91", iso: "in" },
+  { name: "Indonesia", code: "+62", iso: "id" },
+  { name: "Iran", code: "+98", iso: "ir" },
+  { name: "Iraq", code: "+964", iso: "iq" },
+  { name: "Ireland", code: "+353", iso: "ie" },
+  { name: "Isle of Man", code: "+441624", iso: "im" },
+  { name: "Israel", code: "+972", iso: "il" },
+  { name: "Italy", code: "+39", iso: "it" },
+  { name: "Ivory Coast", code: "+225", iso: "ci" },
+  { name: "Jamaica", code: "+1876", iso: "jm" },
+  { name: "Japan", code: "+81", iso: "jp" },
+  { name: "Jersey", code: "+441534", iso: "je" },
+  { name: "Jordan", code: "+962", iso: "jo" },
+  { name: "Kazakhstan", code: "+7", iso: "kz" },
+  { name: "Kenya", code: "+254", iso: "ke" },
+  { name: "Kiribati", code: "+686", iso: "ki" },
+  { name: "Kosovo", code: "+383", iso: "xk" },
+  { name: "Kuwait", code: "+965", iso: "kw" },
+  { name: "Kyrgyzstan", code: "+996", iso: "kg" },
+  { name: "Laos", code: "+856", iso: "la" },
+  { name: "Latvia", code: "+371", iso: "lv" },
+  { name: "Lebanon", code: "+961", iso: "lb" },
+  { name: "Lesotho", code: "+266", iso: "ls" },
+  { name: "Liberia", code: "+231", iso: "lr" },
+  { name: "Libya", code: "+218", iso: "ly" },
+  { name: "Liechtenstein", code: "+423", iso: "li" },
+  { name: "Lithuania", code: "+370", iso: "lt" },
+  { name: "Luxembourg", code: "+352", iso: "lu" },
+  { name: "Macau", code: "+853", iso: "mo" },
+  { name: "Madagascar", code: "+261", iso: "mg" },
+  { name: "Malawi", code: "+265", iso: "mw" },
+  { name: "Malaysia", code: "+60", iso: "my" },
+  { name: "Maldives", code: "+960", iso: "mv" },
+  { name: "Mali", code: "+223", iso: "ml" },
+  { name: "Malta", code: "+356", iso: "mt" },
+  { name: "Marshall Islands", code: "+692", iso: "mh" },
+  { name: "Martinique", code: "+596", iso: "mq" },
+  { name: "Mauritania", code: "+222", iso: "mr" },
+  { name: "Mauritius", code: "+230", iso: "mu" },
+  { name: "Mayotte", code: "+262", iso: "yt" },
+  { name: "Mexico", code: "+52", iso: "mx" },
+  { name: "Micronesia", code: "+691", iso: "fm" },
+  { name: "Moldova", code: "+373", iso: "md" },
+  { name: "Monaco", code: "+377", iso: "mc" },
+  { name: "Mongolia", code: "+976", iso: "mn" },
+  { name: "Montenegro", code: "+382", iso: "me" },
+  { name: "Montserrat", code: "+1664", iso: "ms" },
+  { name: "Morocco", code: "+212", iso: "ma" },
+  { name: "Mozambique", code: "+258", iso: "mz" },
+  { name: "Myanmar", code: "+95", iso: "mm" },
+  { name: "Namibia", code: "+264", iso: "na" },
+  { name: "Nauru", code: "+674", iso: "nr" },
+  { name: "Nepal", code: "+977", iso: "np" },
+  { name: "Netherlands", code: "+31", iso: "nl" },
+  { name: "New Caledonia", code: "+687", iso: "nc" },
+  { name: "New Zealand", code: "+64", iso: "nz" },
+  { name: "Nicaragua", code: "+505", iso: "ni" },
+  { name: "Niger", code: "+227", iso: "ne" },
+  { name: "Nigeria", code: "+234", iso: "ng" },
+  { name: "Niue", code: "+683", iso: "nu" },
+  { name: "Norfolk Island", code: "+672", iso: "nf" },
+  { name: "North Korea", code: "+850", iso: "kp" },
+  { name: "North Macedonia", code: "+389", iso: "mk" },
+  { name: "Northern Mariana Islands", code: "+1670", iso: "mp" },
+  { name: "Norway", code: "+47", iso: "no" },
+  { name: "Oman", code: "+968", iso: "om" },
+  { name: "Pakistan", code: "+92", iso: "pk" },
+  { name: "Palau", code: "+680", iso: "pw" },
+  { name: "Palestine", code: "+970", iso: "ps" },
+  { name: "Panama", code: "+507", iso: "pa" },
+  { name: "Papua New Guinea", code: "+675", iso: "pg" },
+  { name: "Paraguay", code: "+595", iso: "py" },
+  { name: "Peru", code: "+51", iso: "pe" },
+  { name: "Philippines", code: "+63", iso: "ph" },
+  { name: "Pitcairn Islands", code: "+870", iso: "pn" },
+  { name: "Poland", code: "+48", iso: "pl" },
+  { name: "Portugal", code: "+351", iso: "pt" },
+  { name: "Puerto Rico", code: "+1787", iso: "pr" },
+  { name: "Qatar", code: "+974", iso: "qa" },
+  { name: "Republic of the Congo", code: "+242", iso: "cg" },
+  { name: "Reunion", code: "+262", iso: "re" },
+  { name: "Romania", code: "+40", iso: "ro" },
+  { name: "Russia", code: "+7", iso: "ru" },
+  { name: "Rwanda", code: "+250", iso: "rw" },
+  { name: "Saint Barthelemy", code: "+590", iso: "bl" },
+  { name: "Saint Helena", code: "+290", iso: "sh" },
+  { name: "Saint Kitts and Nevis", code: "+1869", iso: "kn" },
+  { name: "Saint Lucia", code: "+1758", iso: "lc" },
+  { name: "Saint Martin", code: "+590", iso: "mf" },
+  { name: "Saint Pierre and Miquelon", code: "+508", iso: "pm" },
+  { name: "Saint Vincent and the Grenadines", code: "+1784", iso: "vc" },
+  { name: "Samoa", code: "+685", iso: "ws" },
+  { name: "San Marino", code: "+378", iso: "sm" },
+  { name: "Sao Tome and Principe", code: "+239", iso: "st" },
+  { name: "Saudi Arabia", code: "+966", iso: "sa" },
+  { name: "Senegal", code: "+221", iso: "sn" },
+  { name: "Serbia", code: "+381", iso: "rs" },
+  { name: "Seychelles", code: "+248", iso: "sc" },
+  { name: "Sierra Leone", code: "+232", iso: "sl" },
+  { name: "Singapore", code: "+65", iso: "sg" },
+  { name: "Sint Maarten", code: "+1721", iso: "sx" },
+  { name: "Slovakia", code: "+421", iso: "sk" },
+  { name: "Slovenia", code: "+386", iso: "si" },
+  { name: "Solomon Islands", code: "+677", iso: "sb" },
+  { name: "Somalia", code: "+252", iso: "so" },
+  { name: "South Africa", code: "+27", iso: "za" },
+  { name: "South Georgia", code: "+500", iso: "gs" },
+  { name: "South Korea", code: "+82", iso: "kr" },
+  { name: "South Sudan", code: "+211", iso: "ss" },
+  { name: "Spain", code: "+34", iso: "es" },
+  { name: "Sri Lanka", code: "+94", iso: "lk" },
+  { name: "Sudan", code: "+249", iso: "sd" },
+  { name: "Suriname", code: "+597", iso: "sr" },
+  { name: "Svalbard and Jan Mayen", code: "+4779", iso: "sj" },
+  { name: "Sweden", code: "+46", iso: "se" },
+  { name: "Switzerland", code: "+41", iso: "ch" },
+  { name: "Syria", code: "+963", iso: "sy" },
+  { name: "Taiwan", code: "+886", iso: "tw" },
+  { name: "Tajikistan", code: "+992", iso: "tj" },
+  { name: "Tanzania", code: "+255", iso: "tz" },
+  { name: "Thailand", code: "+66", iso: "th" },
+  { name: "Togo", code: "+228", iso: "tg" },
+  { name: "Tokelau", code: "+690", iso: "tk" },
+  { name: "Tonga", code: "+676", iso: "to" },
+  { name: "Trinidad and Tobago", code: "+1868", iso: "tt" },
+  { name: "Tunisia", code: "+216", iso: "tn" },
+  { name: "Turkey", code: "+90", iso: "tr" },
+  { name: "Turkmenistan", code: "+993", iso: "tm" },
+  { name: "Turks and Caicos Islands", code: "+1649", iso: "tc" },
+  { name: "Tuvalu", code: "+688", iso: "tv" },
+  { name: "U.S. Virgin Islands", code: "+1340", iso: "vi" },
+  { name: "Uganda", code: "+256", iso: "ug" },
+  { name: "Ukraine", code: "+380", iso: "ua" },
+  { name: "United Arab Emirates", code: "+971", iso: "ae" },
+  { name: "United Kingdom", code: "+44", iso: "gb" },
+  { name: "United States", code: "+1", iso: "us" },
+  { name: "Uruguay", code: "+598", iso: "uy" },
+  { name: "Uzbekistan", code: "+998", iso: "uz" },
+  { name: "Vanuatu", code: "+678", iso: "vu" },
+  { name: "Vatican City", code: "+3906", iso: "va" },
+  { name: "Venezuela", code: "+58", iso: "ve" },
+  { name: "Vietnam", code: "+84", iso: "vn" },
+  { name: "Wallis and Futuna", code: "+681", iso: "wf" },
+  { name: "Western Sahara", code: "+212", iso: "eh" },
+  { name: "Yemen", code: "+967", iso: "ye" },
+  { name: "Zambia", code: "+260", iso: "zm" },
+  { name: "Zimbabwe", code: "+263", iso: "zw" },
+];
+
+document.addEventListener("DOMContentLoaded", () => {
+  const listContainer = document.getElementById("countryList");
+  const searchInput = document.getElementById("countrySearch");
+  const hiddenInput = document.getElementById("countryCode");
+  const displaySpan = document.getElementById("selectedCountryDisplay");
+
+  // 1. Render the SVG Country List
+  if (listContainer) {
+    // Sort alphabetically so it's easy for users to scroll
+    allCountries
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .forEach((country) => {
+        const item = document.createElement("button");
+        item.type = "button";
+        item.className =
+          "dropdown-item d-flex align-items-center gap-3 py-2 country-item";
+        item.setAttribute("data-name", country.name.toLowerCase()); // Lowercase for searching
+
+        // Uses FlagCDN for instantaneous, high-res SVG flags
+        item.innerHTML = `
+                <img src="https://flagcdn.com/${country.iso}.svg" width="24" alt="${country.name}" style="border-radius: 2px;">
+                <span style="font-weight: 500; font-size: 13.5px; color: #1e293b;">${country.name}</span>
+                <span class="ms-auto text-muted" style="font-size: 12px; font-weight: 600;">${country.code}</span>
+            `;
+
+        // 2. Handle the User Selecting a Country
+        item.addEventListener("click", () => {
+          hiddenInput.value = country.code;
+          displaySpan.innerHTML = `<img src="https://flagcdn.com/${country.iso}.svg" width="20" alt="${country.name}"> ${country.code}`;
+        });
+
+        listContainer.appendChild(item);
+      });
+  }
+
+  // 3. Smart Search Function (Lowers user input to match data-name)
+  if (searchInput) {
+    searchInput.addEventListener("input", function () {
+      const query = this.value.toLowerCase().trim();
+      const items = document.querySelectorAll(".country-item");
+
+      items.forEach((item) => {
+        const name = item.getAttribute("data-name");
+        // If the country name includes what the user typed, show it. Otherwise, hide it.
+        if (name.includes(query)) {
+          item.style.display = "flex";
+        } else {
+          item.style.display = "none";
+        }
+      });
+    });
+
+    // Prevent the dropdown from closing when clicking inside the search box
+    searchInput.addEventListener("click", (e) => e.stopPropagation());
+  }
+});
 
 // QUICKTOTAL SPLASH SCREEN LOGIC
 window.addEventListener("load", () => {
@@ -1422,6 +1815,27 @@ calculateBtn.addEventListener("click", async () => {
       if (grandTotalCard) grandTotalCard.style.display = "flex";
       recalculateLiveMath();
 
+      // 🚀 NEW: Tell Supabase to increment the user's daily_scans in the background
+      if (typeof currentUser !== "undefined" && currentUser) {
+        supabaseClient
+          .from("user_profiles")
+          .select("daily_scans")
+          .eq("user_id", currentUser.id)
+          .single()
+          .then(({ data }) => {
+            if (data) {
+              supabaseClient
+                .from("user_profiles")
+                .update({
+                  daily_scans: (data.daily_scans || 0) + successfulDocs,
+                })
+                .eq("user_id", currentUser.id)
+                .then(); // Fire and forget so it doesn't slow down the user's UI
+            }
+          })
+          .catch((err) => console.error("Could not update scan count:", err));
+      }
+
       // 🚨 MOBILE FOCUS MODE: Hide pills and pull Grand Total perfectly up
       const pillContainer = document.querySelector(".pill-container");
       if (pillContainer && window.innerWidth <= 768) {
@@ -2570,49 +2984,154 @@ async function selectOption(event, buttonId, inputId, text, value) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const savedLang = localStorage.getItem("settingsLanguage") || "hi-IN";
-  if (langMap[savedLang]) {
-    const inputEl = document.getElementById("settingsLanguage");
-    if (inputEl) inputEl.value = savedLang;
+  const listContainer = document.getElementById("countryList");
+  const searchInput = document.getElementById("countrySearch");
+  const hiddenInput = document.getElementById("countryCode");
+  const displaySpan = document.getElementById("selectedCountryDisplay");
+  const phoneInput = document.getElementById("authPhone");
 
-    const buttonSpan = document.querySelector("#langBtn span");
-    if (buttonSpan) buttonSpan.innerText = langMap[savedLang];
+  // Government Telecom Lengths (Hard limit for strict countries)
+  // Government Telecom Lengths (Hard limit for strict countries)
+  const countryMaxLengths = {
+    "+91": 10,
+    "+1": 10,
+    "+44": 10,
+    "+61": 9,
+    "+971": 9,
+    "+92": 10,
+    "+880": 10,
+    "+94": 9,
+    "+977": 10,
+    "+65": 8,
+    "+27": 9,
+    "+86": 11,
+    "+55": 11,
+    "+7": 10,
+    // Shared NANP (Caribbean/Americas) remaining local digits
+    "+1242": 7,
+    "+1264": 7,
+    "+1268": 7,
+    "+1246": 7,
+    "+1441": 7,
+    "+1284": 7,
+    "+1345": 7,
+    "+1767": 7,
+    "+1809": 7,
+    "+1473": 7,
+    "+1876": 7,
+    "+1664": 7,
+    "+1787": 7,
+    "+1869": 7,
+    "+1758": 7,
+    "+1784": 7,
+    "+1721": 7,
+    "+1868": 7,
+    "+1649": 7,
+    "+1340": 7,
+    "+1670": 7,
+    "+1671": 7,
+    "+1684": 7,
+    // Shared European/Other routing remaining digits
+    "+441481": 6,
+    "+441624": 6,
+    "+441534": 6,
+    "+3906": 4,
+    "+4779": 4,
+    "+35818": 6,
+  };
 
-    // Highlight active item on page load
-    const langItems = document.querySelectorAll(
-      "#langBtn + .dropdown-menu .dropdown-item",
-    );
-    langItems.forEach((link) => {
-      link.classList.remove("active");
-      if (
-        link.getAttribute("onclick") &&
-        link.getAttribute("onclick").includes(savedLang)
-      ) {
-        link.classList.add("active");
-      }
-    });
+  // Lock to India's 10 digits on initial load
+  if (phoneInput) {
+    phoneInput.maxLength = 10;
+    phoneInput.setAttribute("data-min-length", 10);
   }
 
-  const savedCurrency = localStorage.getItem("settingsCurrency") || "INR";
-  if (currencyMap[savedCurrency]) {
-    const currInput = document.getElementById("settingsCurrency");
-    if (currInput) currInput.value = savedCurrency;
+  if (listContainer && typeof allCountries !== "undefined") {
+    // FIX 1: Wipes the container completely clean before loading to prevent duplicates
+    listContainer.innerHTML = "";
 
-    const currBtnSpan = document.querySelector("#currencyBtn span");
-    if (currBtnSpan) currBtnSpan.innerText = currencyMap[savedCurrency];
-
-    const currItems = document.querySelectorAll(
-      "#currencyBtn + .dropdown-menu .dropdown-item",
+    // Ensure array uniqueness (failsafe against duplicate data entries)
+    const uniqueCountries = Array.from(
+      new Map(allCountries.map((item) => [item.iso, item])).values(),
     );
-    currItems.forEach((link) => {
-      link.classList.remove("active");
-      if (
-        link.getAttribute("onclick") &&
-        link.getAttribute("onclick").includes(savedCurrency)
-      ) {
-        link.classList.add("active");
-      }
+
+    uniqueCountries
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .forEach((country) => {
+        const item = document.createElement("button");
+        item.type = "button";
+        item.className =
+          "dropdown-item d-flex align-items-center gap-3 py-2 country-item";
+
+        // FIX 2: Store both name AND code (e.g., "india +91") in one searchable tag
+        item.setAttribute(
+          "data-search",
+          `${country.name.toLowerCase()} ${country.code}`,
+        );
+
+        item.innerHTML = `
+                <img src="https://flagcdn.com/${country.iso}.svg" width="24" alt="${country.name}" style="border-radius: 2px;">
+                <span style="font-weight: 500; font-size: 13.5px; color: #1e293b;">${country.name}</span>
+                <span class="ms-auto text-muted" style="font-size: 12px; font-weight: 600;">${country.code}</span>
+            `;
+
+        // When a user selects a country:
+        item.addEventListener("click", () => {
+          hiddenInput.value = country.code;
+          displaySpan.innerHTML = `<img src="https://flagcdn.com/${country.iso}.svg" width="20" alt="${country.name}"> ${country.code}`;
+
+          // Instantly lock the input to that country's exact telecom length
+          const reqLen = countryMaxLengths[country.code] || 15;
+          const minLen = countryMaxLengths[country.code] || 7;
+
+          phoneInput.maxLength = reqLen;
+          phoneInput.setAttribute("data-min-length", minLen);
+          phoneInput.value = ""; // Clear invalid numbers from the previous country
+        });
+
+        listContainer.appendChild(item);
+      });
+  }
+
+  // Lightning-fast search that bypasses Bootstrap's !important override
+  if (searchInput) {
+    searchInput.addEventListener("input", function () {
+      const query = this.value.toLowerCase().trim();
+      const items = document.querySelectorAll(".country-item");
+
+      items.forEach((item) => {
+        // Now searches against BOTH the country name and the +123 code
+        const searchData = item.getAttribute("data-search");
+        if (searchData.includes(query)) {
+          item.classList.remove("d-none");
+          item.classList.add("d-flex");
+        } else {
+          item.classList.remove("d-flex");
+          item.classList.add("d-none");
+        }
+      });
     });
+    searchInput.addEventListener("click", (e) => e.stopPropagation()); // Keeps menu open
+  }
+
+  // Lightning-fast search that bypasses Bootstrap's !important override
+  if (searchInput) {
+    searchInput.addEventListener("input", function () {
+      const query = this.value.toLowerCase().trim();
+      const items = document.querySelectorAll(".country-item");
+
+      items.forEach((item) => {
+        const name = item.getAttribute("data-name");
+        if (name.includes(query)) {
+          item.classList.remove("d-none");
+          item.classList.add("d-flex");
+        } else {
+          item.classList.remove("d-flex");
+          item.classList.add("d-none");
+        }
+      });
+    });
+    searchInput.addEventListener("click", (e) => e.stopPropagation()); // Keeps menu open
   }
 });
 document.addEventListener("DOMContentLoaded", () => {
@@ -3529,40 +4048,105 @@ function showSystemError(message, buttonText = null, buttonAction = null) {
   }, 5000);
 }
 
-// Auth Modal Sliding Toggle Logic
-window.currentAuthMode = "signup"; // Keeps track of state without breaking existing code
+// ==========================================
+// 🔐 AUTH MODAL UI & TYPEWRITER LOGIC
+// ==========================================
+window.currentAuthMode = "login"; // Default state
+let authTypingTimeout = null;
+
+function runAuthTypewriter(text) {
+  const titleEl = document.getElementById("authModalLabel");
+  if (!titleEl) return;
+
+  // Clear any existing typing animation so it doesn't glitch if tapped rapidly
+  if (authTypingTimeout) clearTimeout(authTypingTimeout);
+
+  titleEl.innerHTML = "";
+  titleEl.style.display = "inline-block";
+
+  let i = 0;
+  function typeChar() {
+    if (i < text.length) {
+      titleEl.innerHTML += text.charAt(i);
+      i++;
+      authTypingTimeout = setTimeout(typeChar, 35); // 35ms per character
+    }
+  }
+  typeChar();
+}
 
 function toggleAuthUI(mode) {
   const slider = document.getElementById("authSlider");
   const tabLogin = document.getElementById("tabLogin");
   const tabSignup = document.getElementById("tabSignup");
-
-  // Find your main green submit button inside the form
   const submitBtn =
     document.querySelector("#authForm button[type='submit']") ||
     document.querySelector("#authForm .btn-success");
 
+  const emailCol = document.getElementById("emailCol");
+  const phoneCol = document.getElementById("phoneCol");
+  const phoneInput = document.getElementById("authPhone");
+
+  const passCol = document.getElementById("passCol");
+  const confirmCol = document.getElementById("confirmCol");
+  const confirmInput = document.getElementById("authConfirmPassword");
+
   window.currentAuthMode = mode;
 
   if (mode === "login") {
-    // Slide left to Log In
     slider.style.transform = "translateX(0)";
-
-    // Highlight 'Log In' text, dim 'Sign Up'
     tabLogin.style.color = "#0f172a";
     tabSignup.style.color = "#64748b";
-
-    // Update the big green button
     if (submitBtn) submitBtn.textContent = "Log In";
-  } else {
-    // Slide right to Sign Up (moves exactly its own width)
-    slider.style.transform = "translateX(100%)";
 
-    // Highlight 'Sign Up' text, dim 'Log In'
+    // Expand to 1 Column for all screens
+    if (emailCol) emailCol.className = "col-12";
+    if (passCol) passCol.className = "col-12";
+
+    // Hide extra fields
+    if (confirmCol) confirmCol.style.display = "none";
+    if (confirmInput) confirmInput.required = false;
+
+    if (phoneCol) phoneCol.style.display = "none";
+    if (phoneInput) phoneInput.required = false;
+
+    runAuthTypewriter("Welcome back to QuickTotal");
+  } else {
+    slider.style.transform = "translateX(100%)";
     tabLogin.style.color = "#64748b";
     tabSignup.style.color = "#0f172a";
-
-    // Update the big green button
     if (submitBtn) submitBtn.textContent = "Sign Up";
+
+    // SMART RESPONSIVE SPLIT: 100% width on phones, 50% width side-by-side on laptops
+    if (emailCol) emailCol.className = "col-12 col-sm-6";
+    if (passCol) passCol.className = "col-12 col-sm-6";
+
+    // Show extra fields
+    if (confirmCol) confirmCol.style.display = "block";
+    if (confirmInput) confirmInput.required = true;
+
+    if (phoneCol) phoneCol.style.display = "block";
+    if (phoneInput) phoneInput.required = false;
+
+    runAuthTypewriter("Welcome to QuickTotal");
   }
 }
+
+// Automatically trigger the animation and smart tab selection
+document.addEventListener("DOMContentLoaded", () => {
+  const authModalEl = document.getElementById("authModal");
+  if (authModalEl) {
+    authModalEl.addEventListener("show.bs.modal", () => {
+      // Check the device memory for the breadcrumb
+      const isKnownUser = localStorage.getItem("quickTotalKnownUser");
+
+      if (isKnownUser === "true") {
+        // They have logged in here before, show Sign In
+        toggleAuthUI("login");
+      } else {
+        // First time on this device, show Sign Up
+        toggleAuthUI("signup");
+      }
+    });
+  }
+});

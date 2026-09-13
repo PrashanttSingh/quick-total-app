@@ -1180,21 +1180,15 @@
     </div>
     <!-- 🔐 AUTH MODAL (LOGIN/SIGNUP) -->
     <div class="modal fade" id="authModal" tabindex="-1" aria-labelledby="authModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 550px;">
             <div class="modal-content rounded-4 border-0 shadow-lg"
                 style="background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);">
-                <!-- Centered Logo Header -->
                 <div
                     class="modal-header border-bottom-0 pb-0 position-relative pt-4 d-flex flex-column align-items-center w-100">
-                    <!-- Absolute positioned close button (stays in the top right) -->
                     <button type="button" class="btn-close position-absolute top-0 end-0 mt-3 me-3"
                         data-bs-dismiss="modal" aria-label="Close" style="z-index: 10;"></button>
-
-                    <!-- Centered Logo -->
                     <img src="/static/images/qt_monogram.svg" alt="QuickTotal Logo"
                         style="width: 60px; height: 60px; border-radius: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 16px;">
-
-                    <!-- Centered Title -->
                     <h5 class="modal-title fw-bold text-center w-100" id="authModalLabel"
                         style="color: #1e293b; font-size: 22px; letter-spacing: -0.5px;">Welcome to QuickTotal</h5>
                 </div>
@@ -1203,19 +1197,13 @@
                     <!-- Animated Log In / Sign Up Toggle -->
                     <div class="position-relative mb-4"
                         style="background-color: #f1f5f9; border-radius: 99px; padding: 4px; display: flex; cursor: pointer;">
-
-                        <!-- The sliding white background -->
-                        <!-- Default position: left side (Log In is active) -->
                         <div id="authSlider"
                             style="position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc(50% - 4px); background-color: #ffffff; border-radius: 99px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 1; transform: translateX(0);">
                         </div>
-
-                        <!-- The Text Buttons -->
                         <button type="button" id="tabLogin"
                             class="btn flex-fill text-center fw-bold border-0 position-relative"
                             style="z-index: 2; color: #0f172a; padding: 10px 16px; transition: color 0.3s;"
                             onclick="toggleAuthUI('login')">Sign In</button>
-
                         <button type="button" id="tabSignup"
                             class="btn flex-fill text-center fw-bold border-0 position-relative"
                             style="z-index: 2; color: #64748b; padding: 10px 16px; transition: color 0.3s;"
@@ -1228,25 +1216,81 @@
 
                     <!-- Email & Password Form -->
                     <form id="authForm">
-                        <div class="mb-3 mt-2">
-                            <label class="form-label text-muted small fw-bold">Email address</label>
-                            <input type="email" class="form-control rounded-3" id="authEmail" required
-                                placeholder="name@example.com"
-                                style="padding: 12px; border: 1px solid #cbd5e1; font-weight: 500;">
+                        <!-- Row 1: Email & Phone -->
+                        <div class="row gx-2 mb-2 mt-1">
+                            <div class="col-12" id="emailCol">
+                                <label class="form-label text-muted small fw-bold mb-1" style="font-size: 11px;">Email
+                                    address</label>
+                                <input type="email" class="form-control rounded-3" id="authEmail" required
+                                    placeholder="name@email.com"
+                                    style="padding: 12px; border: 1px solid #cbd5e1; font-weight: 500; font-size: 14px;">
+                            </div>
+                            <!-- Responsive Phone & Searchable Country Code -->
+                            <!-- Responsive Phone & Searchable Country Code -->
+                            <div class="col-12 col-sm-6" id="phoneCol" style="display: none;">
+                                <label class="form-label text-muted small fw-bold mb-1" style="font-size: 11px;">Phone
+                                    Number <span style="font-weight: normal; opacity: 0.8;">(Optional)</span></label>
+                                <div class="input-group shadow-sm" style="border-radius: 8px;">
+
+                                    <!-- Hidden input stores the actual code for Supabase (+91, +1, etc) -->
+                                    <input type="hidden" id="countryCode" value="+91">
+
+                                    <!-- Custom Dropdown Button -->
+                                    <button
+                                        class="btn dropdown-toggle d-flex align-items-center justify-content-between border-end-0"
+                                        type="button" id="countryDropdownBtn" data-bs-toggle="dropdown"
+                                        aria-expanded="false"
+                                        style="max-width: 120px; padding: 12px 8px; border: 1px solid #cbd5e1; font-weight: 600; font-size: 13px; background-color: #f8fafc; border-top-left-radius: 8px; border-bottom-left-radius: 8px;">
+                                        <span id="selectedCountryDisplay"
+                                            class="d-flex align-items-center gap-2 text-truncate">
+                                            <img src="https://flagcdn.com/in.svg" width="20" alt="India"> +91
+                                        </span>
+                                    </button>
+
+                                    <!-- Searchable Dropdown Menu -->
+                                    <div class="dropdown-menu p-2 shadow-lg"
+                                        style="width: 280px; max-height: 350px; overflow-y: auto; border-radius: 12px; border: 1px solid #e2e8f0;">
+                                        <div class="position-sticky top-0 bg-white pb-2" style="z-index: 10;">
+                                            <input type="text" class="form-control" id="countrySearch"
+                                                placeholder="Search country..."
+                                                style="font-size: 13px; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                                        </div>
+                                        <!-- Javascript will inject all 240+ countries here -->
+                                        <div id="countryList"></div>
+                                    </div>
+
+                                    <!-- Phone Number Input -->
+                                    <input type="tel" class="form-control" id="authPhone" maxlength="15"
+                                        placeholder="98765 43210"
+                                        style="padding: 12px; border: 1px solid #cbd5e1; font-weight: 500; font-size: 14px; border-top-right-radius: 8px; border-bottom-right-radius: 8px;">
+                                </div>
+                            </div>
                         </div>
-                        <div class="mb-4">
-                            <label class="form-label text-muted small fw-bold">Password</label>
-                            <input type="password" class="form-control rounded-3" id="authPassword" required
-                                placeholder="••••••••"
-                                style="padding: 12px; border: 1px solid #cbd5e1; font-weight: 500;">
+
+                        <!-- Row 2: Password & Confirm -->
+                        <div class="row gx-2 mb-3">
+                            <div class="col-12" id="passCol">
+                                <label class="form-label text-muted small fw-bold mb-1"
+                                    style="font-size: 11px;">Password</label>
+                                <input type="password" class="form-control rounded-3" id="authPassword" required
+                                    placeholder="••••••••"
+                                    style="padding: 12px; border: 1px solid #cbd5e1; font-weight: 500; font-size: 14px;">
+                            </div>
+                            <div class="col-12 col-sm-6" id="confirmCol" style="display: none;">
+                                <label class="form-label text-muted small fw-bold mb-1"
+                                    style="font-size: 11px;">Confirm</label>
+                                <input type="password" class="form-control rounded-3" id="authConfirmPassword"
+                                    placeholder="••••••••"
+                                    style="padding: 12px; border: 1px solid #cbd5e1; font-weight: 500; font-size: 14px;">
+                            </div>
                         </div>
 
                         <button type="submit" class="btn w-100 fw-bold py-3 rounded-3 shadow-sm" id="authSubmitBtn"
-                            style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; font-size: 16px;">Log
+                            style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; font-size: 15px;">Log
                             In</button>
 
                         <!-- Divider -->
-                        <div class="d-flex align-items-center mt-4 mb-3" style="opacity: 0.6;">
+                        <div class="d-flex align-items-center mt-3 mb-2" style="opacity: 0.6;">
                             <hr class="flex-grow-1 border-secondary">
                             <span class="mx-3 text-secondary"
                                 style="font-size: 12px; font-weight: 600; letter-spacing: 1px;">OR</span>
