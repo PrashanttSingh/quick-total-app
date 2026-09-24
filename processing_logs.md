@@ -584,3 +584,20 @@
 | **Batch 346** | 15:18:45 | `Batch (3 files)` | 3 images | ❌ Failed | ✅ Groq Qwen 3.8: Success<br>✅ Groq Qwen 3.8: Success | 994.22s | <b>65%</b> | <b>85%</b> |
 | **Batch 346** | 15:18:58 | `Batch (3 files)` | 3 images | ❌ Failed | ✅ Groq Qwen 3.8: Success<br>✅ Groq Qwen 3.8: Success<br>✅ Nex-AGI N2.5 Mini: Success | 49.04s | <b>60%</b> | <b>85%</b> |
 | **Batch 347** | 15:50:41 | `Batch (3 files)` | 3 images | ❌ Failed | ✅ Groq Qwen 3.8: Success<br>✅ Nex-AGI N2.5 Mini: Success<br>✅ Groq Qwen 3.8: Success | 22.69s | <b>90%</b> | <b>95%</b> |
+| **Batch 348** | 16:17:31 | `Batch (1 files)` | 1 images | ❌ Failed | ✅ Groq Qwen 3.8: Success | 10.26s | <b>85%</b> | <b>90%</b> |
+| **Batch 349** | 16:33:13 | `Batch (2 files)` | 2 images | ❌ Failed | ✅ Groq Qwen 3.8: Success<br>✅ Nex-AGI N2.5 Mini: Success | 38.44s | <b>90%</b> | <b>95%</b> |
+| **Batch 349** | 16:35:34 | `Batch (2 files)` | 2 images | ❌ Failed | ✅ Groq Qwen 3.8: Success | 243.96s | <b>90%</b> | <b>95%</b> |
+| **Batch 350** | 16:40:29 | `Batch (1 files)` | 1 images | ❌ Failed | ✅ Groq Qwen 3.8: Success | 4.85s | <b>90%</b> | <b>95%</b> |
+| **Batch 351** | 16:40:46 | `Batch (1 files)` | 1 images | ❌ Failed | ✅ Groq Qwen 3.8: Success | 6.43s | <b>90%</b> | <b>95%</b> |
+| **Batch 352** | 16:41:20 | `Batch (1 files)` | 1 images | ❌ Failed | ✅ Groq Qwen 3.8: Success | 8.7s | <b>90%</b> | <b>95%</b> |
+| **Batch 353** | 16:41:51 | `Batch (1 files)` | 1 images | ❌ Failed | ✅ Nex-AGI N2.5 Mini: Success | 20.74s | <b>82%</b> | <b>88%</b> |
+| **Batch 354** | 16:46:44 | `Batch (1 files)` | 1 images | ❌ Failed | ✅ Groq Qwen 3.8: Success | 5.39s | <b>90%</b> | <b>95%</b> |
+| **Batch 355** | 16:53:04 | `Batch (1 files)` | 1 images | ❌ Failed | ✅ Groq Qwen 3.8: Success | 5.03s | <b>90%</b> | <b>95%</b> |
+| **Batch 356** | 16:53:32 | `Batch (1 files)` | 1 images | ❌ Failed | ✅ Groq Qwen 3.8: Success | 6.57s | <b>90%</b> | <b>95%</b> |
+| **Batch 357** | 16:54:00 | `Batch (1 files)` | 1 images | ❌ Failed | ✅ Nex-AGI N2.5 Mini: Success | 15.52s | <b>82%</b> | <b>86%</b> |
+| **Batch 358** | 16:54:19 | `Batch (1 files)` | 1 images | ❌ Failed | ✅ Groq Qwen 3.8: Success | 7.95s | <b>90%</b> | <b>95%</b> |
+| **Batch 359** | 17:00:12 | `Batch (1 files)` | 1 images | ❌ Failed | ✅ Groq Qwen 3.8: Success | 5.41s | <b>90%</b> | <b>95%</b> |
+| **Batch 360** | 17:02:53 | `Batch (1 files)` | 1 images | ❌ Failed | ✅ Groq Qwen 3.8: Success | 4.47s | <b>90%</b> | <b>95%</b> |
+| **Batch 361** | 17:03:58 | `Batch (1 files)` | 1 images | ❌ Failed | ✅ Groq Qwen 3.8: Success | 11.16s | <b>90%</b> | <b>95%</b> |
+| **Batch 362** | 17:11:29 | `Batch (1 files)` | 1 images | ❌ Failed | ✅ Groq Qwen 3.8: Success | 5.4s | <b>90%</b> | <b>95%</b> |
+| **Batch 363** | 17:20:00 | `Batch (1 files)` | 1 images | ❌ Failed | ✅ Groq Qwen 3.8: Success | 7.12s | <b>90%</b> | <b>95%</b> |

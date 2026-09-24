@@ -78,6 +78,21 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Temporary storage for email during verification
+  let pendingOtpEmail = "";
+
+  window.backToAuthForm = function () {
+    const otpContainer = document.getElementById("authOtpContainer");
+    const form = document.getElementById("authForm");
+    const authAlert = document.getElementById("authAlert");
+    const tabs = document.getElementById("showLoginBtn")?.parentElement; // Grabs your custom tabs
+
+    if (otpContainer) otpContainer.style.display = "none";
+    if (form) form.style.display = "block";
+    if (tabs) tabs.style.display = "flex"; // Restores your custom tabs
+    if (authAlert) authAlert.classList.add("d-none");
+  };
+
   // Handle Auth Form Submission
   if (authForm) {
     authForm.addEventListener("submit", async (e) => {
@@ -92,7 +107,6 @@ document.addEventListener("DOMContentLoaded", () => {
         window.currentAuthMode === "login" || !window.currentAuthMode;
       const submitBtn = document.getElementById("authSubmitBtn");
 
-      // Clean Error UI Helper
       const showError = (message) => {
         authAlert.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg> <span>${message}</span>`;
         authAlert.classList.remove("d-none");
@@ -100,20 +114,14 @@ document.addEventListener("DOMContentLoaded", () => {
         submitBtn.innerText = isLogin ? "Log In" : "Sign Up";
       };
 
-      // 🛡️ 1. Strict Email Format Check
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email))
         return showError("Please enter a valid email address.");
-
-      // 🛡️ 2. Supabase Strict Password Rule
       if (password.length < 6)
         return showError("Password must be at least 6 characters.");
 
       if (!isLogin) {
-        // 🛡️ 3. Smart Dynamic Phone Length Check (Sign Up Only)
         const numericPhone = phone.replace(/[^0-9]/g, "");
-
-        // ONLY validate the length if the user decided to enter a number
         if (numericPhone.length > 0) {
           const requiredMin = parseInt(
             phoneInputEl.getAttribute("data-min-length") || "7",
@@ -123,7 +131,6 @@ document.addEventListener("DOMContentLoaded", () => {
             phoneInputEl.getAttribute("maxlength") || "15",
             10,
           );
-
           if (
             numericPhone.length < requiredMin ||
             numericPhone.length > requiredMax
@@ -133,8 +140,6 @@ document.addEventListener("DOMContentLoaded", () => {
             );
           }
         }
-
-        // 🛡️ 4. Passwords Match Check (Sign Up Only)
         const confirmPassword = document.getElementById(
           "authConfirmPassword",
         ).value;
@@ -142,19 +147,14 @@ document.addEventListener("DOMContentLoaded", () => {
           return showError("Passwords do not match.");
       }
 
-      // If all checks pass, proceed to database
       submitBtn.disabled = true;
       submitBtn.innerText = "Processing...";
       authAlert.classList.add("d-none");
 
       let authError = null;
-
-      // 🌍 Combine Country Code and Clean Phone Number
       const countryCodeInput = document.getElementById("countryCode");
       const countryCode = countryCodeInput ? countryCodeInput.value : "+91";
       const cleanPhone = phone.replace(/[^0-9]/g, "");
-
-      // If no phone is typed, pass an empty string to the database
       const fullPhoneNumber = cleanPhone ? `${countryCode}${cleanPhone}` : "";
 
       if (isLogin) {
@@ -164,15 +164,11 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         authError = error;
       } else {
-        // Saves the combined full phone number directly into free user metadata
         const { data, error } = await supabaseClient.auth.signUp({
           email,
           password,
           options: {
-            data: {
-              phone_number: fullPhoneNumber,
-              country_code: countryCode,
-            },
+            data: { phone_number: fullPhoneNumber, country_code: countryCode },
           },
         });
         authError = error;
@@ -181,16 +177,97 @@ document.addEventListener("DOMContentLoaded", () => {
       if (authError) {
         showError(authError.message);
       } else {
+        if (!isLogin) {
+          pendingOtpEmail = email;
+
+          // 📲 Transition directly to 6-Digit OTP Screen seamlessly
+          const form = document.getElementById("authForm");
+          const tabs = document.getElementById("showLoginBtn")?.parentElement;
+          const otpBox = document.getElementById("authOtpContainer");
+          const emailTarget = document.getElementById("otpEmailTarget");
+          const otpBoxInput = document.getElementById("authOtpInput");
+
+          if (form) form.style.display = "none";
+          if (tabs) tabs.style.display = "none";
+          if (emailTarget) emailTarget.textContent = email;
+          if (otpBox) otpBox.style.display = "block";
+          if (otpBoxInput) {
+            otpBoxInput.value = "";
+            otpBoxInput.focus();
+          }
+
+          submitBtn.disabled = false;
+          submitBtn.innerText = "Sign Up";
+          return;
+        }
+
         const modalEl = document.getElementById("authModal");
-        if (modalEl) {
+        if (modalEl)
           bootstrap.Modal.getInstance(modalEl)?.hide() ||
             new bootstrap.Modal(modalEl).hide();
-        }
         authForm.reset();
         submitBtn.disabled = false;
-        submitBtn.innerText = isLogin ? "Log In" : "Sign Up";
+        submitBtn.innerText = "Log In";
         checkUserSession();
       }
+    });
+  }
+
+  // 🔢 6-Digit OTP Verification Handler
+  const verifyOtpBtn = document.getElementById("authVerifyOtpBtn");
+  if (verifyOtpBtn) {
+    verifyOtpBtn.addEventListener("click", async () => {
+      const otpInput = document.getElementById("authOtpInput");
+      const token = otpInput
+        ? otpInput.value.replace(/[^0-9]/g, "").trim()
+        : "";
+      const authAlert = document.getElementById("authAlert");
+
+      if (token.length !== 6) {
+        if (authAlert) {
+          authAlert.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg> <span>Please enter the full 6-digit code.</span>`;
+          authAlert.classList.remove("d-none");
+        }
+        return;
+      }
+
+      verifyOtpBtn.disabled = true;
+      const origVerifyText = verifyOtpBtn.innerHTML;
+      verifyOtpBtn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Verifying...`;
+
+      try {
+        const { data, error } = await supabaseClient.auth.verifyOtp({
+          email: pendingOtpEmail,
+          token: token,
+          type: "signup",
+        });
+
+        if (error) throw error;
+
+        const modalEl = document.getElementById("authModal");
+        if (modalEl)
+          bootstrap.Modal.getInstance(modalEl)?.hide() ||
+            new bootstrap.Modal(modalEl).hide();
+
+        window.backToAuthForm();
+        if (authForm) authForm.reset();
+        checkUserSession();
+      } catch (err) {
+        if (authAlert) {
+          authAlert.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg> <span>${err.message || "Invalid or expired code. Please try again."}</span>`;
+          authAlert.classList.remove("d-none");
+        }
+      } finally {
+        verifyOtpBtn.disabled = false;
+        verifyOtpBtn.innerHTML = origVerifyText;
+      }
+    });
+  }
+
+  const authOtpInputField = document.getElementById("authOtpInput");
+  if (authOtpInputField) {
+    authOtpInputField.addEventListener("input", function () {
+      this.value = this.value.replace(/[^0-9]/g, "").slice(0, 6);
     });
   }
 
@@ -211,6 +288,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const fullNumber = `${code}${cleanPhone}`;
       const originalText = sidebarPhoneSaveBtn.innerHTML;
+
+      // ⏳ Show saving state immediately
       sidebarPhoneSaveBtn.innerHTML = `<span class="spinner-border spinner-border-sm"></span>`;
       sidebarPhoneSaveBtn.disabled = true;
 
@@ -220,23 +299,53 @@ document.addEventListener("DOMContentLoaded", () => {
         } = await supabaseClient.auth.getSession();
         if (!session || !session.user) throw new Error("Not logged in");
 
-        const { error } = await supabaseClient
+        // 🛡️ STRICT ANTI-SPAM CHECK: Query database for the exact Number AND Country Code combo
+        const { data: existingUsers, error: checkError } = await supabaseClient
+          .from("user_profiles")
+          .select("user_id")
+          .eq("phone_number", fullNumber)
+          .eq("country_code", code) // 👈 Strictly verifies the country code matches
+          .limit(1);
+
+        if (checkError) throw checkError;
+
+        // If data exists AND it belongs to a different user, block the save!
+        if (
+          existingUsers &&
+          existingUsers.length > 0 &&
+          existingUsers[0].user_id !== session.user.id
+        ) {
+          const showError =
+            typeof showSystemError === "function" ? showSystemError : alert;
+          showError("Number already registered."); // Short, punchy, mobile-friendly
+
+          // Revert button instantly so they can type a new one
+          sidebarPhoneSaveBtn.innerHTML = originalText;
+          sidebarPhoneSaveBtn.disabled = false;
+          return; // 🛑 Halt execution here.
+        }
+
+        // ✅ Check passed: Save the number normally
+        const { error: updateError } = await supabaseClient
           .from("user_profiles")
           .update({ phone_number: fullNumber, country_code: code })
           .eq("user_id", session.user.id);
 
-        if (error) throw error;
+        if (updateError) throw updateError;
 
         // Force UI Lock instantly upon success
-        document.getElementById("sidebarPhoneInputMode").style.display = "none";
-        document.getElementById("sidebarPhoneLockedMode").style.display =
-          "block";
+        const inputMode = document.getElementById("sidebarPhoneInputMode");
+        const lockedMode = document.getElementById("sidebarPhoneLockedMode");
+        const displayEl = document.getElementById("sidebarPhoneDisplay");
+
+        if (inputMode) inputMode.style.display = "none";
+        if (lockedMode) lockedMode.style.display = "block";
+
         const masked =
           cleanPhone.length >= 4
             ? `••••• ••${cleanPhone.slice(-3)}`
             : cleanPhone;
-        document.getElementById("sidebarPhoneDisplay").textContent =
-          `${code} ${masked}`;
+        if (displayEl) displayEl.textContent = `${code} ${masked}`;
       } catch (err) {
         console.error(err);
         const showError =
@@ -266,6 +375,11 @@ async function checkUserSession() {
 
       // 🚨 THE HIDDEN BUG FIX: Destroy Bootstrap's hijack by cloning the button
       if (navLoginBtn) {
+        // 🛡️ FIX: We MUST remove the modal attributes BEFORE cloning,
+        // otherwise Bootstrap instantly fires the modal the moment you click it.
+        navLoginBtn.removeAttribute("data-bs-toggle");
+        navLoginBtn.removeAttribute("data-bs-target");
+
         // Cloning the button completely wipes out Bootstrap's hidden click listeners
         const cleanBtn = navLoginBtn.cloneNode(true);
         navLoginBtn.parentNode.replaceChild(cleanBtn, navLoginBtn);
@@ -276,29 +390,78 @@ async function checkUserSession() {
 
         navLoginBtn.onclick = async (e) => {
           e.preventDefault();
+          e.stopPropagation(); // Stops any leftover click events from bubbling up
+
           if (navLoginText) navLoginText.innerText = "Logging out...";
 
-          // 1. Tell Supabase to kill the session
-          await supabaseClient.auth.signOut();
+          try {
+            // 1. Tell Supabase to kill the session
+            await supabaseClient.auth.signOut();
+          } catch (err) {
+            console.error("Sign-out error:", err);
+          }
 
-          // 2. Nuclear option: Manually scrub the ghost token from the browser
+          // 2. Nuclear option: Manually scrub the ghost tokens from the browser
+          localStorage.removeItem("quickTotalKnownUser");
+          localStorage.removeItem("quickTotalUserPlan");
           for (let key in localStorage) {
             if (key.startsWith("sb-") && key.endsWith("-auth-token")) {
               localStorage.removeItem(key);
             }
           }
 
-          // 3. Hard refresh the page to completely reset the UI
-          window.location.reload();
+          // 3. Instant hard reload with zero modals
+          window.location.href = window.location.pathname;
         };
       }
 
       // Pull tier and phone data from the database instantly!
       const { data: profile } = await supabaseClient
         .from("user_profiles")
-        .select("plan, phone_number, country_code")
+        .select("plan, phone_number, country_code, full_name")
         .eq("user_id", currentUser.id)
         .single();
+
+      // --- 💎 PREMIUM PROFILE WIDGET LOGIC ---
+      const userWidget = document.getElementById("userProfileWidget");
+      const guestWidget = document.getElementById("guestProfileWidget");
+
+      if (userWidget && guestWidget) {
+        guestWidget.style.setProperty("display", "none", "important");
+        userWidget.style.setProperty("display", "flex", "important");
+
+        let displayName = profile && profile.full_name ? profile.full_name : "";
+        let planName =
+          profile && profile.plan ? profile.plan.toUpperCase() : "BASIC";
+
+        const nameTextEl = document.getElementById("userNameText");
+        const nameInputEl = document.getElementById("sidebarNameInput");
+        const displayModeEl = document.getElementById("userNameDisplayMode");
+        const inputModeEl = document.getElementById("userNameInputMode");
+
+        if (displayName) {
+          if (nameTextEl) nameTextEl.textContent = displayName;
+          if (nameInputEl) nameInputEl.value = displayName;
+          if (displayModeEl) displayModeEl.style.display = "flex";
+          if (inputModeEl) inputModeEl.style.display = "none";
+        } else {
+          if (nameInputEl) nameInputEl.value = "";
+          if (displayModeEl) displayModeEl.style.display = "none";
+          if (inputModeEl) inputModeEl.style.display = "flex";
+        }
+
+        // Color code the badge based on their subscription tier
+        const badge = document.getElementById("userPlanBadge");
+        badge.textContent = planName + " PLAN";
+        if (planName === "MAX") badge.style.background = "#3b82f6";
+        else if (planName === "PRO") badge.style.background = "#10b981";
+        else badge.style.background = "#64748b";
+
+        // 🚀 ZERO-COST AVATAR: Dynamically generates an SVG image based on their name!
+        let avatarTargetName = displayName ? displayName : "User";
+        document.getElementById("userAvatar").src =
+          `https://ui-avatars.com/api/?name=${encodeURIComponent(avatarTargetName)}&background=1e293b&color=fff&bold=true&rounded=true&size=128`;
+      }
 
       if (profile && profile.plan) {
         localStorage.setItem("quickTotalUserPlan", profile.plan);
@@ -312,8 +475,71 @@ async function checkUserSession() {
       const phoneLockedMode = document.getElementById("sidebarPhoneLockedMode");
       const phoneDisplay = document.getElementById("sidebarPhoneDisplay");
 
+      // 💳 Show Billing Button & Dynamic Text (And Unlock)
+      const billingContainer = document.getElementById(
+        "sidebarBillingBtnContainer",
+      );
+      if (billingContainer) {
+        billingContainer.style.display = "block";
+
+        // 🔓 Unlock Billing Button (Restores normal click)
+        const billingBtn = billingContainer.querySelector("button");
+        if (billingBtn) {
+          billingBtn.onclick = () => {
+            const offcanvas = bootstrap.Offcanvas.getInstance(
+              document.getElementById("appMenu"),
+            );
+            if (offcanvas) offcanvas.hide();
+            if (typeof window.openPricingModal === "function")
+              window.openPricingModal();
+          };
+        }
+
+        // 🚀 Dynamic Subscription Button Text
+        const btnTextSpan = billingContainer.querySelector("span");
+        if (btnTextSpan) {
+          const currentPlan =
+            profile && profile.plan
+              ? profile.plan.toLowerCase().trim()
+              : "basic";
+          if (currentPlan === "basic")
+            btnTextSpan.textContent = "Upgrade to Pro";
+          else if (currentPlan === "pro")
+            btnTextSpan.textContent = "Upgrade to Max";
+          else btnTextSpan.textContent = "Manage Subscription";
+        }
+      }
+
       if (phoneContainer) {
         phoneContainer.style.display = "block";
+
+        // 🔓 Unlock Phone Container Elements
+        const phoneBtn = document.getElementById("sidebarCountryDropdownBtn");
+        if (phoneBtn) {
+          phoneBtn.setAttribute("data-bs-toggle", "dropdown");
+          phoneBtn.onclick = null;
+        }
+        const phoneInputBox = document.getElementById("sidebarPhoneInput");
+        if (phoneInputBox) {
+          phoneInputBox.onclick = null;
+          phoneInputBox.readOnly = false;
+        }
+        const phoneSave = document.getElementById("sidebarPhoneSaveBtn");
+        if (phoneSave) {
+          phoneSave.onclick = null;
+        }
+
+        // 🔓 Unlock App Settings Dropdowns
+        const langBtn = document.getElementById("langBtn");
+        if (langBtn) {
+          langBtn.setAttribute("data-bs-toggle", "dropdown");
+          langBtn.onclick = null;
+        }
+        const currencyBtn = document.getElementById("currencyBtn");
+        if (currencyBtn) {
+          currencyBtn.setAttribute("data-bs-toggle", "dropdown");
+          currencyBtn.onclick = null;
+        }
 
         if (
           profile &&
@@ -338,10 +564,114 @@ async function checkUserSession() {
       currentUser = null;
       localStorage.setItem("quickTotalUserPlan", "basic");
 
-      // 📱 Hides the phone container securely when logged out
-      const phoneContainer = document.getElementById("sidebarPhoneContainer");
-      if (phoneContainer) phoneContainer.style.display = "none";
+      // --- 👻 SHOW GUEST WIDGET ---
+      const userWidget = document.getElementById("userProfileWidget");
+      const guestWidget = document.getElementById("guestProfileWidget");
+      if (userWidget && guestWidget) {
+        userWidget.style.setProperty("display", "none", "important");
+        guestWidget.style.setProperty("display", "flex", "important");
+      }
 
+      // 🛑 THE AUTH WALL TRIGGER FUNCTION
+      const triggerAuthWall = (e) => {
+        if (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+
+        // Close the sidebar to clear the screen
+        const offcanvasEl = document.getElementById("appMenu");
+        if (offcanvasEl) {
+          const bsOffcanvas = bootstrap.Offcanvas.getInstance(offcanvasEl);
+          if (bsOffcanvas) bsOffcanvas.hide();
+        }
+
+        // Pop the login modal instantly
+        setTimeout(() => {
+          const modalEl = document.getElementById("authModal");
+          if (modalEl) {
+            bootstrap.Modal.getOrCreateInstance(modalEl).show();
+          }
+        }, 150);
+      };
+
+      // 💳 KEEP Billing Button visible, but lock it behind Auth Wall
+      const billingContainer = document.getElementById(
+        "sidebarBillingBtnContainer",
+      );
+      if (billingContainer) {
+        billingContainer.style.display = "block";
+        const btnTextSpan = billingContainer.querySelector("span");
+        if (btnTextSpan) btnTextSpan.textContent = "Upgrade to Pro"; // Show FOMO tease
+        const billingBtn = billingContainer.querySelector("button");
+        if (billingBtn) billingBtn.onclick = triggerAuthWall;
+      }
+
+      // 📱 KEEP Phone container visible, but lock it behind Auth Wall
+      const phoneContainer = document.getElementById("sidebarPhoneContainer");
+      if (phoneContainer) {
+        phoneContainer.style.display = "block";
+
+        // Reset to show input mode so it looks enticing to click
+        const phoneInputMode = document.getElementById("sidebarPhoneInputMode");
+        const phoneLockedMode = document.getElementById(
+          "sidebarPhoneLockedMode",
+        );
+        if (phoneInputMode) phoneInputMode.style.display = "block";
+        if (phoneLockedMode) phoneLockedMode.style.display = "none";
+
+        // 🔓 ALLOW Country Dropdown to open
+        const phoneBtn = document.getElementById("sidebarCountryDropdownBtn");
+        if (phoneBtn) {
+          phoneBtn.setAttribute("data-bs-toggle", "dropdown");
+          phoneBtn.onclick = null;
+        }
+        // 🛑 LOCK the individual country options inside the menu
+        document.querySelectorAll(".sidebar-country-item").forEach((item) => {
+          item.onclick = triggerAuthWall;
+        });
+
+        const phoneInputBox = document.getElementById("sidebarPhoneInput");
+        if (phoneInputBox) {
+          phoneInputBox.onclick = triggerAuthWall;
+          phoneInputBox.readOnly = true;
+        }
+        const phoneSave = document.getElementById("sidebarPhoneSaveBtn");
+        if (phoneSave) {
+          phoneSave.onclick = triggerAuthWall;
+        }
+      }
+
+      // ⚙️ ALLOW App Settings Dropdowns to open
+      const langBtn = document.getElementById("langBtn");
+      if (langBtn) {
+        langBtn.setAttribute("data-bs-toggle", "dropdown");
+        langBtn.onclick = null;
+      }
+      // 🛑 LOCK the individual language options
+      document
+        .querySelectorAll("#langBtn + .dropdown-menu .dropdown-item")
+        .forEach((item) => {
+          item.onclick = triggerAuthWall;
+        });
+
+      const currencyBtn = document.getElementById("currencyBtn");
+      if (currencyBtn) {
+        currencyBtn.setAttribute("data-bs-toggle", "dropdown");
+        currencyBtn.onclick = null;
+      }
+      // 🛑 LOCK the individual currency options
+      document
+        .querySelectorAll("#currencyBtn + .dropdown-menu .dropdown-item")
+        .forEach((item) => {
+          item.onclick = triggerAuthWall;
+        });
+
+      // 🛡️ Re-attach the modal triggers for guests
+      if (navLoginBtn) {
+        navLoginBtn.setAttribute("data-bs-toggle", "modal");
+        navLoginBtn.setAttribute("data-bs-target", "#authModal");
+      }
       if (navLoginText) navLoginText.innerText = "Log In / Sign Up";
     }
   } catch (err) {
@@ -1652,6 +1982,12 @@ function guessCategory(text) {
 calculateBtn.addEventListener("click", async () => {
   if (filesToProcess.length === 0) return;
 
+  // 🛡️ BUTTON LOCK: Prevent double-click race conditions
+  if (window.isProcessingBatch) return;
+  window.isProcessingBatch = true;
+  const originalBtnHTML = calculateBtn.innerHTML;
+  calculateBtn.disabled = true;
+
   // 🚨 FREEMIUM GATEKEEPER: Track unauthenticated device usage
   if (typeof currentUser === "undefined" || !currentUser) {
     const hasUsedFreeScan = localStorage.getItem("quickTotalFreeScanUsed");
@@ -1728,10 +2064,68 @@ calculateBtn.addEventListener("click", async () => {
           </div>
       `;
     } else {
-      // 💻 LAPTOP/DESKTOP: Keep original behavior 100% safe
-      loadingEl.style.display = "block";
+      // 💻 LAPTOP/DESKTOP: FULLSCREEN Glassmorphism UI (Leaves Mobile Untouched)
+
+      // Moving the loader to the document body makes it cover the entire browser tab
+      document.body.appendChild(loadingEl);
+
+      loadingEl.style.position = "fixed";
+      loadingEl.style.top = "0";
+      loadingEl.style.left = "0";
+      loadingEl.style.width = "100vw";
+      loadingEl.style.height = "100vh";
+      loadingEl.style.background = "rgba(248, 250, 252, 0.65)"; // Light frosted glass
+      loadingEl.style.backdropFilter = "blur(16px)";
+      loadingEl.style.webkitBackdropFilter = "blur(16px)";
+      loadingEl.style.borderRadius = "0px";
+      loadingEl.style.zIndex = "999999";
+      loadingEl.style.display = "flex";
+      loadingEl.style.flexDirection = "column";
+      loadingEl.style.alignItems = "center";
+      loadingEl.style.justifyContent = "center";
       loadingEl.style.opacity = "1";
       loadingEl.style.transform = "translateY(0)";
+
+      // 💥 Fully defined Keyframes to ensure animations work correctly
+      loadingEl.innerHTML = `
+          <style>
+              .qt-desktop-spinner { width: 70px; height: 70px; border: 4px solid rgba(16, 185, 129, 0.2); border-top: 4px solid #10b981; border-radius: 50%; animation: qtSpinDesk 1s cubic-bezier(0.55, 0.15, 0.45, 0.85) infinite; margin: 0 auto; }
+              @keyframes qtSpinDesk { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+              .qt-desktop-typewriter { display: inline-block; overflow: hidden; white-space: nowrap; border-right: 3px solid #10b981; font-size: 28px; font-weight: 800; color: #0f172a; margin-top: 30px; margin-bottom: 8px; width: 13ch; animation: qtTypingDesk 3s steps(13, end) infinite, qtBlinkDesk 0.75s step-end infinite; }
+              @keyframes qtTypingDesk { 0%, 10% { width: 0; } 40%, 60% { width: 13ch; } 90%, 100% { width: 0; } }
+              @keyframes qtBlinkDesk { from, to { border-color: transparent; } 50% { border-color: #10b981; } }
+
+              .qt-tips-container-desk { position: relative; height: 28px; margin-top: 12px; overflow: hidden; width: 100%; text-align: center; }
+              .qt-tips-container-desk .qt-tip-desk { position: absolute; width: 100%; left: 0; color: #475569; font-size: 16px; font-weight: 600; opacity: 0; transform: translateY(10px); animation: qtTipFadeDesk 12s infinite; }
+              .qt-tips-container-desk .qt-tip-desk:nth-child(1) { animation-delay: 0s; }
+              .qt-tips-container-desk .qt-tip-desk:nth-child(2) { animation-delay: 3s; }
+              .qt-tips-container-desk .qt-tip-desk:nth-child(3) { animation-delay: 6s; }
+              .qt-tips-container-desk .qt-tip-desk:nth-child(4) { animation-delay: 9s; }
+              @keyframes qtTipFadeDesk { 0%, 5% { opacity: 0; transform: translateY(10px); } 10%, 20% { opacity: 1; transform: translateY(0); } 25%, 100% { opacity: 0; transform: translateY(-10px); } }
+          </style>
+          
+          <div class="qt-desktop-spinner"></div>
+          <div class="qt-desktop-typewriter">Processing...</div>
+          <div class="qt-tips-container-desk">
+              <div class="qt-tip-desk d-flex align-items-center justify-content-center gap-2"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2v14a2 2 0 0 0 2 2h14"></path><path d="M18 22V8a2 2 0 0 0-2-2H2"></path></svg><span>Crop the image before calculating</span></div>
+              <div class="qt-tip-desk d-flex align-items-center justify-content-center gap-2"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg><span>Keep paper flat and well-lit</span></div>
+              <div class="qt-tip-desk d-flex align-items-center justify-content-center gap-2"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg><span>Write clearly in a single column</span></div>
+              <div class="qt-tip-desk d-flex align-items-center justify-content-center gap-2"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg><span>Capture all items and their prices</span></div>
+          </div>
+
+<!-- 🛡️ LEGAL DISCLAIMER PINNED TO BOTTOM -->
+          <div style="position: absolute; bottom: 40px; width: 100%; text-align: center; display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 16px; z-index: 10;">
+              <span style="color: #059669; font-size: 13px; font-weight: 600; padding: 6px 14px; background: rgba(16, 185, 129, 0.1); border-radius: 20px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid rgba(16, 185, 129, 0.2);">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  Bank-grade privacy
+              </span>
+              <span style="color: #cbd5e1;">|</span>
+              <span style="color: #64748b; font-size: 12px; font-weight: 500; letter-spacing: 0.2px;">
+                  QuickTotal AI can make mistakes. Verify critical accounting.
+              </span>
+          </div>
+      `;
     }
   }
   if (actionButtons) actionButtons.style.display = "none";
@@ -2146,6 +2540,12 @@ calculateBtn.addEventListener("click", async () => {
         mobilePreviewWrapper.style.transform = "translateY(0)";
       }
     }
+
+    // 🛡️ UNLOCK BUTTON FOR NEXT BATCH
+    window.isProcessingBatch = false;
+    calculateBtn.disabled = false;
+    if (typeof originalBtnHTML !== "undefined")
+      calculateBtn.innerHTML = originalBtnHTML;
   } // <--- Closes finally block
 }); // <--- Closes calculateBtn.addEventListener
 
@@ -4369,3 +4769,83 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
+// ==========================================
+// ✏️ SIDEBAR INLINE PROFILE NAME LOGIC
+// ==========================================
+window.toggleNameEdit = function (showInput) {
+  const displayMode = document.getElementById("userNameDisplayMode");
+  const inputMode = document.getElementById("userNameInputMode");
+  const inputEl = document.getElementById("sidebarNameInput");
+
+  if (showInput) {
+    if (displayMode) displayMode.style.display = "none";
+    if (inputMode) {
+      inputMode.style.display = "flex";
+      if (inputEl) {
+        inputEl.focus();
+        inputEl.select();
+      }
+    }
+  } else {
+    if (inputMode) inputMode.style.display = "none";
+    if (displayMode) displayMode.style.display = "flex";
+  }
+};
+
+// Real-time input restriction: Letters, numbers, and spaces only (Max 60 chars)
+document.addEventListener("DOMContentLoaded", () => {
+  const nameInput = document.getElementById("sidebarNameInput");
+  if (nameInput) {
+    nameInput.addEventListener("input", function () {
+      this.value = this.value.replace(/[^a-zA-Z0-9 ]/g, "");
+    });
+  }
+});
+
+window.saveSidebarName = async function () {
+  const inputEl = document.getElementById("sidebarNameInput");
+  const saveBtn = document.getElementById("sidebarNameSaveBtn");
+  if (!inputEl) return;
+
+  const cleanName = inputEl.value.trim();
+  if (!cleanName) {
+    inputEl.style.borderColor = "#ef4444";
+    return;
+  }
+
+  const originalText = saveBtn.innerHTML;
+  saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+  saveBtn.disabled = true;
+  inputEl.disabled = true;
+
+  try {
+    const {
+      data: { session },
+    } = await supabaseClient.auth.getSession();
+    if (!session) throw new Error("Not logged in");
+
+    // Save to Database
+    const { error } = await supabaseClient
+      .from("user_profiles")
+      .update({ full_name: cleanName })
+      .eq("user_id", session.user.id);
+
+    if (error) throw error;
+
+    // Update UI instantly
+    document.getElementById("userNameText").textContent = cleanName;
+    document.getElementById("userAvatar").src =
+      `https://ui-avatars.com/api/?name=${encodeURIComponent(cleanName)}&background=1e293b&color=fff&bold=true&rounded=true&size=128`;
+
+    // Hide input mode, show normal text mode
+    window.toggleNameEdit(false);
+  } catch (err) {
+    console.error("Failed to update name:", err);
+    if (typeof showSystemError === "function")
+      showSystemError("Failed to update name. Try again.");
+  } finally {
+    saveBtn.innerHTML = originalText;
+    saveBtn.disabled = false;
+    inputEl.disabled = false;
+  }
+};

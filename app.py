@@ -128,6 +128,7 @@ def build_calculations(parsed_data, source_type):
     ai_accuracy = parsed_data.get('ai_confidence_score', 0)
     calculations, subtotal = [], 0
     items_list = parsed_data.get('items', [])
+    
     if isinstance(items_list, list):
         for entry in items_list:
             if not isinstance(entry, dict):
@@ -138,8 +139,21 @@ def build_calculations(parsed_data, source_type):
                 amount = float(entry.get('amount', 0))
             except Exception:
                 amount = 0.0
-            calculations.append({'expression': item, 'category': category, 'result': round(amount, 2), 'type': source_type})
+
+            # 🛡️ SAFE GUARD: Only rename if the AI left the item completely blank or explicitly tagged it 'unknown'
+            if not item or item.lower() in ["unknown", "none", "null"]:
+                item = "Unreadable Item"
+
+            # (The zero-dollar discard logic has been removed here to preserve 1-to-1 row parity)
+
+            calculations.append({
+                'expression': item, 
+                'category': category, 
+                'result': round(amount, 2), 
+                'type': source_type
+            })
             subtotal += amount
+            
     return calculations, round(subtotal, 2), image_quality, f"{ai_accuracy}%"
 
 # =================================================================

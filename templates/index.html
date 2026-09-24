@@ -34,6 +34,31 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        /* ==========================================
+           📱 SMART MOBILE SIDEBAR SIZING
+           ========================================== */
+        @media (max-width: 575.98px) {
+            #appMenu {
+                /* Forces a tight, premium width only on phones */
+                width: 280px !important;
+            }
+
+            /* Shrinks the avatar slightly so it fits the new compact width perfectly */
+            #userProfileWidget img {
+                width: 44px !important;
+                height: 44px !important;
+            }
+
+            /* Ensures long names gracefully cut off with an ellipsis instead of breaking */
+            #userNameText {
+                max-width: 110px !important;
+            }
+        }
+    </style>
+</head>
+
 </head>
 
 <body>
@@ -603,23 +628,8 @@
                     </div>
                 </div>
 
-                <!-- SINGLE LOADER CARD -->
-                <div class="loader-card py-5" id="loading" style="display:none; text-align: center;">
-                    <div class="scanner-container mx-auto">
-                        <div class="scan-line" style="background: #f59e0b; box-shadow: 0 0 15px #f59e0b;"></div>
-                        <svg class="scan-icon" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#64748b"
-                            stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                            <polyline points="14 2 14 8 20 8"></polyline>
-                            <line x1="16" y1="13" x2="8" y2="13"></line>
-                            <line x1="16" y1="17" x2="8" y2="17"></line>
-                            <polyline points="10 9 9 9 8 9"></polyline>
-                        </svg>
-                    </div>
-                    <h4 style="color: #1e293b; font-weight: 700; margin-top: 20px;">AI Analysis in Progress...</h4>
-                    <p style="color: #64748b;">Processing files one by one for maximum quality</p>
-                </div>
-
+                <!-- SINGLE LOADER CARD (JS handles glassmorphism injection) -->
+                <div class="loader-card" id="loading" style="display:none;"></div>
             </div> <!-- /main-card -->
         </div> <!-- /mx-auto -->
 
@@ -716,170 +726,261 @@
     </div> <!-- /container -->
     <div class="offcanvas offcanvas-end" tabindex="-1" id="appMenu"
         style="background-color: #ffffff; border-left: 1px solid #e2e8f0;">
-        <div class="offcanvas-header border-bottom" style="border-color: #e2e8f0 !important;">
-            <h5 class="offcanvas-title text-dark fw-bold">QuickTotal Controls</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-        </div>
-        <div class="offcanvas-body p-4 text-dark">
+        <div class="offcanvas-header border-bottom d-flex flex-column align-items-start pb-4"
+            style="border-color: #e2e8f0 !important; background: #f8fafc;">
+            <div class="w-100 d-flex justify-content-between align-items-start mb-3">
+                <h5 class="offcanvas-title text-muted fw-bold"
+                    style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px;">Account Menu</h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="offcanvas"
+                    aria-label="Close"></button>
+            </div>
 
-            <!-- 1. ACCOUNT SECTION (Identity First) -->
-            <h6 class="fw-bold mb-3 mt-2 text-uppercase tracking-wider text-muted small">Account</h6>
-            <div class="mb-4">
-                <button class="btn w-100 fw-bold d-flex align-items-center justify-content-center gap-2 auth-btn-hover"
-                    data-bs-toggle="modal" data-bs-target="#authModal" id="navLoginBtn"
-                    style="background: #1e293b; color: #ffffff !important; border: none; border-radius: 12px; padding: 12px 16px; box-shadow: 0 4px 12px rgba(30, 41, 59, 0.2); transition: all 0.2s ease;">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            <!-- 👤 LOGGED IN: Premium User Widget (Inline Name Editor) -->
+            <div id="userProfileWidget" class="w-100 align-items-center gap-3" style="display: none !important;">
+                <img id="userAvatar" src="" alt="User Avatar"
+                    style="width: 50px; height: 50px; border-radius: 50%; border: 2px solid #cbd5e1; flex-shrink: 0;">
+
+                <div class="d-flex flex-column flex-grow-1" style="min-width: 0;">
+
+                    <!-- Mode A: Display Name & Edit Link -->
+                    <div id="userNameDisplayMode" class="d-flex align-items-center justify-content-between">
+                        <span id="userNameText" class="fw-bold text-truncate"
+                            style="color: #1e293b; font-size: 15px; max-width: 130px;">User</span>
+                        <button onclick="window.toggleNameEdit(true)" class="btn btn-link p-0 text-decoration-none"
+                            style="font-size: 12px; font-weight: 600; color: #10b981;">Edit</button>
+                    </div>
+
+                    <!-- Mode B: Inline Input Box (Hidden by default) -->
+                    <div id="userNameInputMode" class="input-group input-group-sm shadow-sm"
+                        style="display: none; border-radius: 6px;">
+                        <input type="text" id="sidebarNameInput" class="form-control form-control-sm"
+                            placeholder="Enter name..." maxlength="60"
+                            style="font-size: 13px; font-weight: 500; border-color: #cbd5e1;">
+                        <button id="sidebarNameSaveBtn" class="btn btn-success btn-sm px-2"
+                            style="background: #10b981; border: none; font-size: 12px; font-weight: 600;"
+                            onclick="window.saveSidebarName()">Save</button>
+                    </div>
+
+                    <span id="userPlanBadge" class="badge mt-1"
+                        style="background: #1e293b; color: #f8fafc; font-size: 9.5px; font-weight: 700; letter-spacing: 0.5px; width: fit-content; padding: 3px 6px; border-radius: 4px;">BASIC
+                        PLAN</span>
+                </div>
+            </div>
+
+            <!-- 👻 LOGGED OUT: Guest Widget -->
+            <div id="guestProfileWidget" class="w-100 d-flex align-items-center gap-3">
+                <div
+                    style="width: 54px; height: 54px; border-radius: 50%; background: #e2e8f0; display: flex; align-items: center; justify-content: center; color: #94a3b8; border: 2px solid #cbd5e1;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                         stroke-linecap="round" stroke-linejoin="round">
                         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                         <circle cx="12" cy="7" r="4"></circle>
                     </svg>
-                    <span id="navLoginText" style="color: #ffffff !important;">Log In / Sign Up</span>
+                </div>
+                <div class="d-flex flex-column">
+                    <span class="fw-bold" style="color: #1e293b; font-size: 18px;">Guest User</span>
+                    <span style="color: #64748b; font-size: 12px; font-weight: 500;">Sign in to save settings</span>
+                </div>
+            </div>
+        </div>
+        <div class="offcanvas-body p-3 px-md-4 text-dark d-flex flex-column" style="background-color: #f8fafc;">
+
+            <div class="flex-grow-1">
+                <!-- 💳 SUBSCRIPTION & BILLING CARD -->
+                <h6 class="fw-bold mb-2 mt-1 text-uppercase text-muted" style="font-size: 11px; letter-spacing: 0.5px;">
+                    Subscription & Billing</h6>
+                <div class="bg-white p-3 mb-4"
+                    style="border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+
+                    <!-- Manage Plan Button -->
+                    <div id="sidebarBillingBtnContainer" style="display: none;">
+                        <button class="btn w-100 fw-bold d-flex align-items-center justify-content-between mb-3"
+                            onclick="if(typeof window.openPricingModal === 'function') { const offcanvas = bootstrap.Offcanvas.getInstance(document.getElementById('appMenu')); if(offcanvas) offcanvas.hide(); window.openPricingModal(); }"
+                            style="background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; border-radius: 10px; padding: 10px 14px; transition: background 0.2s ease;">
+                            <div class="d-flex align-items-center gap-2">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="2" y="5" width="20" height="14" rx="2" ry="2"></rect>
+                                    <line x1="2" y1="10" x2="22" y2="10"></line>
+                                </svg>
+                                <span>Manage Plan</span>
+                            </div>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="9 18 15 12 9 6"></polyline>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Billing Contact -->
+                    <div id="sidebarPhoneContainer" style="display: none;">
+                        <label class="form-label fw-semibold d-flex align-items-center gap-1 mb-2"
+                            style="color: #64748b; font-size: 12px;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path
+                                    d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
+                                </path>
+                            </svg>
+                            Billing Contact
+                        </label>
+                        <!-- Mode 1: Missing Number -->
+                        <div id="sidebarPhoneInputMode">
+                            <div class="input-group shadow-sm" style="border-radius: 8px;">
+                                <input type="hidden" id="sidebarCountryCode" value="+91">
+                                <button
+                                    class="btn dropdown-toggle d-flex align-items-center justify-content-between border-end-0"
+                                    type="button" id="sidebarCountryDropdownBtn" data-bs-toggle="dropdown"
+                                    aria-expanded="false"
+                                    style="max-width: 100px; padding: 10px 8px; border: 1px solid #cbd5e1; font-weight: 600; font-size: 13px; background-color: #f8fafc; border-top-left-radius: 8px; border-bottom-left-radius: 8px;">
+                                    <span id="sidebarSelectedCountryDisplay"
+                                        class="d-flex align-items-center gap-2 text-truncate"><img
+                                            src="https://flagcdn.com/in.svg" width="18" alt="India"> +91</span>
+                                </button>
+                                <div class="dropdown-menu p-2 shadow-lg"
+                                    style="width: 280px; max-height: 350px; overflow-y: auto; border-radius: 12px; border: 1px solid #e2e8f0;">
+                                    <div class="position-sticky top-0 bg-white pb-2" style="z-index: 10;">
+                                        <input type="text" class="form-control" id="sidebarCountrySearch"
+                                            placeholder="Search country..."
+                                            style="font-size: 13px; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                                    </div>
+                                    <div id="sidebarCountryList"></div>
+                                </div>
+                                <input type="tel" id="sidebarPhoneInput" class="form-control" placeholder="9876543210"
+                                    style="border-color: #cbd5e1; font-weight: 500; font-size: 13px;">
+                                <button id="sidebarPhoneSaveBtn"
+                                    class="btn btn-success d-flex align-items-center justify-content-center"
+                                    style="background: #10b981; border: none; font-weight: 600; font-size: 13px; padding: 0 12px; border-top-right-radius: 8px; border-bottom-right-radius: 8px;">Save</button>
+                            </div>
+                        </div>
+                        <!-- Mode 2: Locked -->
+                        <div id="sidebarPhoneLockedMode" style="display: none;">
+                            <div class="d-flex align-items-center justify-content-between p-2 px-3 rounded-3"
+                                style="background: #f1f5f9; border: 1px solid #e2e8f0;">
+                                <span id="sidebarPhoneDisplay"
+                                    style="font-weight: 600; color: #475569; font-size: 13px; letter-spacing: 0.5px;"></span>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981"
+                                    stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ⚙️ APPLICATION SETTINGS CARD -->
+                <h6 class="fw-bold mb-2 mt-4 text-uppercase text-muted" style="font-size: 11px; letter-spacing: 0.5px;">
+                    App Settings</h6>
+                <div class="bg-white p-3 mb-4"
+                    style="border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold d-flex align-items-center gap-1 mb-2"
+                            style="color: #64748b; font-size: 12px;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
+                                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                                <line x1="12" y1="19" x2="12" y2="22"></line>
+                            </svg>
+                            Voice / Mic Language
+                        </label>
+                        <div class="dropdown">
+                            <button class="btn w-100 text-start d-flex justify-content-between align-items-center"
+                                type="button" data-bs-toggle="dropdown" aria-expanded="false" id="langBtn"
+                                style="border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 14px; background: #f8fafc; font-size: 13px; font-weight: 500; color: #1e293b;">
+                                <span>Hindi / English (Default)</span>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8"
+                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg>
+                            </button>
+                            <ul class="dropdown-menu w-100 shadow-sm"
+                                style="border-radius: 12px; border: 1px solid #e2e8f0; padding: 8px;">
+                                <li><a class="dropdown-item active rounded-2 py-2" href="#"
+                                        style="font-size: 13px; font-weight: 500;"
+                                        onclick="selectOption(event, 'langBtn', 'settingsLanguage', 'Hindi / English (Default)', 'hi-IN')">Hindi
+                                        / English (Default)</a></li>
+                                <li><a class="dropdown-item rounded-2 py-2" href="#"
+                                        style="font-size: 13px; font-weight: 500;"
+                                        onclick="selectOption(event, 'langBtn', 'settingsLanguage', 'Hindi (हिंदी)', 'hi-only')">Hindi</a>
+                                </li>
+                                <li><a class="dropdown-item rounded-2 py-2" href="#"
+                                        style="font-size: 13px; font-weight: 500;"
+                                        onclick="selectOption(event, 'langBtn', 'settingsLanguage', 'English', 'en-IN')">English</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <hr class="my-3" style="border-color: #cbd5e1; opacity: 0.5;">
+
+                    <div class="mb-1">
+                        <label class="form-label fw-semibold mb-2" style="color: #64748b; font-size: 12px;">Primary
+                            Currency</label>
+                        <div class="dropdown">
+                            <button class="btn w-100 text-start d-flex justify-content-between align-items-center"
+                                type="button" data-bs-toggle="dropdown" aria-expanded="false" id="currencyBtn"
+                                style="border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 14px; background: #f8fafc; font-size: 13px; font-weight: 500; color: #1e293b;">
+                                <span>Indian Rupee (₹)</span>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8"
+                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg>
+                            </button>
+                            <ul class="dropdown-menu w-100 shadow-sm"
+                                style="max-height: 220px; overflow-y: auto; border-radius: 12px; border: 1px solid #e2e8f0; padding: 8px;">
+                                <li><a class="dropdown-item active rounded-2 py-2" href="#"
+                                        style="font-size: 13px; font-weight: 500;"
+                                        onclick="selectOption(event, 'currencyBtn', 'settingsCurrency', 'Indian Rupee (₹)', 'INR')">Indian
+                                        Rupee (₹)</a></li>
+                                <li><a class="dropdown-item rounded-2 py-2" href="#"
+                                        style="font-size: 13px; font-weight: 500;"
+                                        onclick="selectOption(event, 'currencyBtn', 'settingsCurrency', 'US Dollar ($)', 'USD')">US
+                                        Dollar ($)</a></li>
+                                <li><a class="dropdown-item rounded-2 py-2" href="#"
+                                        style="font-size: 13px; font-weight: 500;"
+                                        onclick="selectOption(event, 'currencyBtn', 'settingsCurrency', 'Euro (€)', 'EUR')">Euro
+                                        (€)</a></li>
+                                <li><a class="dropdown-item rounded-2 py-2" href="#"
+                                        style="font-size: 13px; font-weight: 500;"
+                                        onclick="selectOption(event, 'currencyBtn', 'settingsCurrency', 'British Pound (£)', 'GBP')">British
+                                        Pound (£)</a></li>
+                                <li><a class="dropdown-item rounded-2 py-2" href="#"
+                                        style="font-size: 13px; font-weight: 500;"
+                                        onclick="selectOption(event, 'currencyBtn', 'settingsCurrency', 'Australian Dollar (A$)', 'AUD')">Australian
+                                        Dollar (A$)</a></li>
+                                <li><a class="dropdown-item rounded-2 py-2" href="#"
+                                        style="font-size: 13px; font-weight: 500;"
+                                        onclick="selectOption(event, 'currencyBtn', 'settingsCurrency', 'Saudi Riyal (SAR)', 'SAR')">Saudi
+                                        Riyal (SAR)</a></li>
+                            </ul>
+                        </div>
+                        <input type="hidden" id="settingsCurrency" value="INR">
+                    </div>
+
+                </div>
+
+                <div id="categoryBreakdown" style="display:none;" class="mt-4"></div>
+            </div>
+
+            <!-- 🚪 LOG OUT / SIGN IN BUTTON (Pinned safely to the bottom) -->
+            <div class="mt-auto pt-2">
+                <button class="btn w-100 fw-bold d-flex align-items-center justify-content-center gap-2 auth-btn-hover"
+                    data-bs-toggle="modal" data-bs-target="#authModal" id="navLoginBtn"
+                    style="background: #ffffff; color: #64748b !important; border: 1px solid #cbd5e1; border-radius: 12px; padding: 12px 16px; transition: all 0.2s ease;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                    <span id="navLoginText" style="color: #64748b !important;">Log In / Sign Up</span>
                 </button>
             </div>
-
-            <!-- 📱 DYNAMIC BILLING PHONE CAPTURE -->
-            <div id="sidebarPhoneContainer" class="mb-4" style="display: none;">
-                <label class="form-label small fw-semibold d-flex align-items-center gap-1" style="color: #64748b;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <path
-                            d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
-                        </path>
-                    </svg>
-                    Billing Contact
-                </label>
-
-                <!-- Mode 1: Missing Number (Input Form) -->
-                <div id="sidebarPhoneInputMode">
-                    <div class="input-group shadow-sm" style="border-radius: 8px;">
-
-                        <!-- Hidden input stores the actual code for Supabase -->
-                        <input type="hidden" id="sidebarCountryCode" value="+91">
-
-                        <!-- Custom Dropdown Button -->
-                        <button
-                            class="btn dropdown-toggle d-flex align-items-center justify-content-between border-end-0"
-                            type="button" id="sidebarCountryDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false"
-                            style="max-width: 110px; padding: 12px 8px; border: 1px solid #cbd5e1; font-weight: 600; font-size: 13px; background-color: #f8fafc; border-top-left-radius: 8px; border-bottom-left-radius: 8px;">
-                            <span id="sidebarSelectedCountryDisplay"
-                                class="d-flex align-items-center gap-2 text-truncate">
-                                <img src="https://flagcdn.com/in.svg" width="20" alt="India"> +91
-                            </span>
-                        </button>
-
-                        <!-- Searchable Dropdown Menu -->
-                        <div class="dropdown-menu p-2 shadow-lg"
-                            style="width: 280px; max-height: 350px; overflow-y: auto; border-radius: 12px; border: 1px solid #e2e8f0;">
-                            <div class="position-sticky top-0 bg-white pb-2" style="z-index: 10;">
-                                <input type="text" class="form-control" id="sidebarCountrySearch"
-                                    placeholder="Search country..."
-                                    style="font-size: 13px; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1;">
-                            </div>
-                            <div id="sidebarCountryList"></div>
-                        </div>
-
-                        <input type="tel" id="sidebarPhoneInput" class="form-control" placeholder="9876543210"
-                            style="border-color: #cbd5e1; font-weight: 500; font-size: 14px;">
-                        <button id="sidebarPhoneSaveBtn"
-                            class="btn btn-success d-flex align-items-center justify-content-center"
-                            style="background: #10b981; border: none; font-weight: 600; padding: 0 16px; border-top-right-radius: 8px; border-bottom-right-radius: 8px;">Save</button>
-                    </div>
-                    <div class="mt-1"><span class="text-muted" style="font-size: 11px;">*Required for billing. Cannot be
-                            altered later.</span></div>
-                </div>
-                <!-- Mode 2: Locked (Read-Only) -->
-                <div id="sidebarPhoneLockedMode" style="display: none;">
-                    <div class="d-flex align-items-center justify-content-between p-3 rounded-3 shadow-sm"
-                        style="background: #ecfdf5; border: 1px solid #a7f3d0;">
-                        <span id="sidebarPhoneDisplay"
-                            style="font-weight: 700; color: #065f46; font-size: 14px; letter-spacing: 0.5px;"></span>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="3"
-                            stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                        </svg>
-                    </div>
-                </div>
-            </div>
-
-            <hr class="text-muted my-4">
-
-            <!-- 3. APPLICATION SETTINGS (Universal Last) -->
-            <h6 class="fw-bold mb-3 text-uppercase tracking-wider text-muted small">Application Settings</h6>
-
-            <!-- 🎙️ CLEAR AUDIO INPUT LABEL -->
-            <div class="mb-3">
-                <label class="form-label small fw-semibold d-flex align-items-center gap-1" style="color: #64748b;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
-                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-                        <line x1="12" y1="19" x2="12" y2="22"></line>
-                    </svg>
-                    Voice / Mic Language
-                </label>
-                <div class="dropdown">
-                    <button
-                        class="btn w-100 text-start d-flex justify-content-between align-items-center premium-dropdown"
-                        type="button" data-bs-toggle="dropdown" aria-expanded="false" id="langBtn">
-                        <span>Hindi / English (Default)</span>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"
-                            stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="6 9 12 15 18 9"></polyline>
-                        </svg>
-                    </button>
-                    <ul class="dropdown-menu w-100 premium-dropdown-menu">
-                        <li><a class="dropdown-item active" href="#"
-                                onclick="selectOption(event, 'langBtn', 'settingsLanguage', 'Hindi / English (Default)', 'hi-IN')">Hindi
-                                / English (Default)</a></li>
-                        <li><a class="dropdown-item" href="#"
-                                onclick="selectOption(event, 'langBtn', 'settingsLanguage', 'Hindi (हिंदी)', 'hi-only')">Hindi</a>
-                        </li>
-                        <li><a class="dropdown-item" href="#"
-                                onclick="selectOption(event, 'langBtn', 'settingsLanguage', 'English', 'en-IN')">English</a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="mb-4">
-                <label class="form-label small fw-semibold" style="color: #64748b;">Primary Currency</label>
-                <div class="dropdown">
-                    <button
-                        class="btn w-100 text-start d-flex justify-content-between align-items-center premium-dropdown"
-                        type="button" data-bs-toggle="dropdown" aria-expanded="false" id="currencyBtn">
-                        <span>Indian Rupee (₹)</span>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"
-                            stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="6 9 12 15 18 9"></polyline>
-                        </svg>
-                    </button>
-                    <ul class="dropdown-menu w-100 premium-dropdown-menu" style="max-height: 220px; overflow-y: auto;">
-                        <li><a class="dropdown-item active" href="#"
-                                onclick="selectOption(event, 'currencyBtn', 'settingsCurrency', 'Indian Rupee (₹)', 'INR')">Indian
-                                Rupee (₹)</a></li>
-                        <li><a class="dropdown-item" href="#"
-                                onclick="selectOption(event, 'currencyBtn', 'settingsCurrency', 'US Dollar ($)', 'USD')">US
-                                Dollar ($)</a></li>
-                        <li><a class="dropdown-item" href="#"
-                                onclick="selectOption(event, 'currencyBtn', 'settingsCurrency', 'Euro (€)', 'EUR')">Euro
-                                (€)</a></li>
-                        <li><a class="dropdown-item" href="#"
-                                onclick="selectOption(event, 'currencyBtn', 'settingsCurrency', 'British Pound (£)', 'GBP')">British
-                                Pound (£)</a></li>
-                        <li><a class="dropdown-item" href="#"
-                                onclick="selectOption(event, 'currencyBtn', 'settingsCurrency', 'Australian Dollar (A$)', 'AUD')">Australian
-                                Dollar (A$)</a></li>
-                        <li><a class="dropdown-item" href="#"
-                                onclick="selectOption(event, 'currencyBtn', 'settingsCurrency', 'Saudi Riyal (SAR)', 'SAR')">Saudi
-                                Riyal (SAR)</a></li>
-                    </ul>
-                </div>
-                <input type="hidden" id="settingsCurrency" value="INR">
-            </div>
-
-            <div id="categoryBreakdown" style="display:none;" class="mt-4"></div>
         </div>
+    </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -1375,6 +1476,24 @@
                             Continue with Google
                         </button>
                     </form>
+                    <!-- 2. Inline 6-Digit OTP Verification Screen (Hidden by default) -->
+                    <div id="authOtpContainer" style="display: none; padding: 10px 0;">
+                        <p class="text-muted small text-center mb-1">
+                            We sent a 6-digit code to <b id="otpEmailTarget" class="text-dark"></b>.
+                        </p>
+                        <p class="text-danger small text-center fw-semibold mb-3">
+                            Code valid for 5 minutes
+                        </p>
+                        <div class="mb-3">
+                            <input type="text" id="authOtpInput" class="form-control text-center fw-bold fs-3"
+                                placeholder="000000" maxlength="6" inputmode="numeric" pattern="[0-9]*"
+                                style="letter-spacing: 8px; font-family: monospace;">
+                        </div>
+                        <button type="button" class="btn btn-success w-100 py-2 fw-semibold"
+                            id="authVerifyOtpBtn">Verify & Log In</button>
+                        <button type="button" class="btn btn-link w-100 mt-2 text-decoration-none text-muted small"
+                            onclick="window.backToAuthForm()">← Back / Use another email</button>
+                    </div>
                 </div>
             </div>
         </div>
