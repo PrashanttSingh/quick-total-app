@@ -193,6 +193,61 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+
+  // 📱 SIDEBAR PHONE SAVE LOGIC (Progressive Profiling)
+  const sidebarPhoneSaveBtn = document.getElementById("sidebarPhoneSaveBtn");
+  if (sidebarPhoneSaveBtn) {
+    sidebarPhoneSaveBtn.addEventListener("click", async () => {
+      const code = document.getElementById("sidebarCountryCode").value;
+      const rawInput = document.getElementById("sidebarPhoneInput").value;
+      const cleanPhone = rawInput.replace(/[^0-9]/g, "");
+
+      if (cleanPhone.length < 7 || cleanPhone.length > 15) {
+        const showError =
+          typeof showSystemError === "function" ? showSystemError : alert;
+        showError("Please enter a valid phone number length.");
+        return;
+      }
+
+      const fullNumber = `${code}${cleanPhone}`;
+      const originalText = sidebarPhoneSaveBtn.innerHTML;
+      sidebarPhoneSaveBtn.innerHTML = `<span class="spinner-border spinner-border-sm"></span>`;
+      sidebarPhoneSaveBtn.disabled = true;
+
+      try {
+        const {
+          data: { session },
+        } = await supabaseClient.auth.getSession();
+        if (!session || !session.user) throw new Error("Not logged in");
+
+        const { error } = await supabaseClient
+          .from("user_profiles")
+          .update({ phone_number: fullNumber, country_code: code })
+          .eq("user_id", session.user.id);
+
+        if (error) throw error;
+
+        // Force UI Lock instantly upon success
+        document.getElementById("sidebarPhoneInputMode").style.display = "none";
+        document.getElementById("sidebarPhoneLockedMode").style.display =
+          "block";
+        const masked =
+          cleanPhone.length >= 4
+            ? `••••• ••${cleanPhone.slice(-3)}`
+            : cleanPhone;
+        document.getElementById("sidebarPhoneDisplay").textContent =
+          `${code} ${masked}`;
+      } catch (err) {
+        console.error(err);
+        const showError =
+          typeof showSystemError === "function" ? showSystemError : alert;
+        showError("Failed to save phone number. Try again.");
+        sidebarPhoneSaveBtn.innerHTML = originalText;
+        sidebarPhoneSaveBtn.disabled = false;
+      }
+    });
+  }
+
   checkUserSession(); // Run on load
 });
 
@@ -201,19 +256,47 @@ async function checkUserSession() {
     const {
       data: { session },
     } = await supabaseClient.auth.getSession();
-    const navLoginText = document.getElementById("navLoginText");
-    const navLoginBtn = document.getElementById("navLoginBtn");
+
+    let navLoginBtn = document.getElementById("navLoginBtn");
+    let navLoginText = document.getElementById("navLoginText");
 
     if (session && session.user) {
       currentUser = session.user;
-
-      // NEW: Drop a permanent breadcrumb on this device
       localStorage.setItem("quickTotalKnownUser", "true");
 
-      // Pull tier from the database instantly!
+      // 🚨 THE HIDDEN BUG FIX: Destroy Bootstrap's hijack by cloning the button
+      if (navLoginBtn) {
+        // Cloning the button completely wipes out Bootstrap's hidden click listeners
+        const cleanBtn = navLoginBtn.cloneNode(true);
+        navLoginBtn.parentNode.replaceChild(cleanBtn, navLoginBtn);
+        navLoginBtn = cleanBtn; // Update JS reference to the new clean button
+        navLoginText = navLoginBtn.querySelector("#navLoginText");
+
+        if (navLoginText) navLoginText.innerText = "Log Out";
+
+        navLoginBtn.onclick = async (e) => {
+          e.preventDefault();
+          if (navLoginText) navLoginText.innerText = "Logging out...";
+
+          // 1. Tell Supabase to kill the session
+          await supabaseClient.auth.signOut();
+
+          // 2. Nuclear option: Manually scrub the ghost token from the browser
+          for (let key in localStorage) {
+            if (key.startsWith("sb-") && key.endsWith("-auth-token")) {
+              localStorage.removeItem(key);
+            }
+          }
+
+          // 3. Hard refresh the page to completely reset the UI
+          window.location.reload();
+        };
+      }
+
+      // Pull tier and phone data from the database instantly!
       const { data: profile } = await supabaseClient
         .from("user_profiles")
-        .select("plan")
+        .select("plan, phone_number, country_code")
         .eq("user_id", currentUser.id)
         .single();
 
@@ -223,29 +306,43 @@ async function checkUserSession() {
         localStorage.setItem("quickTotalUserPlan", "basic");
       }
 
-      if (navLoginText) navLoginText.innerText = "Log Out";
-      if (navLoginBtn) {
-        navLoginBtn.removeAttribute("data-bs-toggle");
-        navLoginBtn.removeAttribute("data-bs-target");
-        navLoginBtn.onclick = async () => {
-          await supabaseClient.auth.signOut();
-          localStorage.setItem("quickTotalUserPlan", "basic");
-          window.location.reload();
-        };
+      // 📱 PROGRESSIVE PROFILING LOGIC
+      const phoneContainer = document.getElementById("sidebarPhoneContainer");
+      const phoneInputMode = document.getElementById("sidebarPhoneInputMode");
+      const phoneLockedMode = document.getElementById("sidebarPhoneLockedMode");
+      const phoneDisplay = document.getElementById("sidebarPhoneDisplay");
+
+      if (phoneContainer) {
+        phoneContainer.style.display = "block";
+
+        if (
+          profile &&
+          profile.phone_number &&
+          profile.phone_number.length > 3
+        ) {
+          // Number exists in DB: LOCK IT PERMANENTLY
+          phoneInputMode.style.display = "none";
+          phoneLockedMode.style.display = "block";
+
+          const cc = profile.country_code || "";
+          const num = profile.phone_number.replace(cc, "");
+          const masked = num.length >= 4 ? `••••• ••${num.slice(-3)}` : num;
+          phoneDisplay.textContent = `${cc} ${masked}`;
+        } else {
+          // Missing Number: Show Input
+          phoneInputMode.style.display = "block";
+          phoneLockedMode.style.display = "none";
+        }
       }
     } else {
       currentUser = null;
       localStorage.setItem("quickTotalUserPlan", "basic");
+
+      // 📱 Hides the phone container securely when logged out
+      const phoneContainer = document.getElementById("sidebarPhoneContainer");
+      if (phoneContainer) phoneContainer.style.display = "none";
+
       if (navLoginText) navLoginText.innerText = "Log In / Sign Up";
-      if (navLoginBtn) {
-        navLoginBtn.setAttribute("data-bs-toggle", "modal");
-        navLoginBtn.setAttribute("data-bs-target", "#authModal");
-        // Foolproof way to close the sidebar when opening the modal
-        navLoginBtn.onclick = () => {
-          const closeBtn = document.querySelector("#appMenu .btn-close");
-          if (closeBtn) closeBtn.click();
-        };
-      }
     }
   } catch (err) {
     console.error("Session error:", err);
@@ -651,11 +748,23 @@ function resetApp() {
   if (resultsContainer) resultsContainer.style.display = "none";
   if (grandTotalCard) grandTotalCard.style.display = "none";
 
+  // 🚀 RESET MOBILE PREVIEW STATE
+  const mobWrapper = document.querySelector(
+    "#previewArea > .d-block.d-md-none",
+  );
+  if (mobWrapper) {
+    mobWrapper.style.display = "";
+    mobWrapper.style.opacity = "1";
+    mobWrapper.style.transform = "translateY(0)";
+    mobWrapper.style.transition = "";
+  }
+
   // 🚨 CRITICAL FIX: Instantly kill the loading animation if reset is triggered
   const loadingEl = document.getElementById("loading");
   if (loadingEl) {
     loadingEl.style.display = "none";
-    loadingEl.style.opacity = "0";
+    loadingEl.style.opacity = "1";
+    loadingEl.style.transform = "translateY(0)";
   }
 
   // 🚀 Restores original icon and "Browse Files" text
@@ -1218,6 +1327,17 @@ function updateUIState() {
 
   if (thumbnailGrid) thumbnailGrid.style.display = "flex";
 
+  // 🚀 RESTORE MOBILE PREVIEW ON NEW UPLOADS
+  const mobilePreviewWrapper = document.querySelector(
+    "#previewArea > .d-block.d-md-none",
+  );
+  if (mobilePreviewWrapper) {
+    mobilePreviewWrapper.style.display = "block";
+    mobilePreviewWrapper.style.opacity = "1";
+    mobilePreviewWrapper.style.transform = "translateY(0)";
+    mobilePreviewWrapper.style.transition = "";
+  }
+
   // 🚨 NEW LOGIC: Lock the Add More button at 4 images
   const addMoreBtn = document.getElementById("addMoreDropdownBtn");
   if (addMoreBtn) {
@@ -1532,6 +1652,25 @@ function guessCategory(text) {
 calculateBtn.addEventListener("click", async () => {
   if (filesToProcess.length === 0) return;
 
+  // 🚨 FREEMIUM GATEKEEPER: Track unauthenticated device usage
+  if (typeof currentUser === "undefined" || !currentUser) {
+    const hasUsedFreeScan = localStorage.getItem("quickTotalFreeScanUsed");
+
+    if (hasUsedFreeScan === "true") {
+      const showError =
+        typeof showSystemError === "function" ? showSystemError : alert;
+      showError(
+        "You've used your free scan! Please log in or sign up to continue processing.",
+        "Log In",
+        "document.getElementById('system-alert')?.remove(); bootstrap.Modal.getOrCreateInstance(document.getElementById('authModal')).show();",
+      );
+      return; // 🛑 Instantly stops the AI from running and costing you money
+    }
+
+    // Drop a permanent breadcrumb that this device has used its free ticket
+    localStorage.setItem("quickTotalFreeScanUsed", "true");
+  }
+
   const loadingEl = document.getElementById("loading");
   const actionButtons = document.getElementById("actionButtons");
   const resultsContainer = document.getElementById("resultsContainer");
@@ -1550,6 +1689,9 @@ calculateBtn.addEventListener("click", async () => {
 
       // 📱 MOBILE ONLY: Floating elements directly on frosted glass (No outer box)
       loadingEl.style.display = "flex";
+      loadingEl.style.opacity = "1";
+      loadingEl.style.transform = "translateY(0)";
+      loadingEl.style.transition = "";
       loadingEl.innerHTML = `
           <style>
               /* Automatically upgrades the animation to handle 4 items smoothly */
@@ -1588,6 +1730,8 @@ calculateBtn.addEventListener("click", async () => {
     } else {
       // 💻 LAPTOP/DESKTOP: Keep original behavior 100% safe
       loadingEl.style.display = "block";
+      loadingEl.style.opacity = "1";
+      loadingEl.style.transform = "translateY(0)";
     }
   }
   if (actionButtons) actionButtons.style.display = "none";
@@ -3132,6 +3276,81 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
     searchInput.addEventListener("click", (e) => e.stopPropagation()); // Keeps menu open
+    // 🌍 INITIALIZE SIDEBAR DROPDOWN (Matches Sign-Up Modal)
+    const sidebarListContainer = document.getElementById("sidebarCountryList");
+    const sidebarSearchInput = document.getElementById("sidebarCountrySearch");
+    const sidebarHiddenInput = document.getElementById("sidebarCountryCode");
+    const sidebarDisplaySpan = document.getElementById(
+      "sidebarSelectedCountryDisplay",
+    );
+    const sidebarPhoneInput = document.getElementById("sidebarPhoneInput");
+
+    if (sidebarListContainer && typeof allCountries !== "undefined") {
+      sidebarListContainer.innerHTML = "";
+
+      // Safely pull the country data locally from the global array
+      const sidebarUnique = Array.from(
+        new Map(allCountries.map((item) => [item.iso, item])).values(),
+      );
+
+      sidebarUnique
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .forEach((country) => {
+          const item = document.createElement("button");
+          item.type = "button";
+          item.className =
+            "dropdown-item d-flex align-items-center gap-3 py-2 sidebar-country-item";
+          item.setAttribute(
+            "data-search",
+            `${country.name.toLowerCase()} ${country.code}`,
+          );
+
+          item.innerHTML = `
+          <img src="https://flagcdn.com/${country.iso}.svg" width="24" alt="${country.name}" style="border-radius: 2px;">
+          <span style="font-weight: 500; font-size: 13.5px; color: #1e293b;">${country.name}</span>
+          <span class="ms-auto text-muted" style="font-size: 12px; font-weight: 600;">${country.code}</span>
+      `;
+
+          item.addEventListener("click", () => {
+            if (sidebarHiddenInput) sidebarHiddenInput.value = country.code;
+            if (sidebarDisplaySpan)
+              sidebarDisplaySpan.innerHTML = `<img src="https://flagcdn.com/${country.iso}.svg" width="20" alt="${country.name}"> ${country.code}`;
+            if (sidebarPhoneInput) sidebarPhoneInput.value = "";
+          });
+
+          sidebarListContainer.appendChild(item);
+        });
+    }
+
+    if (sidebarSearchInput) {
+      sidebarSearchInput.addEventListener("input", function () {
+        const query = this.value.toLowerCase().trim();
+        document.querySelectorAll(".sidebar-country-item").forEach((item) => {
+          if (item.getAttribute("data-search").includes(query)) {
+            item.classList.remove("d-none");
+            item.classList.add("d-flex");
+          } else {
+            item.classList.remove("d-flex");
+            item.classList.add("d-none");
+          }
+        });
+      });
+      sidebarSearchInput.addEventListener("click", (e) => e.stopPropagation()); // Keeps menu open
+
+      // 🚨 FIX: Wipe search text and restore full list when dropdown closes
+      const dropdownBtn = document.getElementById("sidebarCountryDropdownBtn");
+      if (dropdownBtn) {
+        dropdownBtn.addEventListener("hidden.bs.dropdown", () => {
+          sidebarSearchInput.value = ""; // Erases the typed text
+
+          // Un-hides all the countries in the list
+          document.querySelectorAll(".sidebar-country-item").forEach((item) => {
+            item.classList.remove("d-none");
+            item.classList.add("d-flex");
+          });
+        });
+      }
+    }
   }
 });
 document.addEventListener("DOMContentLoaded", () => {

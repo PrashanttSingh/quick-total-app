@@ -10,6 +10,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QuickTotal</title>
 
+    <!-- 🚀 Core SEO & Keywords (Invisible to users, visible to Google) -->
+    <meta name="description"
+        content="The ultimate AI receipt totaling tool for shop owners, freelancers, and households. Scan your receipt and get the exact total in a jiffy. Supports handwritten bills, GST, and global receipts.">
+    <meta name="keywords"
+        content="receipt totaling, scan receipt and get total, jiffy total, shop owners receipt app, calculate bill total, AI expense calculator, Indian GST bill scanner, kirana retail totaling, international VAT extractor, OCR receipt math, handwritten bill calculator, total my receipt, instant tally">
+    <meta name="author" content="QuickTotal">
+    <meta name="robots" content="index, follow">
+
+    <!-- 📱 Open Graph / Social Media Sharing -->
+    <meta property="og:title" content="QuickTotal | Scan Any Receipt & Get The Total in a Jiffy">
+    <meta property="og:description"
+        content="Designed for shop owners and daily use. Drop an image of a retail bill or handwritten note and let AI calculate the exact total in seconds.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://yourwebsite.com/">
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -722,27 +737,69 @@
                 </button>
             </div>
 
-            <hr class="text-muted my-4">
-
-            <!-- 2. SUBSCRIPTION SECTION (Billing Second) -->
-            <h6 class="fw-bold mb-3 text-uppercase tracking-wider text-muted small">Subscription</h6>
-            <div class="mb-4">
-                <button class="btn w-100 text-start d-flex justify-content-between align-items-center uniform-pro-btn"
-                    onclick="openPricingModal()" data-bs-dismiss="offcanvas">
-                    <div class="d-flex align-items-center gap-2">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5"
-                            stroke-linecap="round" stroke-linejoin="round">
-                            <path
-                                d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z">
-                            </path>
-                        </svg>
-                        <span>Upgrade to Pro</span>
-                    </div>
-                    <svg class="pro-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="9 18 15 12 9 6"></polyline>
+            <!-- 📱 DYNAMIC BILLING PHONE CAPTURE -->
+            <div id="sidebarPhoneContainer" class="mb-4" style="display: none;">
+                <label class="form-label small fw-semibold d-flex align-items-center gap-1" style="color: #64748b;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path
+                            d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
+                        </path>
                     </svg>
-                </button>
+                    Billing Contact
+                </label>
+
+                <!-- Mode 1: Missing Number (Input Form) -->
+                <div id="sidebarPhoneInputMode">
+                    <div class="input-group shadow-sm" style="border-radius: 8px;">
+
+                        <!-- Hidden input stores the actual code for Supabase -->
+                        <input type="hidden" id="sidebarCountryCode" value="+91">
+
+                        <!-- Custom Dropdown Button -->
+                        <button
+                            class="btn dropdown-toggle d-flex align-items-center justify-content-between border-end-0"
+                            type="button" id="sidebarCountryDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false"
+                            style="max-width: 110px; padding: 12px 8px; border: 1px solid #cbd5e1; font-weight: 600; font-size: 13px; background-color: #f8fafc; border-top-left-radius: 8px; border-bottom-left-radius: 8px;">
+                            <span id="sidebarSelectedCountryDisplay"
+                                class="d-flex align-items-center gap-2 text-truncate">
+                                <img src="https://flagcdn.com/in.svg" width="20" alt="India"> +91
+                            </span>
+                        </button>
+
+                        <!-- Searchable Dropdown Menu -->
+                        <div class="dropdown-menu p-2 shadow-lg"
+                            style="width: 280px; max-height: 350px; overflow-y: auto; border-radius: 12px; border: 1px solid #e2e8f0;">
+                            <div class="position-sticky top-0 bg-white pb-2" style="z-index: 10;">
+                                <input type="text" class="form-control" id="sidebarCountrySearch"
+                                    placeholder="Search country..."
+                                    style="font-size: 13px; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                            </div>
+                            <div id="sidebarCountryList"></div>
+                        </div>
+
+                        <input type="tel" id="sidebarPhoneInput" class="form-control" placeholder="9876543210"
+                            style="border-color: #cbd5e1; font-weight: 500; font-size: 14px;">
+                        <button id="sidebarPhoneSaveBtn"
+                            class="btn btn-success d-flex align-items-center justify-content-center"
+                            style="background: #10b981; border: none; font-weight: 600; padding: 0 16px; border-top-right-radius: 8px; border-bottom-right-radius: 8px;">Save</button>
+                    </div>
+                    <div class="mt-1"><span class="text-muted" style="font-size: 11px;">*Required for billing. Cannot be
+                            altered later.</span></div>
+                </div>
+                <!-- Mode 2: Locked (Read-Only) -->
+                <div id="sidebarPhoneLockedMode" style="display: none;">
+                    <div class="d-flex align-items-center justify-content-between p-3 rounded-3 shadow-sm"
+                        style="background: #ecfdf5; border: 1px solid #a7f3d0;">
+                        <span id="sidebarPhoneDisplay"
+                            style="font-weight: 700; color: #065f46; font-size: 14px; letter-spacing: 0.5px;"></span>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="3"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                        </svg>
+                    </div>
+                </div>
             </div>
 
             <hr class="text-muted my-4">

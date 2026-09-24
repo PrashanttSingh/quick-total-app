@@ -15,20 +15,23 @@ import google.generativeai as genai
 import tempfile
 import stripe
 import razorpay
+import itertools
 
 load_dotenv()
 
+
+
 # --- API KEYS ---
-GEMINI_KEYS = [
-    k for k in [
-        os.getenv('GEMINI_KEY_1'),
-        os.getenv('GEMINI_KEY_2'),
-        os.getenv('GEMINI_KEY_3'),
-        os.getenv('GEMINI_KEY_4'),
-        os.getenv('GEMINI_KEY_5'),
-        os.getenv('GEMINI_KEY_6')
-    ] if k
-]
+# Dynamically load an infinite number of keys without any hard limits
+GEMINI_KEYS = []
+
+# Scans your entire environment for any variable starting with 'GEMINI_KEY_'
+for key_name, key_value in os.environ.items():
+    if key_name.startswith('GEMINI_KEY_') and key_value.strip():
+        GEMINI_KEYS.append(key_value.strip())
+
+# Creates an infinite rotating loop of your keys
+gemini_key_pool = itertools.cycle(GEMINI_KEYS) if GEMINI_KEYS else None
 
 OPENROUTER_KEYS = [
     k for k in [
@@ -47,12 +50,11 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 32 * 1024 * 1024
 
-MODEL_NAMES = {
-    "openrouter:openai/gpt-4o": "GPT-4o (Premium)",
-    "github:gpt-4o-mini": "GitHub GPT-4o-Mini",
-    "groq:meta-llama/llama-4-scout-17b-16e-instruct": "Groq Llama 4 Scout",
-    "openrouter:google/gemma-3-27b-it:free": "Gemma 3 27B",
-    "openrouter:nvidia/nemotron-nano-12b-v2-vl:free": "Nemotron V2"
+MODEL_NAMES = {    
+    "groq:qwen/qwen3.8-27b": "Groq Qwen 3.8",
+    
+    "openrouter:nex-agi/nex-n2.5-mini:free": "Nex-AGI N2.5 Mini"
+    
 }
 
 def get_latest_batch_id():
@@ -182,6 +184,10 @@ Output ONLY a valid JSON object containing a "receipts" array for all {num_image
 }}"""
 def gemini_batch_extraction(img_list, timeline):
     """Processes ALL images in a single Gemini API call."""
+    
+    # 💥 BYPASS ACTIVE: Forces app to test OpenRouter/Groq
+    return None, None 
+
     if not GEMINI_KEYS:
         return None, None
     
@@ -194,11 +200,11 @@ def gemini_batch_extraction(img_list, timeline):
             model = genai.GenerativeModel('gemini-3.5-flash-lite') 
             res = model.generate_content(
                 prompt_content, 
-                generation_config=genai.GenerationConfig(temperature=0.1, response_mime_type="application/json")
+                generation_config=genai.GenerationConfig(temperature=0.1, response_mime_type="application/json"),
+                request_options={"timeout": 25.0} # 💥 Future-proof timeout
             )
             data = parse_response(res.text)
             if data and isinstance(data, dict) and 'receipts' in data:
-                # 🚀 Dynamically extract the model name from the active model instance
                 active_model_name = model.model_name.replace("models/", "")
                 timeline.append(f"✅ {active_model_name}: Processed {len(img_list)} images in 1 API Call")
                 return data['receipts'], active_model_name
@@ -208,36 +214,110 @@ def gemini_batch_extraction(img_list, timeline):
     return None, None
 
 def ai_single_fallback(img, timeline):
-    """Fallback if batch processing fails completely."""
-    prompt = """Extract item as "item" and price as "amount" from this image in JSON format: {"image_readability_score": 80, "ai_confidence_score": 90, "items": [{"item": "Item", "amount": 10.0, "category": "Misc"}]}"""
+    """Fallback engine using your Master Gemini Extraction Prompt."""
+    prompt = """You are an elite AI data extractor for QuickTotal.
+You are provided 1 image.
+Extract the financial data from this image independently.
+
+CRITICAL RULE FOR EXTRACTION ORDER (COLUMNS):
+⚠️If a document has multiple columns, read Column 1 completely (it is not necessary that price will be always on the right side of item name, it can be on left side also of the item name, so please be careful) top-to-bottom first, then Column 2 top-to-bottom. DO NOT read left-to-right across columns.
+
+DOCUMENT TYPE RULES:
+- IF RECEIPT, INVOICE, OR HANDWRITTEN LEDGER: Extract item name as "item", price as "amount".
+- 🏷️ THE DIVERSE CATEGORY RULE: You MUST categorize every item using ONLY the following highly specific categories: "Pantry & Staples" (flour, rice, dal, oil, spices), "Dairy & Eggs" (milk, paneer, curd, butter), "Produce" (fresh fruits, vegetables), "Snacks & Beverages" (chips, biscuits, cold drinks), "Meat & Seafood", "Personal Care" (soap, shampoo, toothpaste), "Household & Cleaning" (detergent, cleaners), "Clothing & Apparels", "Electronics", "Medical", "Transport", "Bills & Utilities", "Education & Stationery", or "Misc". NEVER use a generic term like "Groceries".
+- 🚫 THE STRIKETHROUGH RULE: If an individual line item has a specific pen strike-through or is explicitly crossed out, IGNORE IT and do not extract it. 
+- 📝 THE GIANT 'X' RULE: However, if there is a massive 'X' drawn across the entire page or section, ignore the giant 'X' and aggressively extract all the legible items underneath it.
+- 🚫 THE TOTALS RULE: NEVER extract summary calculation lines like "Total", "Subtotal", "Grand Total", "Kul" (कुल), or "Yog" (योग) as items.
+- ⚖️ THE ADJUSTMENTS RULE: You MUST extract previous balances, old dues, arrears, or deposits (e.g., "Old Due", "Bakaya" (बकाया), "Purana", "Jama" (जमा), "Advance"). Set their category to "Adjustment". If the item is a deposit or payment (like "Jama" or "Advance"), make the amount a NEGATIVE number (e.g., -500.0). If it is a pending due, keep it positive.
+- If an item name is completely unreadable but the price is clear, extract the "amount" and put "Unknown" for the item name.
+- IF MATH WORKSHEET: Extract equation (e.g. "2+3=") as "item", numerical answer as "amount", and set "category" to "Math Problem".
+- 🚨 THE ILLEGIBLE HANDWRITING (PLAN B) RULE: If you encounter a line where the item name is a complete scribble or completely unreadable due to terrible handwriting, DO NOT SKIP IT. You must execute Plan B: extract the clear price/amount, and set the item name exactly as "Unreadable Item". Your absolute highest priority is capturing 100% of the prices on the page so the math is perfect. No price gets left behind, even if the text is just messy ink.
+- ⚠️ Most important rule: try to extract all possible item names with their prices and don't leave any item from calculation and if the total of the receipt is in negative then, re-examine the receipt and give total (extract all items present in the whole photo).
+
+Output ONLY a valid JSON object matching this structure:
+{
+  "receipts": [
+    {
+      "image_index": 1,
+      "image_readability_score": 85,
+      "ai_confidence_score": 95,
+      "items": [
+        {"item": "Item Name", "amount": 40.0, "category": "Misc"}
+      ]
+    }
+  ]
+}"""
+
     img_b64 = img_to_base64(img)
+    
+    github_key = os.getenv("GITHUB_TOKEN")
+    groq_key = os.getenv("GROQ_API_KEY")
+    
+    openrouter_keys = []
+    for k, v in os.environ.items():
+        if k.startswith("OPENROUTER_KEY_") and v.strip():
+            openrouter_keys.append(v.strip())
+            
     for full_model_id, model_name in MODEL_NAMES.items():
         try:
             provider, model_id = full_model_id.split(":", 1)
-            keys = OPENROUTER_KEYS if provider == "openrouter" else [GITHUB_KEY] if GITHUB_KEY else [GROQ_KEY]
-            url = "https://openrouter.ai/api/v1/chat/completions" if provider == "openrouter" else "https://api.groq.com/openai/v1/chat/completions"
+            
+            if provider == "openrouter":
+                url = "https://openrouter.ai/api/v1/chat/completions"
+                keys = openrouter_keys
+            elif provider == "github":
+                url = "https://models.github.ai/inference/chat/completions"
+                keys = [github_key] if github_key else []
+            elif provider == "groq":
+                url = "https://api.groq.com/openai/v1/chat/completions"
+                keys = [groq_key] if groq_key else []
+            else:
+                continue
+
             for key in keys:
+                if not key:
+                    continue
+                    
                 resp = requests.post(
                     url=url,
                     headers={"Authorization": f"Bearer {key}"},
                     json={
                         "model": model_id,
                         "messages": [
-                            {"role": "user", "content": [{"type": "text", "text": prompt}, {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{img_b64}"}}]}
+                            {"role": "user", "content": [
+                                {"type": "text", "text": prompt},
+                                {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{img_b64}"}}
+                            ]}
                         ],
                         "temperature": 0.1
                     },
-                    timeout=45
+                    timeout=25
                 )
-                data = parse_response(resp.json()['choices'][0]['message']['content'])
-                if data and data.get('items'):
-                    calcs, total, q, acc = build_calculations(data, 'ai')
-                    timeline.append(f"✅ {model_name}: Success")
-                    return calcs, total, q, acc, model_name
+                
+                if resp.status_code == 200:
+                    resp_json = resp.json()
+                    raw_text = resp_json['choices'][0]['message']['content']
+                    data = parse_response(raw_text)
+                    
+                    # Schema Handler 1: If model returns a raw list directly
+                    if isinstance(data, list):
+                        data = {"items": data}
+                    
+                    # Schema Handler 2: If model follows the Master Prompt ("receipts" wrapper)
+                    if isinstance(data, dict) and "receipts" in data and isinstance(data["receipts"], list) and len(data["receipts"]) > 0:
+                        data = data["receipts"][0]
+                        
+                    if data and isinstance(data, dict) and data.get('items'):
+                        actual_model_id = resp_json.get('model', model_name)
+                        display_name = actual_model_id if model_id == "openrouter/free" else model_name
+                        
+                        calcs, total, q, acc = build_calculations(data, 'ai')
+                        timeline.append(f"✅ {display_name}: Success")
+                        return calcs, total, q, acc, display_name
         except Exception:
             continue
+            
     return [], 0, 0, "-", None
-
 # =================================================================
 # 🌐 ROUTES
 # =================================================================
@@ -286,7 +366,8 @@ Example: [true, false, true]"""
             model = genai.GenerativeModel('gemini-3.5-flash-lite')
             res = model.generate_content(
                 prompt_content, 
-                generation_config=genai.GenerationConfig(temperature=0.0, response_mime_type="application/json")
+                generation_config=genai.GenerationConfig(temperature=0.0, response_mime_type="application/json"),
+                request_options={"timeout": 25.0}
             )
             clean_text = res.text.replace("```json", "").replace("```", "").strip()
             parsed_res = json.loads(clean_text)

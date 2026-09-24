@@ -553,3 +553,34 @@
 | **Batch 315** | 16:13:19 | `Batch (1 files)` | 1 images | ✅ Success | ✅ gemini-3.5-flash-lite: Processed 1 images in 1 API Call | 3.96s | <b>90%</b> | <b>95%</b> |
 | **Batch 316** | 11:48:25 | `Batch (1 files)` | 1 images | ✅ Success | ✅ gemini-3.5-flash-lite: Processed 1 images in 1 API Call | 4.06s | <b>90%</b> | <b>95%</b> |
 | **Batch 317** | 11:58:36 | `Batch (1 files)` | 1 images | ✅ Success | ✅ gemini-3.5-flash-lite: Processed 1 images in 1 API Call | 5.59s | <b>90%</b> | <b>95%</b> |
+| **Batch 318** | 19:56:24 | `Batch (1 files)` | 1 images | ✅ Success | ✅ gemini-3.5-flash-lite: Processed 1 images in 1 API Call | 23.17s | <b>85%</b> | <b>90%</b> |
+| **Batch 319** | 14:28:32 | `Batch (1 files)` | 1 images | ❌ Failed |  | 63.43s | <b>0%</b> | - |
+| **Batch 320** | 14:29:16 | `Batch (1 files)` | 1 images | ❌ Failed |  | 12.72s | <b>0%</b> | - |
+| **Batch 321** | 14:36:32 | `Batch (1 files)` | 1 images | ❌ Failed |  | 32.9s | <b>0%</b> | - |
+| **Batch 322** | 14:38:45 | `Batch (1 files)` | 1 images | ❌ Failed |  | 29.12s | <b>0%</b> | - |
+| **Batch 323** | 14:43:04 | `Batch (1 files)` | 1 images | ❌ Failed |  | 34.04s | <b>0%</b> | - |
+| **Batch 324** | 14:52:44 | `Batch (1 files)` | 1 images | ❌ Failed |  | 67.82s | <b>0%</b> | - |
+| **Batch 325** | 15:16:13 | `Batch (1 files)` | 1 images | ❌ Failed |  | 83.62s | <b>0%</b> | - |
+| **Batch 326** | 16:05:49 | `Batch (1 files)` | 1 images | ❌ Failed |  | 33.97s | <b>0%</b> | - |
+| **Batch 327** | 16:15:37 | `Batch (1 files)` | 1 images | ❌ Failed |  | 21.16s | <b>0%</b> | - |
+| **Batch 328** | 16:24:20 | `Batch (1 files)` | 1 images | ❌ Failed |  | 18.89s | <b>0%</b> | - |
+| **Batch 329** | 16:41:24 | `Batch (1 files)` | 1 images | ❌ Failed | ✅ OpenRouter Auto-Free: Success | 44.99s | <b>80%</b> | <b>90%</b> |
+| **Batch 330** | 16:48:40 | `Batch (1 files)` | 1 images | ❌ Failed | ✅ Groq Qwen 3.8: Success | 3.71s | <b>0%</b> | <b>0%</b> |
+| **Batch 331** | 16:50:55 | `Batch (1 files)` | 1 images | ❌ Failed | ✅ Groq Qwen 3.8: Success | 5.29s | <b>0%</b> | <b>0%</b> |
+| **Batch 332** | 16:56:53 | `Batch (1 files)` | 1 images | ❌ Failed | ✅ Groq Qwen 3.8: Success | 29.24s | <b>0%</b> | <b>0%</b> |
+| **Batch 333** | 21:33:10 | `Batch (1 files)` | 1 images | ❌ Failed | ✅ Groq Qwen 3.8: Success | 28.58s | <b>80%</b> | <b>90%</b> |
+| **Batch 334** | 21:52:52 | `Batch (1 files)` | 1 images | ❌ Failed | ✅ Groq Qwen 3.8: Success | 24.48s | <b>90%</b> | <b>95%</b> |
+| **Batch 335** | 21:55:59 | `Batch (1 files)` | 1 images | ❌ Failed | ✅ Groq Qwen 3.8: Success | 22.26s | <b>100%</b> | <b>100%</b> |
+| **Batch 336** | 22:08:10 | `Batch (1 files)` | 1 images | ❌ Failed | ✅ OpenRouter Gemma 4 26B: Success | 43.24s | <b>90%</b> | <b>95%</b> |
+| **Batch 337** | 11:17:48 | `Batch (1 files)` | 1 images | ❌ Failed | ✅ Groq Qwen 3.8: Success | 31.49s | <b>90%</b> | <b>95%</b> |
+| **Batch 338** | 11:19:09 | `Batch (1 files)` | 1 images | ❌ Failed | ✅ Groq Qwen 3.8: Success | 38.7s | <b>90%</b> | <b>95%</b> |
+| **Batch 339** | 15:21:55 | `Batch (1 files)` | 1 images | ❌ Failed | ✅ Groq Qwen 3.8: Success | 26.25s | <b>90%</b> | <b>95%</b> |
+| **Batch 340** | 15:22:46 | `Batch (1 files)` | 1 images | ❌ Failed | ✅ Groq Qwen 3.8: Success | 18.63s | <b>90%</b> | <b>95%</b> |
+| **Batch 341** | 15:24:21 | `Batch (1 files)` | 1 images | ❌ Failed | ✅ nex-agi/nex-n2.5-mini:free: Success | 65.01s | <b>100%</b> | <b>99%</b> |
+| **Batch 342** | 19:36:37 | `Batch (1 files)` | 1 images | ❌ Failed | ✅ Groq Qwen 3.8: Success | 50.73s | <b>90%</b> | <b>95%</b> |
+| **Batch 343** | 14:43:46 | `Batch (1 files)` | 1 images | ❌ Failed | ✅ Nex-AGI N2.5 Mini: Success | 10.26s | <b>85%</b> | <b>92%</b> |
+| **Batch 344** | 14:46:40 | `Batch (1 files)` | 1 images | ❌ Failed | ✅ Groq Qwen 3.8: Success | 23.63s | <b>90%</b> | <b>95%</b> |
+| **Batch 345** | 14:49:50 | `Batch (1 files)` | 1 images | ❌ Failed |  | 38.16s | <b>0%</b> | - |
+| **Batch 346** | 15:18:45 | `Batch (3 files)` | 3 images | ❌ Failed | ✅ Groq Qwen 3.8: Success<br>✅ Groq Qwen 3.8: Success | 994.22s | <b>65%</b> | <b>85%</b> |
+| **Batch 346** | 15:18:58 | `Batch (3 files)` | 3 images | ❌ Failed | ✅ Groq Qwen 3.8: Success<br>✅ Groq Qwen 3.8: Success<br>✅ Nex-AGI N2.5 Mini: Success | 49.04s | <b>60%</b> | <b>85%</b> |
+| **Batch 347** | 15:50:41 | `Batch (3 files)` | 3 images | ❌ Failed | ✅ Groq Qwen 3.8: Success<br>✅ Nex-AGI N2.5 Mini: Success<br>✅ Groq Qwen 3.8: Success | 22.69s | <b>90%</b> | <b>95%</b> |
