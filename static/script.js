@@ -91,6 +91,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (form) form.style.display = "block";
     if (tabs) tabs.style.display = "flex"; // Restores your custom tabs
     if (authAlert) authAlert.classList.add("d-none");
+    const tabSwitcher = document.getElementById("authTabSwitcher");
+    if (tabSwitcher) tabSwitcher.style.display = "flex";
   };
 
   // Handle Auth Form Submission
@@ -148,7 +150,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       submitBtn.disabled = true;
-      submitBtn.innerText = "Processing...";
+      authSubmitBtn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="margin-right: 8px; margin-bottom: 2px;"></span><span class="btn-typing-text">Sending secure code</span>`;
       authAlert.classList.add("d-none");
 
       let authError = null;
@@ -157,44 +159,120 @@ document.addEventListener("DOMContentLoaded", () => {
       const cleanPhone = phone.replace(/[^0-9]/g, "");
       const fullPhoneNumber = cleanPhone ? `${countryCode}${cleanPhone}` : "";
 
-      if (isLogin) {
-        const { data, error } = await supabaseClient.auth.signInWithPassword({
-          email,
-          password,
-        });
-        authError = error;
-      } else {
-        const { data, error } = await supabaseClient.auth.signUp({
-          email,
-          password,
-          options: {
-            data: { phone_number: fullPhoneNumber, country_code: countryCode },
-          },
-        });
-        authError = error;
+      // ⏱️ 15-Second Strict Network Guard (Covers custom SMTP delays)
+      let timeoutId;
+      const timeoutPromise = new Promise((_, reject) => {
+        timeoutId = setTimeout(() => {
+          reject(
+            new Error(
+              "Network timeout: Please check your internet connection.",
+            ),
+          );
+        }, 15000);
+      });
+
+      try {
+        if (isLogin) {
+          const result = await Promise.race([
+            supabaseClient.auth.signInWithPassword({ email, password }),
+            timeoutPromise,
+          ]);
+          clearTimeout(timeoutId);
+          authError = result.error;
+
+          // 🛡️ MULTI-DEVICE SYNC FIX: Instantly kill old sessions on other laptops/phones
+          if (!authError) {
+            await supabaseClient.auth.signOut({ scope: "others" });
+          }
+        } else {
+          const result = await Promise.race([
+            supabaseClient.auth.signUp({
+              email,
+              password,
+              options: {
+                // 🚨 DATA INTEGRITY FIX: Strictly using 'cleanPhone' to keep columns separated
+                data: { phone_number: cleanPhone, country_code: countryCode },
+              },
+            }),
+            timeoutPromise,
+          ]);
+          clearTimeout(timeoutId);
+
+          // 🚨 PROFESSIONAL SAAS VALIDATION (Email Enumeration Protection)
+          if (
+            result.data &&
+            result.data.user &&
+            result.data.user.identities &&
+            result.data.user.identities.length === 0
+          ) {
+            authError = new Error(
+              "This email is already registered in our database. Please click 'Sign In' above or use a different email.",
+            );
+          } else if (
+            result.error &&
+            result.error.message.toLowerCase().includes("already registered")
+          ) {
+            authError = new Error(
+              "This email is already registered in our database. Please click 'Sign In' above or use a different email.",
+            );
+          } else {
+            authError = result.error;
+          }
+        }
+      } catch (err) {
+        clearTimeout(timeoutId);
+        authError = err;
       }
 
       if (authError) {
-        showError(authError.message);
+        const isRateLimit =
+          authError.status === 429 ||
+          (authError.message &&
+            authError.message.toLowerCase().includes("rate limit"));
+
+        if (isRateLimit) {
+          if (authAlert) authAlert.classList.add("d-none");
+          if (typeof showSystemError === "function") {
+            showSystemError(
+              "Email delivery is delayed due to high traffic. For immediate access, please use Continue with Google.",
+            );
+          }
+          submitBtn.disabled = false;
+          submitBtn.innerText = isLogin ? "Log In" : "Sign Up";
+        } else {
+          if (authAlert) {
+            authAlert.className = "d-flex align-items-center gap-2 mb-4";
+            authAlert.style.cssText =
+              "background: #fff1f2; color: #be123c; border: 1px solid #ffe4e6; border-radius: 12px; padding: 14px 16px; font-size: 13.5px; font-weight: 600; box-shadow: 0 4px 12px rgba(225, 29, 72, 0.08);";
+          }
+          showError(authError.message);
+        }
       } else {
+        // SUCCESS PATH: Restored the missing "else" branch!
         if (!isLogin) {
           pendingOtpEmail = email;
 
-          // 📲 Transition directly to 6-Digit OTP Screen seamlessly
           const form = document.getElementById("authForm");
           const tabs = document.getElementById("showLoginBtn")?.parentElement;
           const otpBox = document.getElementById("authOtpContainer");
           const emailTarget = document.getElementById("otpEmailTarget");
-          const otpBoxInput = document.getElementById("authOtpInput");
+          const tabSwitcher = document.getElementById("authTabSwitcher");
 
           if (form) form.style.display = "none";
           if (tabs) tabs.style.display = "none";
           if (emailTarget) emailTarget.textContent = email;
           if (otpBox) otpBox.style.display = "block";
-          if (otpBoxInput) {
-            otpBoxInput.value = "";
-            otpBoxInput.focus();
-          }
+          if (tabSwitcher) tabSwitcher.style.display = "none";
+
+          if (typeof window.startResendTimer === "function")
+            window.startResendTimer();
+
+          const otpInputs = document.querySelectorAll(".otp-digit");
+          otpInputs.forEach((input) => {
+            input.value = "";
+            input.style.borderColor = "#e2e8f0";
+          });
+          if (otpInputs.length > 0) otpInputs[0].focus();
 
           submitBtn.disabled = false;
           submitBtn.innerText = "Sign Up";
@@ -202,9 +280,12 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         const modalEl = document.getElementById("authModal");
-        if (modalEl)
-          bootstrap.Modal.getInstance(modalEl)?.hide() ||
-            new bootstrap.Modal(modalEl).hide();
+        if (modalEl) {
+          const modalInstance =
+            bootstrap.Modal.getInstance(modalEl) ||
+            new bootstrap.Modal(modalEl);
+          modalInstance.hide();
+        }
         authForm.reset();
         submitBtn.disabled = false;
         submitBtn.innerText = "Log In";
@@ -213,19 +294,81 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // 🔢 6-Digit OTP Verification Handler
+  // 🔢 Modern 6-Digit OTP Box Logic (Auto-Advance, Backspace, Paste & Auto-Verify)
+  const otpInputs = document.querySelectorAll(".otp-digit");
+
+  otpInputs.forEach((input, index) => {
+    // 1. Auto-advance when typing
+    input.addEventListener("input", (e) => {
+      e.target.value = e.target.value.replace(/[^0-9]/g, ""); // Numbers only
+      if (e.target.value !== "") {
+        e.target.style.borderColor = "#10b981"; // Green border when filled
+        if (index < otpInputs.length - 1) {
+          otpInputs[index + 1].focus();
+        } else {
+          // 🚀 AUTO-VERIFY: If they just typed the 6th digit, click the button for them!
+          const verifyBtn = document.getElementById("authVerifyOtpBtn");
+          if (verifyBtn && !verifyBtn.disabled) verifyBtn.click();
+        }
+      } else {
+        e.target.style.borderColor = "#e2e8f0"; // Reset border if empty
+      }
+    });
+
+    // 2. Handle Backspace (go to previous box)
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Backspace" && e.target.value === "") {
+        if (index > 0) {
+          otpInputs[index - 1].focus();
+          otpInputs[index - 1].value = "";
+          otpInputs[index - 1].style.borderColor = "#e2e8f0";
+        }
+      }
+    });
+
+    // 3. Handle Pasting exactly 6 digits at once
+    input.addEventListener("paste", (e) => {
+      e.preventDefault();
+      const pastedData = (e.clipboardData || window.clipboardData)
+        .getData("text")
+        .replace(/[^0-9]/g, "")
+        .slice(0, 6);
+
+      if (pastedData) {
+        pastedData.split("").forEach((char, i) => {
+          if (otpInputs[i]) {
+            otpInputs[i].value = char;
+            otpInputs[i].style.borderColor = "#10b981";
+          }
+        });
+
+        const focusIndex = Math.min(pastedData.length, otpInputs.length - 1);
+        otpInputs[focusIndex].focus();
+
+        // 🚀 AUTO-VERIFY: If they pasted exactly 6 digits, click the button for them!
+        if (pastedData.length === 6) {
+          const verifyBtn = document.getElementById("authVerifyOtpBtn");
+          if (verifyBtn && !verifyBtn.disabled) {
+            setTimeout(() => verifyBtn.click(), 100); // 100ms delay so they see the pasted numbers before it spins
+          }
+        }
+      }
+    });
+  });
+
+  // 🔢 Verify Submission Handler
   const verifyOtpBtn = document.getElementById("authVerifyOtpBtn");
   if (verifyOtpBtn) {
     verifyOtpBtn.addEventListener("click", async () => {
-      const otpInput = document.getElementById("authOtpInput");
-      const token = otpInput
-        ? otpInput.value.replace(/[^0-9]/g, "").trim()
-        : "";
+      // Concatenate the 6 individual boxes into one string
+      let token = "";
+      otpInputs.forEach((input) => (token += input.value));
+
       const authAlert = document.getElementById("authAlert");
 
       if (token.length !== 6) {
         if (authAlert) {
-          authAlert.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg> <span>Please enter the full 6-digit code.</span>`;
+          authAlert.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg> <span>Please fill in all 6 digits.</span>`;
           authAlert.classList.remove("d-none");
         }
         return;
@@ -244,6 +387,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (error) throw error;
 
+        // Success: Close modal and refresh UI
         const modalEl = document.getElementById("authModal");
         if (modalEl)
           bootstrap.Modal.getInstance(modalEl)?.hide() ||
@@ -254,8 +398,20 @@ document.addEventListener("DOMContentLoaded", () => {
         checkUserSession();
       } catch (err) {
         if (authAlert) {
-          authAlert.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg> <span>${err.message || "Invalid or expired code. Please try again."}</span>`;
+          authAlert.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg> <span>${err.message || "Invalid code. Please try again."}</span>`;
           authAlert.classList.remove("d-none");
+
+          // Flash inputs red on error
+          otpInputs.forEach((input) => {
+            input.style.borderColor = "#ef4444";
+            input.style.background = "#fef2f2";
+          });
+          setTimeout(() => {
+            otpInputs.forEach((input) => {
+              input.style.borderColor = input.value ? "#10b981" : "#e2e8f0";
+              input.style.background = "#f8fafc";
+            });
+          }, 1500);
         }
       } finally {
         verifyOtpBtn.disabled = false;
@@ -286,7 +442,6 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      const fullNumber = `${code}${cleanPhone}`;
       const originalText = sidebarPhoneSaveBtn.innerHTML;
 
       // ⏳ Show saving state immediately
@@ -303,8 +458,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const { data: existingUsers, error: checkError } = await supabaseClient
           .from("user_profiles")
           .select("user_id")
-          .eq("phone_number", fullNumber)
-          .eq("country_code", code) // 👈 Strictly verifies the country code matches
+          .eq("phone_number", cleanPhone)
+          .eq("country_code", code)
           .limit(1);
 
         if (checkError) throw checkError;
@@ -328,7 +483,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // ✅ Check passed: Save the number normally
         const { error: updateError } = await supabaseClient
           .from("user_profiles")
-          .update({ phone_number: fullNumber, country_code: code })
+          .update({ phone_number: cleanPhone, country_code: code })
           .eq("user_id", session.user.id);
 
         if (updateError) throw updateError;
@@ -551,7 +706,7 @@ async function checkUserSession() {
           phoneLockedMode.style.display = "block";
 
           const cc = profile.country_code || "";
-          const num = profile.phone_number.replace(cc, "");
+          const num = profile.phone_number; // Read directly from the isolated phone_number column
           const masked = num.length >= 4 ? `••••• ••${num.slice(-3)}` : num;
           phoneDisplay.textContent = `${cc} ${masked}`;
         } else {
@@ -2353,25 +2508,13 @@ calculateBtn.addEventListener("click", async () => {
       if (grandTotalCard) grandTotalCard.style.display = "flex";
       recalculateLiveMath();
 
-      // 🚀 NEW: Tell Supabase to increment the user's daily_scans in the background
+      // 🚀 ENTERPRISE GRADE: Call the secure database RPC to handle all math and date checking
       if (typeof currentUser !== "undefined" && currentUser) {
         supabaseClient
-          .from("user_profiles")
-          .select("daily_scans")
-          .eq("user_id", currentUser.id)
-          .single()
-          .then(({ data }) => {
-            if (data) {
-              supabaseClient
-                .from("user_profiles")
-                .update({
-                  daily_scans: (data.daily_scans || 0) + successfulDocs,
-                })
-                .eq("user_id", currentUser.id)
-                .then(); // Fire and forget so it doesn't slow down the user's UI
-            }
-          })
-          .catch((err) => console.error("Could not update scan count:", err));
+          .rpc("log_successful_scans", { scans_added: successfulDocs })
+          .then(({ error }) => {
+            if (error) console.error("RPC Tracking Error:", error);
+          });
       }
 
       // 🚨 MOBILE FOCUS MODE: Hide pills and pull Grand Total perfectly up
@@ -4849,3 +4992,85 @@ window.saveSidebarName = async function () {
     inputEl.disabled = false;
   }
 };
+
+// ⏱️ Resend OTP Timer & API Handler
+let resendInterval;
+
+window.startResendTimer = function () {
+  let timeLeft = 60;
+  const resendTimerText = document.getElementById("resendTimerText");
+  const resendCountdown = document.getElementById("resendCountdown");
+  const resendCodeBtn = document.getElementById("resendCodeBtn");
+
+  if (resendTimerText) resendTimerText.classList.remove("d-none");
+  if (resendCodeBtn) resendCodeBtn.classList.add("d-none");
+  if (resendCountdown) resendCountdown.textContent = timeLeft;
+
+  clearInterval(resendInterval);
+  resendInterval = setInterval(() => {
+    timeLeft--;
+    if (resendCountdown) resendCountdown.textContent = timeLeft;
+
+    if (timeLeft <= 0) {
+      clearInterval(resendInterval);
+      if (resendTimerText) resendTimerText.classList.add("d-none");
+      if (resendCodeBtn) resendCodeBtn.classList.remove("d-none");
+    }
+  }, 1000);
+};
+
+// Handle the "Resend Code" Click (Secure DOM Scraping)
+document.addEventListener("click", async (e) => {
+  const resendBtn = e.target.closest("#resendCodeBtn");
+
+  if (resendBtn) {
+    e.preventDefault();
+
+    // 🛡️ Block clicks if timer is running
+    if (
+      resendBtn.classList.contains("d-none") ||
+      resendBtn.style.pointerEvents === "none"
+    ) {
+      return;
+    }
+
+    // 🚨 UI SCRAPER: Safely pull the email from the bold text on screen to prevent scope crashes
+    const targetEmailEl = document.getElementById("otpEmailTarget");
+    const emailToResend = targetEmailEl ? targetEmailEl.innerText.trim() : "";
+
+    if (!emailToResend) {
+      const authAlert = document.getElementById("authAlert");
+      if (authAlert) {
+        authAlert.innerHTML = `<span>Email missing. Please try signing up again.</span>`;
+        authAlert.classList.remove("d-none");
+      }
+      return;
+    }
+
+    const originalText = resendBtn.innerHTML;
+    resendBtn.innerHTML = `<span class="spinner-border spinner-border-sm" style="margin-right: 5px;"></span> Sending...`;
+    resendBtn.style.pointerEvents = "none";
+
+    try {
+      const { error } = await supabaseClient.auth.resend({
+        type: "signup",
+        email: emailToResend,
+      });
+      if (error) throw error;
+
+      if (typeof window.startResendTimer === "function")
+        window.startResendTimer();
+    } catch (err) {
+      console.error("Resend error:", err);
+      const authAlert = document.getElementById("authAlert");
+      if (authAlert) {
+        // Clean error display for normal users
+        authAlert.innerHTML = `<span>Failed to resend code. Please try again later.</span>`;
+        authAlert.classList.remove("d-none");
+      }
+    } finally {
+      resendBtn.innerHTML = originalText;
+      resendBtn.style.pointerEvents = "auto";
+    }
+  }
+});

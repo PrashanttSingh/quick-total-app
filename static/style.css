@@ -1805,12 +1805,11 @@ body {
   stroke: #10b981 !important;
 }
 
-
 /* ============================================================
    🚀 ELEGANT SAAS LOGIN BUTTON HOVER
    ============================================================ */
 .auth-btn-hover:hover {
-    background: #0f172a !important; /* Shifts to the deepest slate */
-    transform: translateY(-2px); /* Premium upward lift */
-    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.35) !important; /* Expanded drop shadow */
+  background: #0f172a !important; /* Shifts to the deepest slate */
+  transform: translateY(-2px); /* Premium upward lift */
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.35) !important; /* Expanded drop shadow */
 }

@@ -1353,7 +1353,7 @@
                 <div class="modal-body p-4">
 
                     <!-- Animated Log In / Sign Up Toggle -->
-                    <div class="position-relative mb-4"
+                    <div id='authTabSwitcher' class="position-relative mb-4"
                         style="background-color: #f1f5f9; border-radius: 99px; padding: 4px; display: flex; cursor: pointer;">
                         <div id="authSlider"
                             style="position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc(50% - 4px); background-color: #ffffff; border-radius: 99px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 1; transform: translateX(0);">
@@ -1372,6 +1372,38 @@
                         style="background: #fff1f2; color: #be123c; border: 1px solid #ffe4e6; border-radius: 12px; padding: 14px 16px; font-size: 13.5px; font-weight: 600; box-shadow: 0 4px 12px rgba(225, 29, 72, 0.08);">
                     </div>
 
+                    <style>
+                        .btn-typing-text {
+                            position: relative;
+                            display: inline-block;
+                            padding-right: 12px;
+                        }
+
+                        .btn-typing-text::after {
+                            content: '';
+                            position: absolute;
+                            left: 100%;
+                            animation: typingDots 1.5s infinite step-start;
+                        }
+
+                        @keyframes typingDots {
+                            0% {
+                                content: '';
+                            }
+
+                            25% {
+                                content: '.';
+                            }
+
+                            50% {
+                                content: '..';
+                            }
+
+                            75% {
+                                content: '...';
+                            }
+                        }
+                    </style>
                     <!-- Email & Password Form -->
                     <form id="authForm">
                         <!-- Row 1: Email & Phone -->
@@ -1476,23 +1508,82 @@
                             Continue with Google
                         </button>
                     </form>
-                    <!-- 2. Inline 6-Digit OTP Verification Screen (Hidden by default) -->
+                    <!-- 2. Modern 6-Digit OTP Verification Screen (Hidden by default) -->
                     <div id="authOtpContainer" style="display: none; padding: 10px 0;">
-                        <p class="text-muted small text-center mb-1">
-                            We sent a 6-digit code to <b id="otpEmailTarget" class="text-dark"></b>.
-                        </p>
-                        <p class="text-danger small text-center fw-semibold mb-3">
-                            Code valid for 5 minutes
-                        </p>
-                        <div class="mb-3">
-                            <input type="text" id="authOtpInput" class="form-control text-center fw-bold fs-3"
-                                placeholder="000000" maxlength="6" inputmode="numeric" pattern="[0-9]*"
-                                style="letter-spacing: 8px; font-family: monospace;">
+
+                        <div class="text-center mb-3">
+                            <p class="text-muted small mb-2">
+                                We sent a secure code to <b id="otpEmailTarget" class="text-dark"></b>
+                            </p>
+                            <span class="badge"
+                                style="background: #fffbeb; color: #d97706; border: 1px solid #fde68a; padding: 6px 12px; font-weight: 600; font-size: 12px; border-radius: 8px;">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                                    style="margin-right: 4px; margin-bottom: 2px;">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <polyline points="12 6 12 12 16 14"></polyline>
+                                </svg>
+                                Code valid for 5 minutes
+                            </span>
                         </div>
-                        <button type="button" class="btn btn-success w-100 py-2 fw-semibold"
-                            id="authVerifyOtpBtn">Verify & Log In</button>
-                        <button type="button" class="btn btn-link w-100 mt-2 text-decoration-none text-muted small"
-                            onclick="window.backToAuthForm()">← Back / Use another email</button>
+
+                        <!-- Modern 6-Square Inputs -->
+                        <div class="d-flex justify-content-center gap-2 mb-3" id="otpBoxContainer">
+                            <input type="text" class="form-control text-center fw-bolder fs-4 otp-digit" maxlength="1"
+                                inputmode="numeric"
+                                style="width: 48px; height: 56px; border-radius: 12px; background: #f8fafc; border: 2px solid #e2e8f0; color: #0f172a; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); caret-color: #10b981;">
+                            <input type="text" class="form-control text-center fw-bolder fs-4 otp-digit" maxlength="1"
+                                inputmode="numeric"
+                                style="width: 48px; height: 56px; border-radius: 12px; background: #f8fafc; border: 2px solid #e2e8f0; color: #0f172a; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); caret-color: #10b981;">
+                            <input type="text" class="form-control text-center fw-bolder fs-4 otp-digit" maxlength="1"
+                                inputmode="numeric"
+                                style="width: 48px; height: 56px; border-radius: 12px; background: #f8fafc; border: 2px solid #e2e8f0; color: #0f172a; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); caret-color: #10b981;">
+                            <input type="text" class="form-control text-center fw-bolder fs-4 otp-digit" maxlength="1"
+                                inputmode="numeric"
+                                style="width: 48px; height: 56px; border-radius: 12px; background: #f8fafc; border: 2px solid #e2e8f0; color: #0f172a; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); caret-color: #10b981;">
+                            <input type="text" class="form-control text-center fw-bolder fs-4 otp-digit" maxlength="1"
+                                inputmode="numeric"
+                                style="width: 48px; height: 56px; border-radius: 12px; background: #f8fafc; border: 2px solid #e2e8f0; color: #0f172a; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); caret-color: #10b981;">
+                            <input type="text" class="form-control text-center fw-bolder fs-4 otp-digit" maxlength="1"
+                                inputmode="numeric"
+                                style="width: 48px; height: 56px; border-radius: 12px; background: #f8fafc; border: 2px solid #e2e8f0; color: #0f172a; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); caret-color: #10b981;">
+                        </div>
+
+                        <!-- ⏱️ Resend Code Timer -->
+                        <div id="resendCodeContainer" class="text-center mb-3">
+                            <span id="resendTimerText" style="color: #64748b; font-size: 13px; font-weight: 500;">
+                                Resend code in <span id="resendCountdown"
+                                    style="font-weight: 700; color: #1e293b;">60</span>s
+                            </span>
+                            <a href="javascript:void(0)" id="resendCodeBtn" class="text-decoration-none d-none"
+                                style="color: #10b981; font-size: 13px; font-weight: 700;">
+                                Didn't receive it? Resend Code
+                            </a>
+                        </div>
+
+                        <button type="button" class="btn w-100 py-2 fw-semibold mb-2" id="authVerifyOtpBtn"
+                            style="background: #10b981; color: white; border: none; border-radius: 10px; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);">
+                            Verify & Sign Up
+                        </button>
+
+                        <style>
+                            .otp-back-btn {
+                                color: #64748b !important;
+                                transition: all 0.2s ease;
+                                border-radius: 8px;
+                            }
+
+                            .otp-back-btn:hover {
+                                color: #0f172a !important;
+                                background-color: #f1f5f9 !important;
+                            }
+                        </style>
+
+                        <button type="button" class="btn w-100 text-decoration-none small otp-back-btn py-2"
+                            onclick="window.backToAuthForm()"
+                            style="font-weight: 500; background: transparent; border: none;">
+                            ← Use a different email
+                        </button>
                     </div>
                 </div>
             </div>
