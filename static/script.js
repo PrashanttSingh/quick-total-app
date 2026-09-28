@@ -543,20 +543,25 @@ async function checkUserSession() {
 
         if (navLoginText) navLoginText.innerText = "Log Out";
 
-        navLoginBtn.onclick = async (e) => {
+navLoginBtn.onclick = async (e) => {
           e.preventDefault();
-          e.stopPropagation(); // Stops any leftover click events from bubbling up
+          e.stopPropagation(); 
 
-          if (navLoginText) navLoginText.innerText = "Logging out...";
+          // 1. TRIGGER THE VISUAL
+          navLoginBtn.classList.add("logging-out"); 
+          
+          if (navLoginText) {
+             navLoginText.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px; margin-bottom: 2px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> Securing...`;
+          }
 
+          // 2. WIPE THE BACKEND SECURELY
           try {
-            // 1. Tell Supabase to kill the session
             await supabaseClient.auth.signOut();
           } catch (err) {
             console.error("Sign-out error:", err);
           }
 
-          // 2. Nuclear option: Manually scrub the ghost tokens from the browser
+          // 3. WIPE LOCAL STORAGE
           localStorage.removeItem("quickTotalKnownUser");
           localStorage.removeItem("quickTotalUserPlan");
           for (let key in localStorage) {
@@ -565,10 +570,10 @@ async function checkUserSession() {
             }
           }
 
-          // 3. Instant hard reload with zero modals
+          // 4. INSTANT RELOAD (Zero artificial waiting)
           window.location.href = window.location.pathname;
         };
-      }
+      }  
 
       // Pull tier and phone data from the database instantly!
       const { data: profile } = await supabaseClient
@@ -2511,7 +2516,7 @@ calculateBtn.addEventListener("click", async () => {
       // 🚀 ENTERPRISE GRADE: Call the secure database RPC to handle all math and date checking
       if (typeof currentUser !== "undefined" && currentUser) {
         supabaseClient
-          .rpc("log_successful_scans", { scans_added: successfulDocs })
+          .rpc("log_successful_scans", { scans_to_add: successfulDocs })
           .then(({ error }) => {
             if (error) console.error("RPC Tracking Error:", error);
           });
@@ -4995,6 +5000,8 @@ window.saveSidebarName = async function () {
 
 // ⏱️ Resend OTP Timer & API Handler
 let resendInterval;
+let resendAttempts = 0; // 🛡️ Tracks how many times they clicked resend
+const MAX_RESENDS = 2; // 🛡️ Billion-Dollar Cap: Initial send + 2 resends = 3 emails max
 
 window.startResendTimer = function () {
   let timeLeft = 60;
@@ -5014,19 +5021,30 @@ window.startResendTimer = function () {
     if (timeLeft <= 0) {
       clearInterval(resendInterval);
       if (resendTimerText) resendTimerText.classList.add("d-none");
-      if (resendCodeBtn) resendCodeBtn.classList.remove("d-none");
+      
+      // Only show the resend button again if they haven't hit the cap
+      if (resendCodeBtn && resendAttempts < MAX_RESENDS) {
+         resendCodeBtn.classList.remove("d-none");
+      } else if (resendCodeBtn && resendAttempts >= MAX_RESENDS) {
+         // Graceful degradation when the limit is reached
+         resendCodeBtn.classList.remove("d-none");
+         resendCodeBtn.innerHTML = "Limit Reached";
+         resendCodeBtn.style.color = "#94a3b8"; // Muted slate color
+         resendCodeBtn.style.pointerEvents = "none";
+         resendCodeBtn.style.cursor = "not-allowed";
+      }
     }
   }, 1000);
 };
 
-// Handle the "Resend Code" Click (Secure DOM Scraping)
+// Handle the "Resend Code" Click
 document.addEventListener("click", async (e) => {
   const resendBtn = e.target.closest("#resendCodeBtn");
 
   if (resendBtn) {
     e.preventDefault();
 
-    // 🛡️ Block clicks if timer is running
+    // 🛡️ Block clicks if timer is running or limits reached
     if (
       resendBtn.classList.contains("d-none") ||
       resendBtn.style.pointerEvents === "none"
@@ -5034,7 +5052,17 @@ document.addEventListener("click", async (e) => {
       return;
     }
 
-    // 🚨 UI SCRAPER: Safely pull the email from the bold text on screen to prevent scope crashes
+    // 🛑 STRICT SAAS RATE LIMITER
+    if (resendAttempts >= MAX_RESENDS) {
+        if (typeof showSystemError === "function") {
+            showSystemError("Maximum verification attempts reached. Please check your spam folder or try again in an hour.");
+        }
+        resendBtn.innerHTML = "Limit Reached";
+        resendBtn.style.color = "#94a3b8";
+        resendBtn.style.pointerEvents = "none";
+        return;
+    }
+
     const targetEmailEl = document.getElementById("otpEmailTarget");
     const emailToResend = targetEmailEl ? targetEmailEl.innerText.trim() : "";
 
@@ -5058,19 +5086,24 @@ document.addEventListener("click", async (e) => {
       });
       if (error) throw error;
 
+      // ✅ Increment the tracker only on a successful send
+      resendAttempts++; 
+
       if (typeof window.startResendTimer === "function")
         window.startResendTimer();
     } catch (err) {
       console.error("Resend error:", err);
       const authAlert = document.getElementById("authAlert");
       if (authAlert) {
-        // Clean error display for normal users
         authAlert.innerHTML = `<span>Failed to resend code. Please try again later.</span>`;
         authAlert.classList.remove("d-none");
       }
     } finally {
-      resendBtn.innerHTML = originalText;
-      resendBtn.style.pointerEvents = "auto";
+      // Only restore button functionality if they haven't hit the cap
+      if (resendAttempts < MAX_RESENDS) {
+          resendBtn.innerHTML = originalText;
+          resendBtn.style.pointerEvents = "auto";
+      }
     }
   }
 });

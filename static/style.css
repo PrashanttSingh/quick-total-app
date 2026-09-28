@@ -1813,3 +1813,104 @@ body {
   transform: translateY(-2px); /* Premium upward lift */
   box-shadow: 0 8px 20px rgba(15, 23, 42, 0.35) !important; /* Expanded drop shadow */
 }
+/* --------------------------------------------------- */
+/* NEXT-GEN: Liquid Animated Login/Logout Button       */
+/* --------------------------------------------------- */
+#navLoginBtn {
+  /* Brighter, lighter, and more vibrant gradient */
+  background: linear-gradient(
+    -45deg,
+    #10b981,
+    #38bdf8,
+    #60a5fa,
+    #10b981
+  ) !important;
+  background-size: 300% 300% !important;
+  border: none !important;
+  border-radius: 10px !important;
+  opacity: 1 !important; /* Prevents the whole button from fading */
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2) !important;
+}
+
+/* 🔥 CRITICAL FIX: Forces the text and any inner icons to be solid white */
+#navLoginBtn,
+#navLoginBtn span,
+#navLoginBtn i,
+#navLoginBtn svg {
+  color: #ffffff !important;
+  opacity: 1 !important; /* Overrides Bootstrap's annoying translucent classes */
+  font-weight: 700 !important;
+  letter-spacing: 0.5px !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25) !important; /* Soft shadow to separate text from background */
+}
+
+#navLoginBtn:hover {
+  animation: qtGradientShift 3s ease infinite !important;
+  box-shadow: 0 8px 25px rgba(56, 189, 248, 0.4) !important;
+  transform: translateY(-2px) !important;
+}
+
+#navLoginBtn:active {
+  transform: translateY(1px) scale(0.96) !important;
+  box-shadow: 0 2px 10px rgba(16, 185, 129, 0.3) !important;
+  transition: all 0.1s ease !important;
+}
+
+@keyframes qtGradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* --------------------------------------------------- */
+/* BILLION-DOLLAR LOGOUT SLIDER MICRO-INTERACTION      */
+/* --------------------------------------------------- */
+#navLoginBtn {
+  position: relative !important;
+  overflow: hidden !important; /* Traps the slider inside the rounded corners */
+}
+
+/* Ensures the text stays above the sliding liquid bar */
+#navLoginBtn span,
+#navLoginBtn svg,
+#navLoginBtn i {
+  position: relative !important;
+  z-index: 2 !important;
+}
+
+/* The 'logging-out' state styling */
+#navLoginBtn.logging-out {
+  pointer-events: none !important; /* Locks button from double-clicks */
+  background: #0f172a !important; /* Drops to a solid dark slate during animation */
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+  transform: scale(0.98) !important; /* Keeps the button "pressed" down */
+}
+
+#navLoginBtn.logging-out::before {
+  content: "" !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  height: 100% !important;
+  width: 0% !important;
+  background: linear-gradient(90deg, #10b981, #38bdf8) !important;
+  z-index: 1 !important;
+  /* Sped up from 1.2s to 0.4s to match the instant logout speed */
+  animation: premiumSliderSweep 0.4s cubic-bezier(0.77, 0, 0.175, 1) forwards !important;
+}
+
+@keyframes premiumSliderSweep {
+  0% {
+    width: 0%;
+  }
+  100% {
+    width: 100%;
+  }
+}
